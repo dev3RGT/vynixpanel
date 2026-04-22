@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lumina AI — Think Beyond</title>
+<title>Clora AI — Think Beyond</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
 <style>
 /* ── Reset ── */
@@ -23,8 +24,8 @@
   --muted:        rgba(238,234,248,0.42);
   --radius-xl:    20px;
   --radius-pill:  100px;
-  --font-d:       'Syne', sans-serif;
-  --font-b:       'DM Sans', sans-serif;
+  --font-d:       'Outfit', sans-serif;
+  --font-b:       'Inter', sans-serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -298,58 +299,11 @@ footer {
   background:linear-gradient(120deg,#fff,#b5a8ff);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
-
-/* ── Config Modal ── */
-.modal-overlay {
-  position:fixed; inset:0; z-index:500;
-  background:rgba(0,0,0,.72); backdrop-filter:blur(10px);
-  display:flex; align-items:center; justify-content:center; padding:1rem;
-  animation:fadeIn .3s ease both;
-}
-.modal-overlay.hidden { display:none !important; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.modal {
-  width:100%; max-width:480px;
-  background:rgba(10,8,28,.97); border:1px solid var(--glass-border);
-  border-radius:var(--radius-xl); padding:2.2rem;
-  backdrop-filter:blur(40px);
-  box-shadow:0 40px 100px rgba(0,0,0,.7);
-  animation:modalIn .45s cubic-bezier(.16,1,.3,1) both;
-}
-@keyframes modalIn { from{transform:translateY(30px) scale(.96);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
-.modal h2 { font-family:var(--font-d); font-size:1.3rem; font-weight:700; margin-bottom:.4rem; }
-.modal-lead { font-size:.84rem; color:var(--muted); margin-bottom:1.6rem; line-height:1.6; }
-.form-group { margin-bottom:1rem; }
-.form-group label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:.35rem; font-weight:500; }
-.form-group input {
-  width:100%; background:rgba(255,255,255,.05); border:1px solid var(--glass-border); border-radius:10px;
-  padding:.6rem .9rem; font-family:var(--font-b); font-size:.85rem; color:var(--text);
-  outline:none; transition:border-color .2s;
-}
-.form-group input:focus { border-color:rgba(123,104,238,.5); }
-.form-group input::placeholder { color:var(--muted); opacity:.5; }
-.modal-actions { display:flex; gap:.75rem; margin-top:.5rem; }
-.modal-btn {
-  flex:1; padding:.78rem; border-radius:var(--radius-pill); border:none;
-  background:linear-gradient(135deg,var(--accent),#a78bfa); color:#fff;
-  font-family:var(--font-b); font-size:.9rem; font-weight:500; cursor:pointer;
-  box-shadow:0 0 28px var(--accent-glow); transition:opacity .2s, transform .2s;
-}
-.modal-btn:hover { opacity:.9; transform:translateY(-1px); }
-.modal-skip {
-  flex:0; white-space:nowrap; padding:.78rem 1.4rem; border-radius:var(--radius-pill);
-  border:1px solid var(--glass-border); background:transparent;
-  font-family:var(--font-b); font-size:.9rem; color:var(--muted); cursor:pointer;
-  transition:color .2s;
-}
-.modal-skip:hover { color:var(--text); }
-.modal-note { font-size:.72rem; color:var(--muted); margin-top:1rem; line-height:1.5; opacity:.7; }
 </style>
 </head>
 
 <body>
 
-<!-- Background -->
 <div class="bg-layer">
   <div class="orb orb-a"></div>
   <div class="orb orb-b"></div>
@@ -357,67 +311,19 @@ footer {
 </div>
 <div class="dot-grid"></div>
 
-<!-- ═══ CONFIG MODAL ═══ -->
-<div class="modal-overlay" id="configModal">
-  <div class="modal">
-    <h2>🔥 Connect Your Services</h2>
-    <p class="modal-lead">
-      Enter your Anthropic API key to power the chat, and your Firebase Realtime Database credentials to persist conversations. All keys are stored only in your browser's <code>localStorage</code>.
-    </p>
-
-    <div class="form-group">
-      <label>Anthropic API Key *</label>
-      <input type="password" id="cfg-anthropic" placeholder="sk-ant-api03-..." />
-    </div>
-
-    <div style="font-family:var(--font-d);font-size:.78rem;color:rgba(181,168,255,.7);margin:.4rem 0 1rem;letter-spacing:.06em;text-transform:uppercase;">
-      Firebase Config (optional — enables persistence)
-    </div>
-
-    <div class="form-group">
-      <label>Firebase API Key</label>
-      <input type="text" id="cfg-fbKey"     placeholder="AIzaSy..." />
-    </div>
-    <div class="form-group">
-      <label>Firebase Auth Domain</label>
-      <input type="text" id="cfg-fbDomain"  placeholder="your-app.firebaseapp.com" />
-    </div>
-    <div class="form-group">
-      <label>Firebase Project ID</label>
-      <input type="text" id="cfg-fbProject" placeholder="your-app-id" />
-    </div>
-    <div class="form-group">
-      <label>Firebase Database URL</label>
-      <input type="text" id="cfg-fbDb"      placeholder="https://your-app-default-rtdb.firebaseio.com" />
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-btn"  onclick="saveConfig()">Save &amp; Launch →</button>
-      <button class="modal-skip" onclick="skipConfig()">Skip</button>
-    </div>
-    <p class="modal-note">
-      ⚠ Your Anthropic API key is sent directly to <code>api.anthropic.com</code> from your browser. Never share this page with others while keys are stored.
-    </p>
-  </div>
-</div>
-
-<!-- ═══ PAGE ═══ -->
 <div class="page">
 
-  <!-- NAV -->
   <nav>
-    <a href="#" class="logo">Lumina</a>
+    <a href="#" class="logo">Clora</a>
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
       <li><a href="#chat">Try it</a></li>
-      <li><a href="#" onclick="openConfig();return false;">Config</a></li>
     </ul>
     <button class="nav-cta" onclick="document.getElementById('chat').scrollIntoView({behavior:'smooth'})">
       Start chatting →
     </button>
   </nav>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="badge"><span class="badge-dot"></span> Now in public beta</div>
 
@@ -426,7 +332,7 @@ footer {
     </h1>
 
     <p class="hero-sub">
-      A minimal AI interface powered by Claude &amp; Firebase. Ask anything, explore everything — every conversation persisted in real-time.
+      A minimal AI interface powered by Google Gemini &amp; Firebase. Ask anything, explore everything — every conversation persisted in real-time.
     </p>
 
     <div class="hero-actions">
@@ -439,15 +345,14 @@ footer {
     </div>
   </section>
 
-  <!-- STATS -->
   <div class="stats">
     <div class="stat">
-      <div class="stat-num">200B+</div>
-      <div class="stat-label">Parameters</div>
+      <div class="stat-num">Fast</div>
+      <div class="stat-label">Gemini Processing</div>
     </div>
     <div class="stat-div"></div>
     <div class="stat">
-      <div class="stat-num">&lt;100ms</div>
+      <div class="stat-num">&lt;200ms</div>
       <div class="stat-label">Avg. response</div>
     </div>
     <div class="stat-div"></div>
@@ -462,23 +367,22 @@ footer {
     </div>
   </div>
 
-  <!-- FEATURES -->
   <section id="features" style="padding:0 2rem;">
     <div class="features-grid">
       <div class="feat">
         <div class="feat-icon">⚡</div>
         <div class="feat-title">Instant Responses</div>
-        <div class="feat-desc">Claude processes and responds in near real-time, with no perceivable delay in conversation flow.</div>
+        <div class="feat-desc">Gemini processes and responds in near real-time, with fluid, conversational capabilities.</div>
       </div>
       <div class="feat">
         <div class="feat-icon">🔥</div>
         <div class="feat-title">Firebase Realtime DB</div>
-        <div class="feat-desc">Every message is persisted in Firebase Realtime Database, synced live across browser sessions.</div>
+        <div class="feat-desc">Every message is persisted securely in Firebase, synced live across browser sessions.</div>
       </div>
       <div class="feat">
         <div class="feat-icon">🔒</div>
         <div class="feat-title">Private by Design</div>
-        <div class="feat-desc">Your API keys stay in your browser's localStorage — never sent to any third-party server.</div>
+        <div class="feat-desc">API keys are securely bundled within the web logic.</div>
       </div>
       <div class="feat">
         <div class="feat-icon">✦</div>
@@ -488,53 +392,44 @@ footer {
     </div>
   </section>
 
-  <!-- CHAT SECTION -->
   <section class="chat-section" id="chat" style="margin-top:5rem;">
     <div class="section-eyebrow">Live Demo</div>
-    <h2 class="section-title">Talk to Lumina</h2>
+    <h2 class="section-title">Talk to Clora</h2>
 
-    <!-- Firebase status strip -->
     <div class="fb-strip">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.89 15.67L6.6 3.33a.5.5 0 01.95-.07L9.73 9l1.2-2.27a.5.5 0 01.9.01L20.11 21H3.89z"/></svg>
-      <span id="fbStatus">Firebase not configured —
-        <a href="#" onclick="openConfig();return false;" style="color:#fbbf24;text-decoration:underline;">connect now</a>
-        to persist messages across sessions.
-      </span>
+      <span id="fbStatus">Connecting to Firebase...</span>
     </div>
 
-    <!-- GLASS CHAT BOX -->
     <div class="chat-wrap">
 
-      <!-- Header -->
       <div class="chat-head">
-        <div class="chat-head-avatar">L</div>
+        <div class="chat-head-avatar">C</div>
         <div style="flex:1;">
-          <div class="chat-head-name">Lumina AI</div>
+          <div class="chat-head-name">Clora AI</div>
           <div class="chat-head-status">
-            <span class="status-dot"></span> Online · powered by Claude
+            <span class="status-dot"></span> Online · powered by Gemini
           </div>
         </div>
         <div class="win-btns">
           <button class="win-btn r" title="Clear chat"    onclick="clearChat()"></button>
-          <button class="win-btn a" title="Settings"      onclick="openConfig()"></button>
+          <button class="win-btn a" title="Settings"></button>
           <button class="win-btn g" title="Scroll to top" onclick="scrollTop()"></button>
         </div>
       </div>
 
-      <!-- Messages -->
       <div class="chat-messages" id="chatMessages">
         <div class="msg ai">
-          <div class="msg-av">L</div>
+          <div class="msg-av">C</div>
           <div>
             <div class="msg-bubble">
-              Hello! I'm Lumina, your AI assistant powered by Claude. Ask me anything — I'm here to help you think, create, and explore. ✦
+              Hello! I'm Clora, your AI assistant powered by Google Gemini. Ask me anything — I'm here to help you think, create, and explore. ✦
             </div>
             <div class="msg-time">Just now</div>
           </div>
         </div>
       </div>
 
-      <!-- Input bar -->
       <div class="chat-input-bar">
         <textarea
           id="chatInput"
@@ -554,37 +449,43 @@ footer {
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer>
-    <span class="footer-logo">Lumina</span>
+    <span class="footer-logo">Clora</span>
     <span>
-      Built with Claude API + Firebase ·
-      <a href="#" onclick="openConfig();return false;" style="color:#b5a8ff;text-decoration:none;">Configure →</a>
+      Built with Google Gemini API + Firebase
     </span>
-    <span>© 2025 Lumina AI</span>
+    <span>© 2026 Clora AI</span>
   </footer>
 
-</div><!-- /page -->
-
-<!-- ═══ Firebase SDK ═══ -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+</div><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script>
 /* ─────────────────────────────────────────
-   STATE & HELPERS
+   CONFIG & STATE
 ───────────────────────────────────────── */
+const GOOGLE_API_KEY = "AIzaSyDXehvfhK0xjX8GvSyUMg1Go_0dTmpoQc0";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
+  authDomain: "test-17881.firebaseapp.com",
+  projectId: "test-17881",
+  storageBucket: "test-17881.firebasestorage.app",
+  messagingSenderId: "1057428047643",
+  appId: "1:1057428047643:web:f3801c0d933225a5cd35be"
+};
+
 const LS = {
-  get: k  => localStorage.getItem('lumina_' + k) || '',
-  set: (k,v) => localStorage.setItem('lumina_' + k, v)
+  get: k  => localStorage.getItem('clora_' + k) || '',
+  set: (k,v) => localStorage.setItem('clora_' + k, v)
 };
 
 let firebaseApp = null;
 let db          = null;
 let isTyping    = false;
-let chatHistory = [];   // Anthropic message history
+let geminiHistory = []; // Maps to Gemini message format
 
-// Persistent session ID (keeps conversation across page refreshes)
+// Persistent session ID
 let sessionId = LS.get('session');
 if (!sessionId) {
   sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
@@ -592,76 +493,18 @@ if (!sessionId) {
 }
 
 /* ─────────────────────────────────────────
-   INIT — show modal or boot Firebase
+   INIT FIREBASE ON LOAD
 ───────────────────────────────────────── */
 window.addEventListener('DOMContentLoaded', () => {
-  // Pre-fill modal with saved values
-  prefillModal();
-
-  const hasKey = LS.get('anthropic');
-  if (!hasKey) {
-    showModal();
-  } else {
-    hideModal();
-    bootFirebase();
-  }
+  bootFirebase();
 });
 
-function prefillModal() {
-  document.getElementById('cfg-anthropic').value  = LS.get('anthropic');
-  document.getElementById('cfg-fbKey').value      = LS.get('fbKey');
-  document.getElementById('cfg-fbDomain').value   = LS.get('fbDomain');
-  document.getElementById('cfg-fbProject').value  = LS.get('fbProject');
-  document.getElementById('cfg-fbDb').value       = LS.get('fbDb');
-}
-function showModal() { document.getElementById('configModal').classList.remove('hidden'); prefillModal(); }
-function hideModal() { document.getElementById('configModal').classList.add('hidden'); }
-function openConfig() { showModal(); return false; }
-
-function saveConfig() {
-  const anthropic = document.getElementById('cfg-anthropic').value.trim();
-  if (!anthropic) { alert('Anthropic API key is required to use the chat.'); return; }
-  LS.set('anthropic', anthropic);
-  LS.set('fbKey',     document.getElementById('cfg-fbKey').value.trim());
-  LS.set('fbDomain',  document.getElementById('cfg-fbDomain').value.trim());
-  LS.set('fbProject', document.getElementById('cfg-fbProject').value.trim());
-  LS.set('fbDb',      document.getElementById('cfg-fbDb').value.trim());
-  hideModal();
-  bootFirebase();
-}
-
-function skipConfig() {
-  if (!LS.get('anthropic')) {
-    alert('You need at least an Anthropic API key to chat. Please enter one.');
-    return;
-  }
-  hideModal();
-}
-
-/* ─────────────────────────────────────────
-   FIREBASE BOOT
-───────────────────────────────────────── */
 function bootFirebase() {
-  const fbKey     = LS.get('fbKey');
-  const fbDomain  = LS.get('fbDomain');
-  const fbProject = LS.get('fbProject');
-  const fbDb      = LS.get('fbDb');
-  const statusEl  = document.getElementById('fbStatus');
-
-  if (!fbKey || !fbDb) {
-    statusEl.innerHTML = 'Firebase not configured — <a href="#" onclick="openConfig()" style="color:#fbbf24;text-decoration:underline;">connect now</a> to persist messages across sessions.';
-    return;
-  }
+  const statusEl = document.getElementById('fbStatus');
 
   try {
-    // Avoid re-initialising if already done
     if (!firebase.apps.length) {
-      firebaseApp = firebase.initializeApp({
-        apiKey:      fbKey,
-        authDomain:  fbDomain,
-        projectId:   fbProject,
-        databaseURL: fbDb
-      });
+      firebaseApp = firebase.initializeApp(firebaseConfig);
     } else {
       firebaseApp = firebase.apps[0];
     }
@@ -669,29 +512,32 @@ function bootFirebase() {
 
     statusEl.innerHTML = '🔥 Firebase connected &mdash; session <code style="font-size:.7rem;opacity:.55">' + sessionId + '</code>';
 
-    // Load messages from this session (most recent 80)
+    // Load messages from this session
     db.ref('chats/' + sessionId + '/messages')
       .orderByChild('timestamp')
       .limitToLast(80)
       .once('value', snap => {
         const data = snap.val();
         if (!data) return;
-        // Clear default greeting then replay
+        
         document.getElementById('chatMessages').innerHTML = '';
-        chatHistory = [];
+        geminiHistory = [];
+        
         Object.values(data)
           .sort((a,b) => a.timestamp - b.timestamp)
           .forEach(m => {
             renderMsg(m.role, m.content, m.time, false);
             if (m.role !== 'system') {
-              chatHistory.push({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content });
+              geminiHistory.push({ 
+                role: m.role === 'ai' ? 'model' : 'user', 
+                parts: [{ text: m.content }] 
+              });
             }
           });
       });
 
   } catch(err) {
-    statusEl.innerHTML = '⚠ Firebase error: ' + err.message +
-      ' &mdash; <a href="#" onclick="openConfig()" style="color:#fbbf24;text-decoration:underline;">reconfigure</a>';
+    statusEl.innerHTML = '⚠ Firebase error: ' + err.message;
     console.error(err);
   }
 }
@@ -712,7 +558,7 @@ function renderMsg(role, content, time, animate = true) {
 
   const av = document.createElement('div');
   av.className = 'msg-av';
-  av.textContent = role === 'ai' ? 'L' : 'U';
+  av.textContent = role === 'ai' ? 'C' : 'U';
 
   const inner = document.createElement('div');
 
@@ -736,7 +582,7 @@ function showTyping() {
   const wrap = document.getElementById('chatMessages');
   const el = document.createElement('div');
   el.className = 'msg ai'; el.id = 'typingEl';
-  el.innerHTML = `<div class="msg-av">L</div>
+  el.innerHTML = `<div class="msg-av">C</div>
     <div class="msg-bubble" style="padding:.55rem .9rem;">
       <div class="typing-dots"><span></span><span></span><span></span></div>
     </div>`;
@@ -751,9 +597,9 @@ function hideTyping() {
 function clearChat() {
   if (!confirm('Clear this conversation?')) return;
   document.getElementById('chatMessages').innerHTML = '';
-  chatHistory = [];
+  geminiHistory = [];
   if (db) db.ref('chats/' + sessionId).remove();
-  // New session for fresh start
+  
   sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
   LS.set('session', sessionId);
   renderMsg('ai', 'Conversation cleared. Start fresh — what\'s on your mind? ✦');
@@ -775,7 +621,7 @@ function autoResize(el) {
 }
 
 /* ─────────────────────────────────────────
-   SEND  →  Anthropic  →  Firebase
+   SEND  →  Gemini API  →  Firebase
 ───────────────────────────────────────── */
 async function sendMessage() {
   const inputEl  = document.getElementById('chatInput');
@@ -784,17 +630,10 @@ async function sendMessage() {
 
   if (!text || isTyping) return;
 
-  const anthropicKey = LS.get('anthropic');
-  if (!anthropicKey) {
-    alert('No Anthropic API key found. Please open Config and add your key.');
-    openConfig();
-    return;
-  }
-
   // Render user message immediately
   const uTime = nowStr();
   renderMsg('user', text, uTime);
-  chatHistory.push({ role: 'user', content: text });
+  geminiHistory.push({ role: 'user', parts: [{ text: text }] });
   fbSave('user', text, uTime);
 
   // Lock UI
@@ -803,21 +642,16 @@ async function sendMessage() {
   showTyping();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Content-Type':    'application/json',
-        'x-api-key':       anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: `You are Lumina, a sophisticated and warmly helpful AI assistant.
-Be concise, thoughtful, and precise. Keep responses conversational.
-Never mention that you are Claude or made by Anthropic — you are Lumina.`,
-        messages: chatHistory
+        contents: geminiHistory,
+        systemInstruction: {
+          parts: [{ text: "You are Clora, a sophisticated and warmly helpful AI assistant. Be concise, thoughtful, and precise. Keep responses conversational." }]
+        }
       })
     });
 
@@ -827,8 +661,8 @@ Never mention that you are Claude or made by Anthropic — you are Lumina.`,
       throw new Error(data.error?.message || 'API request failed with status ' + res.status);
     }
 
-    const reply = data.content?.[0]?.text || '(empty response)';
-    chatHistory.push({ role: 'assistant', content: reply });
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '(empty response)';
+    geminiHistory.push({ role: 'model', parts: [{ text: reply }] });
 
     hideTyping();
     const aTime = nowStr();
@@ -839,6 +673,8 @@ Never mention that you are Claude or made by Anthropic — you are Lumina.`,
     hideTyping();
     renderMsg('ai', '⚠ Error: ' + err.message);
     console.error(err);
+    // Remove the failed user message from history array so it doesn't break future requests
+    geminiHistory.pop();
   } finally {
     sendBtn.disabled = false;
     isTyping = false;
