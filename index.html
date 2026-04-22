@@ -1,932 +1,1218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="theme-color" content="#070c1a" id="meta-theme" />
   <title>VynixPanelB - AI Damage Estimator</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- jsPDF for client-side PDF export -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Syne', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
-          colors: {
-            ink: { 50:'#f0f4ff', 100:'#dce6ff', 200:'#b9cdff', 300:'#85a8ff', 400:'#4d7bff', 500:'#1a4fff', 600:'#0033e6', 700:'#0028b8', 800:'#001f8a', 900:'#00155c' },
-            neon: { cyan:'#00f5ff', green:'#00ff88', amber:'#ffb800', red:'#ff3b3b' },
-          },
-          animation: {
-            'slide-up':'slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
-            'fade-in':'fadeIn 0.3s ease forwards',
-            'pulse-neon':'pulseNeon 2s ease-in-out infinite',
-            'scan':'scan 1.8s ease-in-out infinite',
-            'float':'float 3s ease-in-out infinite',
-          },
-          keyframes: {
-            slideUp:{'0%':{opacity:'0',transform:'translateY(14px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
-            fadeIn:{'0%':{opacity:'0'},'100%':{opacity:'1'}},
-            pulseNeon:{'0%,100%':{boxShadow:'0 0 8px #00f5ff44'},'50%':{boxShadow:'0 0 24px #00f5ffaa'}},
-            scan:{'0%':{transform:'translateY(0)'},'50%':{transform:'translateY(72px)'},'100%':{transform:'translateY(0)'}},
-            float:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-8px)'}},
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    body{background:#070c1a;color:#e8eeff;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;font-family:'Syne',sans-serif;}
-    ::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}
-    .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);}
-    .glass-heavy{background:rgba(10,15,40,0.85);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);}
-    .neon-border{border:1px solid rgba(0,245,255,0.3);box-shadow:0 0 20px rgba(0,245,255,0.08),inset 0 0 20px rgba(0,245,255,0.03);}
-    .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e8eeff;border-radius:14px;padding:14px 18px;width:100%;outline:none;font-family:'Syne',sans-serif;font-size:15px;transition:all 0.2s;}
-    .input-field:focus{background:rgba(0,245,255,0.06);border-color:rgba(0,245,255,0.5);box-shadow:0 0 0 3px rgba(0,245,255,0.1);}
-    .input-field::placeholder{color:rgba(255,255,255,0.3);}
-    .btn-primary{background:linear-gradient(135deg,#1a4fff,#0033e6);color:#fff;border:none;border-radius:100px;padding:14px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:8px;}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(26,79,255,0.5);}
-    .btn-primary:disabled{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);cursor:not-allowed;transform:none;box-shadow:none;}
-    .btn-ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:13px 24px;font-family:'Syne',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;}
-    .btn-ghost:hover{background:rgba(255,255,255,0.1);color:#fff;}
-    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:0.5px;font-family:'JetBrains Mono',monospace;}
-    .badge-pending{background:rgba(255,184,0,0.15);color:#ffb800;border:1px solid rgba(255,184,0,0.3);}
-    .badge-approved{background:rgba(0,255,136,0.1);color:#00ff88;border:1px solid rgba(0,255,136,0.25);}
-    .badge-rejected{background:rgba(255,59,59,0.1);color:#ff3b3b;border:1px solid rgba(255,59,59,0.25);}
-    .panel-hit{fill:rgba(255,59,59,0.5);stroke:#ff3b3b;stroke-width:2;cursor:pointer;transition:all 0.2s;}
-    .panel-hit:hover{fill:rgba(255,59,59,0.7);}
-    .panel-normal{fill:rgba(0,245,255,0.04);stroke:rgba(0,245,255,0.25);stroke-width:1.5;cursor:pointer;transition:all 0.2s;}
-    .panel-normal:hover{fill:rgba(0,245,255,0.15);stroke:rgba(0,245,255,0.6);}
-    .car-body{fill:rgba(0,245,255,0.06);stroke:rgba(0,245,255,0.4);stroke-width:1.5;}
-    .car-glass{fill:rgba(0,245,255,0.12);stroke:rgba(0,245,255,0.3);stroke-width:1;}
-    .car-wheel{fill:rgba(255,255,255,0.06);stroke:rgba(255,255,255,0.25);stroke-width:1.5;}
-    .edit-input{background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.3);color:#e8eeff;border-radius:8px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;width:90px;outline:none;}
-    .edit-input:focus{border-color:#00f5ff;box-shadow:0 0 0 2px rgba(0,245,255,0.15);}
-    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
-    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 100%);background-size:400px 100%;animation:shimmer 1.5s infinite;}
-  </style>
-
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    /* ─── CSS VARIABLES (theme tokens) ─── */
+    :root {
+      --bg: #f0f4ff;
+      --bg2: #e6ecfa;
+      --surface: rgba(255,255,255,0.85);
+      --surface2: rgba(255,255,255,0.6);
+      --border: rgba(0,0,0,0.07);
+      --border2: rgba(0,0,0,0.05);
+      --text: #0d1426;
+      --text2: #4a5580;
+      --text3: #8896bb;
+      --accent: #1a4fff;
+      --accent2: #0033e6;
+      --accent-glow: rgba(26,79,255,0.25);
+      --cyan: #0090ff;
+      --green: #00b86e;
+      --amber: #e8a000;
+      --red: #e03030;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+      --input-bg: rgba(0,0,0,0.04);
+      --input-border: rgba(0,0,0,0.1);
+      --panel-normal-fill: rgba(26,79,255,0.06);
+      --panel-normal-stroke: rgba(26,79,255,0.3);
+      --car-body-fill: rgba(26,79,255,0.05);
+      --car-body-stroke: rgba(26,79,255,0.35);
+      --car-glass-fill: rgba(26,79,255,0.1);
+      --car-wheel-fill: rgba(0,0,0,0.06);
+      --car-wheel-stroke: rgba(0,0,0,0.2);
+      --skel: linear-gradient(90deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.08) 50%,rgba(0,0,0,0.04) 100%);
+    }
+    [data-theme="dark"] {
+      --bg: #070c1a;
+      --bg2: #0d1530;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.02);
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.05);
+      --text: #e8eeff;
+      --text2: #8896cc;
+      --text3: #4a5580;
+      --accent: #4d7bff;
+      --accent2: #1a4fff;
+      --accent-glow: rgba(77,123,255,0.25);
+      --cyan: #00f5ff;
+      --green: #00ff88;
+      --amber: #ffb800;
+      --red: #ff5050;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
+      --input-bg: rgba(255,255,255,0.05);
+      --input-border: rgba(255,255,255,0.1);
+      --panel-normal-fill: rgba(0,245,255,0.04);
+      --panel-normal-stroke: rgba(0,245,255,0.25);
+      --car-body-fill: rgba(0,245,255,0.05);
+      --car-body-stroke: rgba(0,245,255,0.35);
+      --car-glass-fill: rgba(0,245,255,0.1);
+      --car-wheel-fill: rgba(255,255,255,0.05);
+      --car-wheel-stroke: rgba(255,255,255,0.2);
+      --skel: linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 100%);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+      margin: 0;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+
+    /* ─── GLASS & SURFACES ─── */
+    .surface {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .surface-solid {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      transition: background 0.3s ease;
+    }
+
+    /* ─── INPUTS ─── */
+    .field {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 14px 18px;
+      width: 100%;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+    }
+    .field:focus {
+      background: rgba(77,123,255,0.08);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .field::placeholder { color: var(--text3); }
+
+    /* ─── BUTTONS ─── */
+    .btn-p {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 14px 26px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.22s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    .btn-p:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
+    .btn-p:active { transform: scale(0.97); }
+    .btn-p:disabled { background: var(--input-bg); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-g {
+      background: var(--input-bg);
+      color: var(--text2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 13px 22px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    .btn-g:hover { background: var(--border); color: var(--text); }
+    .btn-g:active { transform: scale(0.97); }
+
+    /* ─── BADGES ─── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-pending  { background: rgba(232,160,0,0.12); color: var(--amber); border: 1px solid rgba(232,160,0,0.25); }
+    .badge-approved { background: rgba(0,184,110,0.1);  color: var(--green); border: 1px solid rgba(0,184,110,0.22); }
+    .badge-rejected { background: rgba(224,48,48,0.1);  color: var(--red);   border: 1px solid rgba(224,48,48,0.22); }
+
+    /* ─── SVG CAR PANEL CLASSES ─── */
+    .p-hit   { fill: rgba(255,59,59,0.45); stroke: #ff4444; stroke-width: 2; cursor: pointer; transition: fill 0.15s; }
+    .p-hit:hover { fill: rgba(255,59,59,0.65); }
+    .p-ok    { fill: var(--panel-normal-fill); stroke: var(--panel-normal-stroke); stroke-width: 1.5; cursor: pointer; transition: fill 0.15s, stroke 0.15s; }
+    .p-ok:hover { fill: rgba(77,123,255,0.15); stroke: var(--accent); }
+    .c-body  { fill: var(--car-body-fill); stroke: var(--car-body-stroke); stroke-width: 1.5; }
+    .c-glass { fill: var(--car-glass-fill); stroke: var(--car-body-stroke); stroke-width: 1; pointer-events: none; }
+    .c-wheel { fill: var(--car-wheel-fill); stroke: var(--car-wheel-stroke); stroke-width: 1.5; }
+
+    /* ─── EDIT INPUT ─── */
+    .edit-n {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 88px;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+    }
+    .edit-n:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+    /* ─── SKELETON ─── */
+    @keyframes shimmer { 0%{background-position:-500px 0} 100%{background-position:500px 0} }
+    .skel {
+      background: var(--skel);
+      background-size: 500px 100%;
+      animation: shimmer 1.6s infinite;
+      border-radius: 14px;
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes slideUp { 0%{opacity:0;transform:translateY(16px)} 100%{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { 0%{opacity:0} 100%{opacity:1} }
+    @keyframes floatY  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes scanLine{ 0%{transform:translateY(0)} 50%{transform:translateY(70px)} 100%{transform:translateY(0)} }
+    @keyframes sheetUp { 0%{transform:translateY(100%);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    @keyframes overlayIn{ 0%{opacity:0} 100%{opacity:1} }
+    @keyframes toggleSlide { 0%{transform:translateX(0)} 100%{transform:translateX(28px)} }
+    .anim-up   { animation: slideUp 0.38s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .anim-float{ animation: floatY 3s ease-in-out infinite; }
+    .anim-scan { animation: scanLine 1.8s ease-in-out infinite; }
+    .anim-fade { animation: fadeIn 0.25s ease forwards; }
+    .sheet-up  { animation: sheetUp 0.36s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .overlay-in{ animation: overlayIn 0.2s ease forwards; }
+
+    /* ─── DARK MODE PILL TOGGLE ─── */
+    .dm-pill {
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px;
+      gap: 2px;
+      cursor: pointer;
+      transition: background 0.3s;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .dm-btn {
+      width: 32px; height: 32px;
+      border-radius: 100px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      color: var(--text3);
+    }
+    .dm-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    /* ─── BOTTOM SHEET OVERLAY ─── */
+    .sheet-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+    }
+    .sheet-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 201;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+    }
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 100px;
+      margin: 10px auto 20px;
+    }
+
+    /* ─── MOBILE BOTTOM NAV ─── */
+    .mobile-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 8px 24px calc(8px + env(safe-area-inset-bottom));
+      display: flex; align-items: center; justify-content: space-around;
+    }
+    .mnav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 6px 12px; border-radius: 16px;
+      border: none; background: transparent; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.6px; color: var(--text3);
+      transition: all 0.2s; touch-action: manipulation;
+      min-width: 56px;
+    }
+    .mnav-btn.active { color: var(--accent); }
+    .mnav-btn svg { transition: transform 0.2s; }
+    .mnav-btn.active svg { transform: scale(1.1); }
+    .mnav-fab {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; cursor: pointer; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-12px);
+      transition: all 0.22s; touch-action: manipulation;
+    }
+    .mnav-fab:active { transform: translateY(-12px) scale(0.93); }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 260px; height: 100vh; position: sticky; top: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex; flex-direction: column;
+      transition: background 0.3s;
+    }
+    .snav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 14px;
+      border: 1px solid transparent;
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; background: transparent; color: var(--text2);
+      width: 100%; transition: all 0.18s; touch-action: manipulation;
+    }
+    .snav-item.active {
+      background: rgba(77,123,255,0.1);
+      color: var(--accent);
+      border-color: rgba(77,123,255,0.2);
+    }
+    .snav-item:not(.active):hover { background: var(--surface); color: var(--text); }
+
+    /* ─── STAT CARDS ─── */
+    .stat-card {
+      padding: 18px 20px; border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: all 0.25s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    /* ─── ESTIMATE ROW ─── */
+    .est-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px; cursor: pointer;
+      border-bottom: 1px solid var(--border2);
+      transition: background 0.15s;
+      -webkit-user-select: none; user-select: none;
+    }
+    .est-row:hover { background: rgba(77,123,255,0.04); }
+    .est-row:active { background: rgba(77,123,255,0.08); }
+    .est-row:last-child { border-bottom: none; }
+
+    /* ─── MISC ─── */
+    .divider { height: 1px; background: var(--border); }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── SMOOTH SCROLL for wizard steps ─── */
+    .wizard-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ─── SAFE AREA PADDING ─── */
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+    /* ─── PHOTO GRID ─── */
+    .photo-thumb {
+      width: 100%; aspect-ratio: 1;
+      object-fit: cover; border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    /* ─── step progress dot ─── */
+    .step-dot {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+    .step-dot.on  { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-glow); }
+    .step-dot.off { background: var(--input-bg); color: var(--text3); }
+
+    @media (max-width: 640px) {
+      .btn-p, .btn-g { min-height: 48px; } /* touch target */
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef, useCallback } = React;
+<script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
 
-    // Firebase Init
-    const firebaseConfig = {
-      apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
-      authDomain: "test-17881.firebaseapp.com",
-      projectId: "test-17881",
-      storageBucket: "test-17881.firebasestorage.app",
-      messagingSenderId: "1057428047643",
-      appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
-      databaseURL: "https://test-17881-default-rtdb.firebaseio.com"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
+  /* ─── FIREBASE ─────────────────────────── */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
+    authDomain: "test-17881.firebaseapp.com",
+    projectId: "test-17881",
+    storageBucket: "test-17881.firebasestorage.app",
+    messagingSenderId: "1057428047643",
+    appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
+    databaseURL: "https://test-17881-default-rtdb.firebaseio.com"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.database();
+  const gp   = new firebase.auth.GoogleAuthProvider();
 
-    const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dqkujefxj/image/upload';
-    const CLOUDINARY_PRESET = 'banter_box';
-    const LABOR_RATE = 750;
+  const CLOUD_URL    = 'https://api.cloudinary.com/v1_1/dqkujefxj/image/upload';
+  const CLOUD_PRESET = 'banter_box';
+  const LABOR        = 750;
 
-    // ─── SVG ICONS ────────────────────────────────────────────────
-    const IWrench = () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
-    const IDash = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
-    const ICar = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
-    const ILogout = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5-5-5m5 5H9"/></svg>;
-    const IUpload = () => <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4l4-4 4 4"/></svg>;
-    const IChev = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
-    const ICheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
-    const IDownload = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16l-4-4h2.5V4h3v8H16l-4 4zm-8 4h16"/></svg>;
-    const IPlus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14"/></svg>;
-    const ITrash = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>;
-    const ISpin = () => <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#00f5ff" strokeWidth="4" strokeLinecap="round"/></svg>;
-    const ICamera = () => <svg className="w-16 h-16" fill="none" stroke="rgba(0,245,255,0.6)" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
-    const IGoog = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
-    const IEdit = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
+  /* ─── CAR PANELS ──────────────────────── */
+  const PANELS = [
+    { id:'front-bumper',    label:'Front Bumper',        x:80,  y:10,  w:120, h:28  },
+    { id:'hood',            label:'Hood',                x:80,  y:42,  w:120, h:55  },
+    { id:'front-left',      label:'Front Left Fender',   x:40,  y:42,  w:36,  h:55  },
+    { id:'front-right',     label:'Front Right Fender',  x:204, y:42,  w:36,  h:55  },
+    { id:'windshield',      label:'Windshield',          x:90,  y:100, w:100, h:36  },
+    { id:'roof',            label:'Roof',                x:80,  y:138, w:120, h:50  },
+    { id:'rear-windshield', label:'Rear Windshield',     x:90,  y:190, w:100, h:32  },
+    { id:'left-door-front', label:'Left Front Door',     x:40,  y:100, w:36,  h:88  },
+    { id:'left-door-rear',  label:'Left Rear Door',      x:40,  y:192, w:36,  h:56  },
+    { id:'right-door-front',label:'Right Front Door',    x:204, y:100, w:36,  h:88  },
+    { id:'right-door-rear', label:'Right Rear Door',     x:204, y:192, w:36,  h:56  },
+    { id:'trunk',           label:'Trunk / Boot',        x:80,  y:224, w:120, h:50  },
+    { id:'rear-left',       label:'Rear Left Fender',    x:40,  y:192, w:36,  h:82  },
+    { id:'rear-right',      label:'Rear Right Fender',   x:204, y:192, w:36,  h:82  },
+    { id:'rear-bumper',     label:'Rear Bumper',         x:80,  y:276, w:120, h:28  },
+  ];
 
-    // ─── CAR WIREFRAME MAP COMPONENT ──────────────────────────────
-    const CAR_PANELS = [
-      { id:'front-bumper',   label:'Front Bumper',   x:80,  y:10,  w:120, h:28 },
-      { id:'hood',           label:'Hood',           x:80,  y:42,  w:120, h:55 },
-      { id:'front-left',     label:'Front Left Fender', x:40, y:42, w:36, h:55 },
-      { id:'front-right',    label:'Front Right Fender', x:204, y:42, w:36, h:55 },
-      { id:'windshield',     label:'Windshield',     x:90,  y:100, w:100, h:36 },
-      { id:'roof',           label:'Roof',           x:80,  y:138, w:120, h:50 },
-      { id:'rear-windshield',label:'Rear Windshield',x:90,  y:190, w:100, h:32 },
-      { id:'left-door-front',label:'Left Front Door',x:40,  y:100, w:36, h:88 },
-      { id:'left-door-rear', label:'Left Rear Door', x:40,  y:192, w:36, h:56 },
-      { id:'right-door-front',label:'Right Front Door',x:204,y:100,w:36, h:88 },
-      { id:'right-door-rear',label:'Right Rear Door',x:204, y:192, w:36, h:56 },
-      { id:'trunk',          label:'Trunk / Boot',   x:80,  y:224, w:120, h:50 },
-      { id:'rear-left',      label:'Rear Left Fender',x:40, y:192, w:36, h:82 },
-      { id:'rear-right',     label:'Rear Right Fender',x:204,y:192,w:36, h:82 },
-      { id:'rear-bumper',    label:'Rear Bumper',    x:80,  y:276, w:120, h:28 },
-    ];
+  const PANEL_COSTS = {
+    'front-bumper':    { p:2800, h:2.0 }, 'rear-bumper':      { p:2600, h:2.0 },
+    'hood':            { p:4500, h:3.0 }, 'trunk':            { p:4200, h:3.0 },
+    'roof':            { p:5500, h:4.0 }, 'front-left':       { p:3200, h:2.5 },
+    'front-right':     { p:3200, h:2.5 }, 'rear-left':        { p:3000, h:2.5 },
+    'rear-right':      { p:3000, h:2.5 }, 'left-door-front':  { p:3800, h:3.0 },
+    'left-door-rear':  { p:3600, h:3.0 }, 'right-door-front': { p:3800, h:3.0 },
+    'right-door-rear': { p:3600, h:3.0 }, 'windshield':       { p:4200, h:1.5 },
+    'rear-windshield': { p:3800, h:1.5 },
+  };
 
-    function CarWireframe({ selected, onToggle }) {
-      return (
-        <div className="flex flex-col items-center">
-          <svg viewBox="0 0 280 310" className="w-full max-w-[260px]" style={{filter:'drop-shadow(0 0 20px rgba(0,245,255,0.15))'}}>
-            {/* Wheels */}
-            {[[28,88,22,44],[230,88,22,44],[28,202,22,44],[230,202,22,44]].map(([cx,cy,rx,ry],i)=>(
-              <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} className="car-wheel"/>
-            ))}
-            {/* Car outline body */}
-            <rect x="40" y="10" width="200" height="294" rx="28" className="car-body"/>
-            {/* Panel hit zones */}
-            {CAR_PANELS.map(p => (
-              <rect
-                key={p.id}
-                x={p.x} y={p.y} width={p.w} height={p.h} rx="4"
-                className={selected.includes(p.id) ? 'panel-hit' : 'panel-normal'}
-                onClick={() => onToggle(p.id)}
-              >
-                <title>{p.label}</title>
-              </rect>
-            ))}
-            {/* Windshields slightly different */}
-            <rect x="90" y="100" width="100" height="36" rx="4" className="car-glass" style={{pointerEvents:'none'}}/>
-            <rect x="90" y="190" width="100" height="32" rx="4" className="car-glass" style={{pointerEvents:'none'}}/>
-            {/* Center line */}
-            <line x1="140" y1="10" x2="140" y2="304" stroke="rgba(0,245,255,0.1)" strokeWidth="1" strokeDasharray="4,4"/>
-            {/* Label: FRONT / REAR */}
-            <text x="140" y="7" textAnchor="middle" fill="rgba(0,245,255,0.4)" fontSize="6" fontFamily="JetBrains Mono">FRONT</text>
-            <text x="140" y="308" textAnchor="middle" fill="rgba(0,245,255,0.4)" fontSize="6" fontFamily="JetBrains Mono">REAR</text>
-            <text x="14" y="160" textAnchor="middle" fill="rgba(0,245,255,0.3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(-90,14,160)">DRIVER</text>
-            <text x="266" y="160" textAnchor="middle" fill="rgba(0,245,255,0.3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(90,266,160)">PASSENGER</text>
-          </svg>
-          <p className="text-xs text-center mt-2" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>Tap panels to mark as damaged</p>
+  /* ─── ICONS ───────────────────────────── */
+  const IWrench = ({cls=''}) => <svg className={cls||'w-full h-full'} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+  const IDash = ({cls='w-5 h-5'}) => <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
+  const ICar = ({cls='w-5 h-5'}) => <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
+  const ILogout = ({cls='w-5 h-5'}) => <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5-5-5m5 5H9"/></svg>;
+  const IUpload = () => <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4l4-4 4 4"/></svg>;
+  const IChev = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
+  const ICheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
+  const IDl = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16l-4-4h2.5V4h3v8H16l-4 4zm-8 4h16"/></svg>;
+  const IPlus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14"/></svg>;
+  const ITrash = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>;
+  const ISpin = ({cls='w-7 h-7'}) => <svg className={`${cls} animate-spin`} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.15"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>;
+  const ICamera = () => <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" style={{opacity:0.5}}><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
+  const IGoog = () => <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+  const IChevD = ({open}) => <svg className="w-4 h-4 flex-shrink-0" style={{transform:open?'rotate(90deg)':'rotate(0deg)',transition:'transform 0.2s',color:'var(--text3)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
+
+  /* Dark mode icon: screen / monitor for LIGHT, circuit/eye for DARK */
+  const IScreenLight = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4"/>
+    </svg>
+  );
+  const ICircuitDark = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
+    </svg>
+  );
+
+  /* ─── DARK MODE PILL ──────────────────── */
+  function DarkModePill({ dark, onToggle }) {
+    return (
+      <div className="dm-pill" onClick={onToggle} role="button" aria-label="Toggle theme" style={{minWidth:76}}>
+        <div className={`dm-btn ${!dark ? 'active' : ''}`} title="Light mode">
+          <IScreenLight />
         </div>
-      );
+        <div className={`dm-btn ${dark ? 'active' : ''}`} title="Dark mode">
+          <ICircuitDark />
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── LOGOUT BOTTOM SHEET ─────────────── */
+  function LogoutSheet({ onConfirm, onCancel }) {
+    return (
+      <>
+        <div className="sheet-overlay overlay-in" onClick={onCancel} />
+        <div className="sheet-panel sheet-up">
+          <div className="sheet-handle"/>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:12,paddingBottom:8}}>
+            <div style={{
+              width:56,height:56,borderRadius:16,
+              background:'rgba(224,48,48,0.1)',
+              border:'1px solid rgba(224,48,48,0.2)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              color:'var(--red)',marginBottom:4
+            }}>
+              <ILogout cls="w-6 h-6"/>
+            </div>
+            <div>
+              <p style={{fontSize:18,fontWeight:800,color:'var(--text)',marginBottom:6}}>Sign Out?</p>
+              <p style={{fontSize:14,color:'var(--text2)',lineHeight:1.5}}>You'll need to sign in again to access your estimates and workspace.</p>
+            </div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:20}}>
+            <button
+              onClick={onConfirm}
+              style={{
+                background:'var(--red)',color:'#fff',border:'none',
+                borderRadius:100,padding:'15px 0',fontFamily:'Inter',
+                fontWeight:700,fontSize:15,cursor:'pointer',width:'100%',
+                transition:'opacity 0.2s'
+              }}
+            >Sign Out</button>
+            <button className="btn-g" onClick={onCancel} style={{width:'100%',padding:'14px 0',fontSize:15}}>Cancel</button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  /* ─── CAR WIREFRAME ───────────────────── */
+  function CarWireframe({ selected, onToggle }) {
+    return (
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+        <svg viewBox="0 0 280 310" style={{width:'100%',maxWidth:240,filter:'drop-shadow(0 0 16px rgba(77,123,255,0.12))'}}>
+          {[[28,88,22,44],[230,88,22,44],[28,202,22,44],[230,202,22,44]].map(([cx,cy,rx,ry],i)=>(
+            <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} className="c-wheel"/>
+          ))}
+          <rect x="40" y="10" width="200" height="294" rx="28" className="c-body"/>
+          {PANELS.map(p=>(
+            <rect key={p.id} x={p.x} y={p.y} width={p.w} height={p.h} rx="4"
+              className={selected.includes(p.id)?'p-hit':'p-ok'}
+              onClick={()=>onToggle(p.id)}>
+              <title>{p.label}</title>
+            </rect>
+          ))}
+          <rect x="90" y="100" width="100" height="36" rx="4" className="c-glass"/>
+          <rect x="90" y="190" width="100" height="32" rx="4" className="c-glass"/>
+          <line x1="140" y1="10" x2="140" y2="304" stroke="var(--border)" strokeWidth="1" strokeDasharray="4,4"/>
+          <text x="140" y="7"   textAnchor="middle" fill="var(--text3)" fontSize="6" fontFamily="JetBrains Mono">FRONT</text>
+          <text x="140" y="308" textAnchor="middle" fill="var(--text3)" fontSize="6" fontFamily="JetBrains Mono">REAR</text>
+          <text x="14" y="160" textAnchor="middle" fill="var(--text3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(-90,14,160)">DRIVER</text>
+          <text x="266" y="160" textAnchor="middle" fill="var(--text3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(90,266,160)">PASSENGER</text>
+        </svg>
+        <p style={{fontSize:11,color:'var(--text3)',marginTop:8,fontFamily:'JetBrains Mono',textAlign:'center'}}>Tap panels to mark as damaged</p>
+      </div>
+    );
+  }
+
+  /* ─── PDF EXPORT ──────────────────────── */
+  function exportPDF(vehicle, fin, panels, tech, id) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pw = doc.internal.pageSize.getWidth();
+    doc.setFillColor(7,12,26); doc.rect(0,0,pw,38,'F');
+    doc.setFillColor(26,79,255); doc.rect(0,0,4,38,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(232,238,255);
+    doc.text('VynixPanelB',14,16);
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(150,170,220);
+    doc.text('AI-Powered Damage Estimate',14,23);
+    doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`,14,29);
+    doc.text(`Ref: ${id?id.slice(-8).toUpperCase():'DRAFT'}`,pw-14,29,{align:'right'});
+    doc.text(`Technician: ${tech||'N/A'}`,pw-14,23,{align:'right'});
+    doc.setFillColor(15,22,55); doc.roundedRect(10,44,pw-20,22,3,3,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,245,255);
+    doc.text('VEHICLE DETAILS',16,53);
+    doc.setFont('helvetica','normal'); doc.setTextColor(200,210,240);
+    doc.text(`Make: ${vehicle.make||'–'}   Model: ${vehicle.model||'–'}   VIN: ${vehicle.vin||'–'}`,16,60);
+    let nextY = 72;
+    if (panels && panels.length > 0) {
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,245,255);
+      doc.text('DAMAGED PANELS',16,nextY);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(200,210,240);
+      const names = panels.map(id=>PANELS.find(p=>p.id===id)?.label||id).join(', ');
+      const split = doc.splitTextToSize(names,pw-32);
+      doc.text(split,16,nextY+6);
+      nextY += 6 + split.length * 5 + 8;
     }
+    doc.autoTable({
+      startY: nextY,
+      head:[['Description','Labor Hrs','Labor (R)','Parts (R)','Total (R)']],
+      body: fin.lineItems.map(i=>[i.description,i.laborHours.toFixed(1),i.laborCost.toFixed(2),i.partsCost.toFixed(2),i.total.toFixed(2)]),
+      headStyles:{fillColor:[26,79,255],textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+      bodyStyles:{textColor:[30,40,80],fontSize:8,fillColor:[240,244,255]},
+      alternateRowStyles:{fillColor:[228,234,255]},
+      columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'}},
+      margin:{left:10,right:10}, theme:'grid',
+    });
+    let fy = doc.lastAutoTable.finalY + 8;
+    doc.setFillColor(240,244,255); doc.roundedRect(pw-82,fy,72,46,3,3,'F');
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(80,100,150);
+    const rc = pw-14;
+    doc.text(`Labor (${fin.totalHours}h @ R${LABOR}/h)`,pw-84,fy+9,{align:'right'});
+    doc.text(`R ${(fin.totalHours*LABOR).toFixed(2)}`,rc,fy+9,{align:'right'});
+    doc.text('Parts / Materials',pw-84,fy+17,{align:'right'});
+    doc.text(`R ${fin.totalParts.toFixed(2)}`,rc,fy+17,{align:'right'});
+    doc.text('Subtotal',pw-84,fy+25,{align:'right'});
+    doc.text(`R ${fin.subtotal.toFixed(2)}`,rc,fy+25,{align:'right'});
+    doc.text('VAT 15%',pw-84,fy+33,{align:'right'});
+    doc.text(`R ${fin.tax.toFixed(2)}`,rc,fy+33,{align:'right'});
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,79,255);
+    doc.text('GRAND TOTAL',pw-84,fy+44,{align:'right'});
+    doc.text(`R ${fin.grandTotal.toFixed(2)}`,rc,fy+44,{align:'right'});
+    const ph = doc.internal.pageSize.getHeight();
+    doc.setFillColor(7,12,26); doc.rect(0,ph-14,pw,14,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,120,160);
+    doc.text('VynixPanelB | AI Damage Estimation Platform | Computer-generated estimate',pw/2,ph-7,{align:'center'});
+    doc.save(`Estimate_${vehicle.make||'Vehicle'}_${vehicle.model||''}_${Date.now()}.pdf`);
+  }
 
-    // ─── PDF EXPORT ───────────────────────────────────────────────
-    function exportPDF(vehicle, estimateData, damagedPanels, techName, estimateId) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-      const pw = doc.internal.pageSize.getWidth();
+  /* ─── RECALC ──────────────────────────── */
+  function recalc(items) {
+    const totalHours = items.reduce((s,i)=>s+i.laborHours,0);
+    const totalParts = items.reduce((s,i)=>s+i.partsCost,0);
+    const subtotal = totalHours*LABOR + totalParts;
+    const tax = subtotal*0.15;
+    return { totalHours, totalParts, subtotal, tax, grandTotal: subtotal+tax };
+  }
 
-      // Header bar
-      doc.setFillColor(7,12,26);
-      doc.rect(0,0,pw,38,'F');
-      doc.setFillColor(26,79,255);
-      doc.rect(0,0,4,38,'F');
+  /* ─── LINE ITEM ROW ───────────────────── */
+  function LineRow({ item, idx, onChange, onDelete }) {
+    return (
+      <div style={{display:'grid',gridTemplateColumns:'1fr auto auto auto auto',gap:8,alignItems:'center',padding:'12px 0',borderBottom:'1px solid var(--border2)'}}>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--text)',wordBreak:'break-word',lineHeight:1.4}}>{item.description}</span>
+        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end'}}>
+          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px',whiteSpace:'nowrap'}}>HRS</label>
+          <input type="number" className="edit-n" value={item.laborHours} min="0" step="0.5"
+            onChange={e=>{const h=parseFloat(e.target.value)||0; onChange(idx,{...item,laborHours:h,laborCost:h*LABOR,total:h*LABOR+item.partsCost});}}/>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end'}}>
+          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px',whiteSpace:'nowrap'}}>PARTS</label>
+          <input type="number" className="edit-n" value={item.partsCost} min="0" step="50"
+            onChange={e=>{const p=parseFloat(e.target.value)||0; onChange(idx,{...item,partsCost:p,total:item.laborCost+p});}}/>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end',minWidth:72}}>
+          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px'}}>TOTAL</label>
+          <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',paddingTop:6}}>{item.total.toFixed(0)}</span>
+        </div>
+        <button onClick={()=>onDelete(idx)} style={{padding:8,borderRadius:10,border:'none',background:'transparent',cursor:'pointer',color:'var(--red)',opacity:0.7,display:'flex',alignItems:'center',justifyContent:'center',marginTop:8,minWidth:32,minHeight:32}}>
+          <ITrash/>
+        </button>
+      </div>
+    );
+  }
 
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(22);
-      doc.setTextColor(232,238,255);
-      doc.text('VynixPanelB', 14, 16);
-      doc.setFontSize(9);
-      doc.setFont('helvetica','normal');
-      doc.setTextColor(150,170,220);
-      doc.text('AI-Powered Damage Estimate', 14, 23);
-      doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`, 14, 29);
-      doc.text(`Ref: ${estimateId ? estimateId.slice(-8).toUpperCase() : 'DRAFT'}`, pw-14, 29, {align:'right'});
-      doc.text(`Technician: ${techName || 'N/A'}`, pw-14, 23, {align:'right'});
+  /* ─── ESTIMATE WIZARD ─────────────────── */
+  function Wizard({ onDone }) {
+    const [step, setStep]   = useState(1);
+    const [uploading, setUploading] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [veh, setVeh]   = useState({ vin:'', make:'', model:'' });
+    const [imgs, setImgs] = useState([]);
+    const [hit,  setHit]  = useState([]);
+    const [fin,  setFin]  = useState(null);
+    const [newDesc, setNewDesc] = useState('');
+    const [saving, setSaving] = useState(false);
 
-      // Vehicle section
-      doc.setFillColor(15,22,55);
-      doc.roundedRect(10,44,pw-20,22,3,3,'F');
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(9);
-      doc.setTextColor(0,245,255);
-      doc.text('VEHICLE DETAILS', 16, 53);
-      doc.setFont('helvetica','normal');
-      doc.setTextColor(200,210,240);
-      doc.text(`Make: ${vehicle.make || '–'}   Model: ${vehicle.model || '–'}   VIN: ${vehicle.vin || '–'}`, 16, 60);
+    const togglePanel = id => setHit(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
 
-      // Damaged panels
-      if (damagedPanels && damagedPanels.length > 0) {
-        doc.setFont('helvetica','bold');
-        doc.setFontSize(9);
-        doc.setTextColor(0,245,255);
-        doc.text('DAMAGE MAPPING', 16, 76);
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(8);
-        doc.setTextColor(200,210,240);
-        const panelNames = damagedPanels.map(id => CAR_PANELS.find(p=>p.id===id)?.label || id).join(', ');
-        const split = doc.splitTextToSize(panelNames, pw - 32);
-        doc.text(split, 16, 82);
+    const uploadFiles = async e => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+      setUploading(true);
+      for (const f of files) {
+        const fd = new FormData();
+        fd.append('file',f); fd.append('upload_preset',CLOUD_PRESET);
+        try { const r=await fetch(CLOUD_URL,{method:'POST',body:fd}); const d=await r.json(); if(d.secure_url) setImgs(p=>[...p,d.secure_url]); } catch{}
       }
+      setUploading(false);
+    };
 
-      // Line items table
-      const startY = damagedPanels && damagedPanels.length > 0 ? 95 : 76;
-      doc.autoTable({
-        startY,
-        head: [['Description','Labor Hrs','Labor Cost (R)','Parts Cost (R)','Total (R)']],
-        body: estimateData.lineItems.map(i => [
-          i.description, i.laborHours.toFixed(1),
-          i.laborCost.toFixed(2), i.partsCost.toFixed(2), i.total.toFixed(2)
-        ]),
-        headStyles:{fillColor:[26,79,255],textColor:[255,255,255],fontStyle:'bold',fontSize:8},
-        bodyStyles:{textColor:[30,40,80],fontSize:8,fillColor:[240,244,255]},
-        alternateRowStyles:{fillColor:[228,234,255]},
-        columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'}},
-        margin:{left:10,right:10},
-        theme:'grid',
-      });
+    useEffect(()=>{
+      if (step!==4) return;
+      setAnalyzing(true);
+      const t = setTimeout(()=>{
+        const panels = hit.length>0 ? hit : ['front-bumper','hood'];
+        const items  = panels.map(pid=>{
+          const c = PANEL_COSTS[pid]||{p:1500,h:2};
+          const lc = c.h*LABOR;
+          return {description:PANELS.find(p=>p.id===pid)?.label||pid,laborHours:c.h,laborCost:lc,partsCost:c.p,total:lc+c.p};
+        });
+        setFin({lineItems:items,...recalc(items)});
+        setAnalyzing(false);
+      },3000);
+      return ()=>clearTimeout(t);
+    },[step]);
 
-      let finalY = doc.lastAutoTable.finalY + 8;
+    const updateItem = (idx,u)=>setFin(p=>{const items=[...p.lineItems];items[idx]=u;return{...p,lineItems:items,...recalc(items)};});
+    const deleteItem = idx=>setFin(p=>{const items=p.lineItems.filter((_,i)=>i!==idx);return{...p,lineItems:items,...recalc(items)};});
+    const addItem = ()=>{
+      if(!newDesc.trim())return;
+      const ni={description:newDesc.trim(),laborHours:1,laborCost:LABOR,partsCost:500,total:LABOR+500};
+      setFin(p=>{const items=[...p.lineItems,ni];return{...p,lineItems:items,...recalc(items)};});
+      setNewDesc('');
+    };
 
-      // Totals box
-      doc.setFillColor(240,244,255);
-      doc.roundedRect(pw-80, finalY, 70, 45, 3, 3, 'F');
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica','normal');
-      doc.setTextColor(80,100,150);
-      const rCol = pw-14;
-      doc.text(`Labor (${estimateData.totalHours}h @ R${LABOR_RATE}/h)`, pw-82, finalY+9, {align:'right'});
-      doc.text(`R ${(estimateData.totalHours*LABOR_RATE).toFixed(2)}`, rCol, finalY+9, {align:'right'});
-      doc.text('Parts / Materials', pw-82, finalY+17, {align:'right'});
-      doc.text(`R ${estimateData.totalParts.toFixed(2)}`, rCol, finalY+17, {align:'right'});
-      doc.text('Subtotal', pw-82, finalY+25, {align:'right'});
-      doc.text(`R ${estimateData.subtotal.toFixed(2)}`, rCol, finalY+25, {align:'right'});
-      doc.text('VAT 15%', pw-82, finalY+33, {align:'right'});
-      doc.text(`R ${estimateData.tax.toFixed(2)}`, rCol, finalY+33, {align:'right'});
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(10);
-      doc.setTextColor(26,79,255);
-      doc.text('GRAND TOTAL', pw-82, finalY+43, {align:'right'});
-      doc.text(`R ${estimateData.grandTotal.toFixed(2)}`, rCol, finalY+43, {align:'right'});
+    const save = async ()=>{
+      if(!fin)return; setSaving(true);
+      try {
+        await db.ref('estimates').push({
+          technicianId:auth.currentUser?.uid||'anon',
+          technicianName:auth.currentUser?.displayName||'Technician',
+          vehicle:veh, photos:imgs, damagedPanels:hit,
+          financials:fin, status:'pending',
+          createdAt:firebase.database.ServerValue.TIMESTAMP
+        });
+        onDone();
+      } catch(e){ console.error(e); alert('Error saving.'); }
+      setSaving(false);
+    };
 
-      // Footer
-      const pageH = doc.internal.pageSize.getHeight();
-      doc.setFillColor(7,12,26);
-      doc.rect(0, pageH-16, pw, 16, 'F');
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(100,120,160);
-      doc.text('VynixPanelB | AI Damage Estimation Platform | This is a computer-generated estimate.', pw/2, pageH-8, {align:'center'});
+    const STEP_LABELS = ['Vehicle','Panels','Photos','AI Scan','Summary'];
 
-      doc.save(`Estimate_${vehicle.make || 'Vehicle'}_${vehicle.model || ''}_${Date.now()}.pdf`);
-    }
-
-    // ─── EDITABLE LINE ITEM ROW ────────────────────────────────────
-    function LineItemRow({ item, index, onChange, onDelete }) {
-      return (
-        <div className="grid grid-cols-12 gap-2 items-center py-3 border-b" style={{borderColor:'rgba(255,255,255,0.06)'}}>
-          <div className="col-span-12 sm:col-span-4 text-sm" style={{color:'rgba(255,255,255,0.8)'}}>{item.description}</div>
-          <div className="col-span-4 sm:col-span-2 flex flex-col gap-0.5">
-            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>HOURS</label>
-            <input type="number" className="edit-input" value={item.laborHours} min="0" step="0.5"
-              onChange={e => {
-                const h = parseFloat(e.target.value) || 0;
-                onChange(index, { ...item, laborHours: h, laborCost: h * LABOR_RATE, total: h * LABOR_RATE + item.partsCost });
-              }} />
-          </div>
-          <div className="col-span-4 sm:col-span-2 flex flex-col gap-0.5">
-            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>PARTS (R)</label>
-            <input type="number" className="edit-input" value={item.partsCost} min="0" step="50"
-              onChange={e => {
-                const p = parseFloat(e.target.value) || 0;
-                onChange(index, { ...item, partsCost: p, total: item.laborCost + p });
-              }} />
-          </div>
-          <div className="col-span-3 sm:col-span-3 flex flex-col gap-0.5">
-            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>TOTAL (R)</label>
-            <span className="font-mono font-bold text-sm pt-1.5" style={{color:'#00f5ff'}}>{item.total.toFixed(2)}</span>
-          </div>
-          <div className="col-span-1 flex justify-end">
-            <button onClick={() => onDelete(index)} className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors" style={{color:'rgba(255,59,59,0.7)'}}>
-              <ITrash />
-            </button>
-          </div>
+    return (
+      <div style={{maxWidth:680,margin:'0 auto'}}>
+        {/* Step progress */}
+        <div className="surface" style={{borderRadius:100,padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          {STEP_LABELS.map((lbl,i)=>{
+            const n=i+1, on=step>=n;
+            return (
+              <div key={n} style={{display:'flex',alignItems:'center',gap:6}}>
+                <div className={`step-dot ${on?'on':'off'}`}>{n}</div>
+                <span className="hidden sm:block" style={{fontSize:12,fontWeight:700,color:on?'var(--text)':'var(--text3)'}}>{lbl}</span>
+              </div>
+            );
+          })}
         </div>
-      );
-    }
 
-    // ─── ESTIMATE WIZARD ──────────────────────────────────────────
-    function EstimateWizard({ onComplete }) {
-      const [step, setStep] = useState(1);
-      const [isUploading, setIsUploading] = useState(false);
-      const [isAnalyzing, setIsAnalyzing] = useState(false);
-      const [vehicleInfo, setVehicleInfo] = useState({ vin:'', make:'', model:'' });
-      const [images, setImages] = useState([]);
-      const [damagedPanels, setDamagedPanels] = useState([]);
-      const [estimateData, setEstimateData] = useState(null);
-      const [newItemDesc, setNewItemDesc] = useState('');
-      const [saving, setSaving] = useState(false);
-
-      const togglePanel = (id) => setDamagedPanels(prev => prev.includes(id) ? prev.filter(p=>p!==id) : [...prev, id]);
-
-      const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
-        setIsUploading(true);
-        for (const file of files) {
-          const fd = new FormData();
-          fd.append('file', file);
-          fd.append('upload_preset', CLOUDINARY_PRESET);
-          try {
-            const res = await fetch(CLOUDINARY_URL, {method:'POST',body:fd});
-            const d = await res.json();
-            if (d.secure_url) setImages(prev => [...prev, d.secure_url]);
-          } catch(err) { console.error(err); }
-        }
-        setIsUploading(false);
-      };
-
-      // AI Analysis (uses damaged panels to generate line items)
-      useEffect(() => {
-        if (step === 4) {
-          setIsAnalyzing(true);
-          const timer = setTimeout(() => {
-            const panelDamageMap = {
-              'front-bumper':  { partsCost: 2800, hoursPerPanel: 2.0 },
-              'rear-bumper':   { partsCost: 2600, hoursPerPanel: 2.0 },
-              'hood':          { partsCost: 4500, hoursPerPanel: 3.0 },
-              'trunk':         { partsCost: 4200, hoursPerPanel: 3.0 },
-              'roof':          { partsCost: 5500, hoursPerPanel: 4.0 },
-              'front-left':    { partsCost: 3200, hoursPerPanel: 2.5 },
-              'front-right':   { partsCost: 3200, hoursPerPanel: 2.5 },
-              'rear-left':     { partsCost: 3000, hoursPerPanel: 2.5 },
-              'rear-right':    { partsCost: 3000, hoursPerPanel: 2.5 },
-              'left-door-front':{ partsCost: 3800, hoursPerPanel: 3.0 },
-              'left-door-rear':{ partsCost: 3600, hoursPerPanel: 3.0 },
-              'right-door-front':{ partsCost: 3800, hoursPerPanel: 3.0 },
-              'right-door-rear':{ partsCost: 3600, hoursPerPanel: 3.0 },
-              'windshield':    { partsCost: 4200, hoursPerPanel: 1.5 },
-              'rear-windshield':{ partsCost: 3800, hoursPerPanel: 1.5 },
-            };
-            const panelsToProcess = damagedPanels.length > 0 ? damagedPanels : ['front-bumper','hood'];
-            let totalHours = 0, totalParts = 0;
-            const lineItems = panelsToProcess.map(pid => {
-              const info = panelDamageMap[pid] || { partsCost: 1500, hoursPerPanel: 2 };
-              const label = CAR_PANELS.find(p=>p.id===pid)?.label || pid;
-              const laborHours = info.hoursPerPanel;
-              const laborCost = laborHours * LABOR_RATE;
-              const partsCost = info.partsCost;
-              totalHours += laborHours;
-              totalParts += partsCost;
-              return { description: label, laborHours, laborCost, partsCost, total: laborCost + partsCost };
-            });
-            const subtotal = totalHours * LABOR_RATE + totalParts;
-            const tax = subtotal * 0.15;
-            setEstimateData({ lineItems, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax });
-            setIsAnalyzing(false);
-          }, 3200);
-          return () => clearTimeout(timer);
-        }
-      }, [step]);
-
-      // Editable items helpers
-      const updateLineItem = (idx, updated) => {
-        setEstimateData(prev => {
-          const items = [...prev.lineItems];
-          items[idx] = updated;
-          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
-          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
-          const subtotal = totalHours * LABOR_RATE + totalParts;
-          const tax = subtotal * 0.15;
-          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
-        });
-      };
-      const deleteLineItem = (idx) => {
-        setEstimateData(prev => {
-          const items = prev.lineItems.filter((_,i) => i !== idx);
-          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
-          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
-          const subtotal = totalHours * LABOR_RATE + totalParts;
-          const tax = subtotal * 0.15;
-          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
-        });
-      };
-      const addLineItem = () => {
-        if (!newItemDesc.trim()) return;
-        const newItem = { description: newItemDesc.trim(), laborHours: 1, laborCost: LABOR_RATE, partsCost: 500, total: LABOR_RATE + 500 };
-        setEstimateData(prev => {
-          const items = [...prev.lineItems, newItem];
-          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
-          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
-          const subtotal = totalHours * LABOR_RATE + totalParts;
-          const tax = subtotal * 0.15;
-          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
-        });
-        setNewItemDesc('');
-      };
-
-      const handleSave = async () => {
-        if (!estimateData) return;
-        setSaving(true);
-        try {
-          const ref = await db.ref('estimates').push({
-            technicianId: auth.currentUser?.uid || 'unknown',
-            technicianName: auth.currentUser?.displayName || 'Technician',
-            vehicle: vehicleInfo,
-            photos: images,
-            damagedPanels,
-            financials: estimateData,
-            status: 'pending',
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-          });
-          onComplete();
-        } catch(err) {
-          console.error(err);
-          alert('Error saving estimate.');
-        }
-        setSaving(false);
-      };
-
-      const STEPS = ['Vehicle','Panels','Photos','AI Scan','Summary'];
-
-      return (
-        <div className="max-w-3xl mx-auto space-y-5">
-          {/* Step bar */}
-          <div className="glass rounded-full px-4 py-3 flex items-center justify-between animate-slide-up">
-            {STEPS.map((label, i) => {
-              const num = i + 1;
-              const active = step >= num;
-              return (
-                <div key={num} className="flex items-center gap-1.5">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${active ? 'bg-ink-500 text-white shadow-[0_0_12px_rgba(26,79,255,0.6)]' : 'bg-white/5 text-white/30'}`}>{num}</div>
-                  <span className={`hidden sm:block text-xs font-semibold transition-colors ${active ? 'text-white/80' : 'text-white/25'}`}>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="glass rounded-3xl p-6 sm:p-8 min-h-96">
-
-            {/* STEP 1 - Vehicle */}
-            {step === 1 && (
-              <div className="space-y-5 animate-slide-up">
-                <div>
-                  <h2 className="text-2xl font-bold">Vehicle Details</h2>
-                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Enter the vehicle information for this estimate</p>
-                </div>
-                <input className="input-field" placeholder="VIN Number" value={vehicleInfo.vin} onChange={e=>setVehicleInfo({...vehicleInfo,vin:e.target.value})}/>
-                <div className="grid grid-cols-2 gap-4">
-                  <input className="input-field" placeholder="Make (e.g. Toyota)" value={vehicleInfo.make} onChange={e=>setVehicleInfo({...vehicleInfo,make:e.target.value})}/>
-                  <input className="input-field" placeholder="Model (e.g. Corolla)" value={vehicleInfo.model} onChange={e=>setVehicleInfo({...vehicleInfo,model:e.target.value})}/>
-                </div>
-                <div className="flex justify-end pt-2">
-                  <button className="btn-primary" disabled={!vehicleInfo.vin||!vehicleInfo.make} onClick={()=>setStep(2)}>Panel Mapping <IChev/></button>
-                </div>
+        <div className="surface" style={{borderRadius:24,padding:'24px 20px',minHeight:380}}>
+          {/* STEP 1 */}
+          {step===1 && (
+            <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Details</h2>
+                <p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Enter the vehicle information for this estimate</p>
               </div>
-            )}
-
-            {/* STEP 2 - Damage Map */}
-            {step === 2 && (
-              <div className="space-y-5 animate-slide-up">
-                <div>
-                  <h2 className="text-2xl font-bold">Interactive Damage Map</h2>
-                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Tap the panels that are damaged on the car diagram below</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-                  <CarWireframe selected={damagedPanels} onToggle={togglePanel} />
-                  <div>
-                    <p className="text-xs font-bold mb-3" style={{color:'rgba(0,245,255,0.7)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>SELECTED PANELS ({damagedPanels.length})</p>
-                    {damagedPanels.length === 0
-                      ? <p className="text-sm" style={{color:'rgba(255,255,255,0.3)'}}>No panels selected yet. Tap on the diagram.</p>
-                      : <div className="flex flex-wrap gap-2">
-                          {damagedPanels.map(id => (
-                            <span key={id} className="badge" style={{background:'rgba(255,59,59,0.12)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.25)'}}>
-                              {CAR_PANELS.find(p=>p.id===id)?.label || id}
-                              <button onClick={()=>togglePanel(id)} style={{opacity:0.6,marginLeft:2}}>×</button>
-                            </span>
-                          ))}
-                        </div>
-                    }
-                  </div>
-                </div>
-                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
-                  <button className="btn-ghost" onClick={()=>setStep(1)}>Back</button>
-                  <button className="btn-primary" onClick={()=>setStep(3)}>
-                    {damagedPanels.length > 0 ? `Continue with ${damagedPanels.length} panel(s)` : 'Skip'} <IChev/>
-                  </button>
-                </div>
+              <input className="field" placeholder="VIN Number" value={veh.vin} onChange={e=>setVeh({...veh,vin:e.target.value})}/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <input className="field" placeholder="Make" value={veh.make} onChange={e=>setVeh({...veh,make:e.target.value})}/>
+                <input className="field" placeholder="Model" value={veh.model} onChange={e=>setVeh({...veh,model:e.target.value})}/>
               </div>
-            )}
+              <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
+                <button className="btn-p" disabled={!veh.vin||!veh.make} onClick={()=>setStep(2)} style={{width:'100%',maxWidth:220}}>Panel Mapping <IChev/></button>
+              </div>
+            </div>
+          )}
 
-            {/* STEP 3 - Photos */}
-            {step === 3 && (
-              <div className="space-y-5 animate-slide-up">
+          {/* STEP 2 */}
+          {step===2 && (
+            <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Damage Map</h2>
+                <p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Tap the panels that are damaged</p>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
+                <CarWireframe selected={hit} onToggle={togglePanel}/>
                 <div>
-                  <h2 className="text-2xl font-bold">Damage Photos</h2>
-                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Upload close-up shots of the damaged areas for AI analysis</p>
-                </div>
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all hover:border-cyan-400/60 hover:bg-cyan-400/5" style={{borderColor:'rgba(0,245,255,0.2)'}}>
-                  {isUploading
-                    ? <div style={{color:'#00f5ff'}}><ISpin/></div>
-                    : <div className="flex flex-col items-center" style={{color:'rgba(0,245,255,0.5)'}}>
-                        <IUpload/>
-                        <span className="text-sm font-medium mt-2">Tap to Upload</span>
-                        <span className="text-xs mt-1" style={{color:'rgba(255,255,255,0.3)'}}>Multiple files accepted</span>
+                  <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>
+                    SELECTED ({hit.length})
+                  </p>
+                  {hit.length===0
+                    ? <p style={{fontSize:13,color:'var(--text3)'}}>Tap diagram to select panels</p>
+                    : <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                        {hit.map(id=>(
+                          <span key={id} className="badge" style={{background:'rgba(224,48,48,0.1)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.2)',fontSize:10}}>
+                            {PANELS.find(p=>p.id===id)?.label||id}
+                            <button onClick={()=>togglePanel(id)} style={{background:'none',border:'none',cursor:'pointer',color:'inherit',padding:0,marginLeft:2,fontSize:12}}>×</button>
+                          </span>
+                        ))}
                       </div>
                   }
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading}/>
-                </label>
-                {images.length > 0 && (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {images.map((img,i) => (
-                      <img key={i} src={img} alt="" className="w-full h-20 object-cover rounded-xl" style={{border:'1px solid rgba(0,245,255,0.15)'}}/>
-                    ))}
-                  </div>
-                )}
-                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
-                  <button className="btn-ghost" onClick={()=>setStep(2)}>Back</button>
-                  <button className="btn-primary" disabled={images.length<1||isUploading} onClick={()=>setStep(4)}>Run AI Analysis <IChev/></button>
                 </div>
               </div>
-            )}
-
-            {/* STEP 4 - AI Scan */}
-            {step === 4 && (
-              <div className="flex flex-col items-center justify-center min-h-64 gap-6 animate-slide-up">
-                {isAnalyzing ? (
-                  <>
-                    <div className="relative animate-float">
-                      <ICamera/>
-                      <div className="absolute top-0 left-0 w-full h-0.5 rounded-full animate-scan" style={{background:'linear-gradient(90deg,transparent,#00f5ff,transparent)',boxShadow:'0 0 10px #00f5ff'}}/>
-                    </div>
-                    <div className="text-center">
-                      <h2 className="text-xl font-bold" style={{color:'#00f5ff'}}>Neural Analysis Running…</h2>
-                      <p className="text-sm mt-2" style={{color:'rgba(255,255,255,0.4)'}}>Mapping {damagedPanels.length || 2} panels · Calculating repair estimates</p>
-                    </div>
-                    <div className="flex gap-1.5">{[0,1,2,3,4].map(i=><div key={i} className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#00f5ff',opacity:0.6,animationDelay:`${i*0.15}s`}}/>)}</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-4 rounded-full" style={{background:'rgba(0,255,136,0.1)',boxShadow:'0 0 30px rgba(0,255,136,0.2)'}}>
-                      <svg className="w-14 h-14" fill="none" stroke="#00ff88" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
-                    </div>
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold" style={{color:'#00ff88'}}>Analysis Complete</h2>
-                      <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>{estimateData?.lineItems.length} damage items detected</p>
-                    </div>
-                    <button className="btn-primary" onClick={()=>setStep(5)}>View & Edit Estimate <IChev/></button>
-                  </>
-                )}
+              <div style={{display:'flex',gap:10,marginTop:4}}>
+                <button className="btn-g" onClick={()=>setStep(1)} style={{flex:'0 0 auto'}}>Back</button>
+                <button className="btn-p" onClick={()=>setStep(3)} style={{flex:1}}>
+                  {hit.length>0?`Continue (${hit.length})`:'Skip'} <IChev/>
+                </button>
               </div>
-            )}
-
-            {/* STEP 5 - Editable Summary */}
-            {step === 5 && estimateData && (
-              <div className="space-y-5 animate-slide-up">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">Estimate Summary</h2>
-                    <p className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.4)'}}>Edit hours, parts costs, or add custom line items</p>
-                  </div>
-                  <button
-                    onClick={()=>exportPDF(vehicleInfo, estimateData, damagedPanels, auth.currentUser?.displayName, null)}
-                    className="btn-ghost flex items-center gap-2 text-sm px-4 py-2"
-                    style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)',flexShrink:0}}
-                  >
-                    <IDownload/> PDF
-                  </button>
-                </div>
-
-                {/* Editable line items */}
-                <div className="rounded-2xl p-4" style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)'}}>
-                  <div className="hidden sm:grid grid-cols-12 gap-2 pb-2 mb-1 text-[10px] font-bold" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'0.8px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-                    <div className="col-span-4">DESCRIPTION</div><div className="col-span-2">HOURS</div><div className="col-span-2">PARTS (R)</div><div className="col-span-3">TOTAL (R)</div><div className="col-span-1"></div>
-                  </div>
-                  {estimateData.lineItems.map((item, idx) => (
-                    <LineItemRow key={idx} item={item} index={idx} onChange={updateLineItem} onDelete={deleteLineItem}/>
-                  ))}
-                  {/* Add custom item */}
-                  <div className="flex gap-2 mt-3 pt-3" style={{borderTop:'1px dashed rgba(255,255,255,0.08)'}}>
-                    <input className="input-field flex-1" placeholder="Add custom line item description…" value={newItemDesc} onChange={e=>setNewItemDesc(e.target.value)}
-                      onKeyDown={e=>e.key==='Enter'&&addLineItem()} style={{padding:'10px 14px',fontSize:'13px'}}/>
-                    <button onClick={addLineItem} className="p-3 rounded-xl flex items-center gap-1.5 text-sm font-semibold" style={{background:'rgba(0,245,255,0.1)',color:'#00f5ff',border:'1px solid rgba(0,245,255,0.2)',flexShrink:0}}>
-                      <IPlus/><span className="hidden sm:inline">Add</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Totals */}
-                <div className="rounded-2xl p-4 space-y-2 text-right" style={{background:'rgba(26,79,255,0.06)',border:'1px solid rgba(26,79,255,0.2)'}}>
-                  {[
-                    [`Labor (${estimateData.totalHours.toFixed(1)}h × R${LABOR_RATE})`, (estimateData.totalHours*LABOR_RATE).toFixed(2)],
-                    ['Parts / Materials', estimateData.totalParts.toFixed(2)],
-                    ['Subtotal', estimateData.subtotal.toFixed(2)],
-                    ['VAT 15%', estimateData.tax.toFixed(2)],
-                  ].map(([label,val])=>(
-                    <div key={label} className="flex justify-between text-sm" style={{color:'rgba(255,255,255,0.5)'}}>
-                      <span>{label}</span><span className="font-mono" style={{color:'rgba(255,255,255,0.8)'}}>R {val}</span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between items-center pt-3 mt-3" style={{borderTop:'1px solid rgba(26,79,255,0.3)'}}>
-                    <span className="text-base font-bold" style={{color:'#00f5ff'}}>GRAND TOTAL</span>
-                    <span className="text-xl font-bold font-mono" style={{color:'#00f5ff'}}>R {estimateData.grandTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
-                  <button className="btn-ghost" onClick={()=>setStep(1)}>Discard</button>
-                  <div className="flex gap-3">
-                    <button onClick={()=>exportPDF(vehicleInfo, estimateData, damagedPanels, auth.currentUser?.displayName, null)}
-                      className="btn-ghost flex items-center gap-2" style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)'}}>
-                      <IDownload/> Download PDF
-                    </button>
-                    <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                      {saving ? <ISpin/> : <><ICheck/> Save Estimate</>}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // ─── LIVE DASHBOARD ───────────────────────────────────────────
-    function Dashboard({ onNew }) {
-      const [estimates, setEstimates] = useState(null);
-      const [selected, setSelected] = useState(null);
-
-      useEffect(() => {
-        const ref = db.ref('estimates').orderByChild('createdAt').limitToLast(50);
-        ref.on('value', snap => {
-          if (!snap.exists()) { setEstimates([]); return; }
-          const arr = [];
-          snap.forEach(child => arr.push({ id: child.key, ...child.val() }));
-          arr.reverse();
-          setEstimates(arr);
-        });
-        return () => ref.off();
-      }, []);
-
-      const updateStatus = async (id, status) => {
-        await db.ref(`estimates/${id}`).update({ status });
-      };
-
-      const totalRevenue = estimates ? estimates.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.financials?.grandTotal||0),0) : 0;
-      const pending = estimates ? estimates.filter(e=>e.status==='pending').length : 0;
-
-      return (
-        <div className="space-y-6 animate-slide-up">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label:'Total Estimates', value: estimates ? estimates.length : '–', color:'#00f5ff' },
-              { label:'Pending Approval', value: estimates ? pending : '–', color:'#ffb800' },
-              { label:'Approved', value: estimates ? estimates.filter(e=>e.status==='approved').length : '–', color:'#00ff88' },
-              { label:'Revenue (Approved)', value: estimates ? `R ${totalRevenue.toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:0})}` : '–', color:'#00ff88' },
-            ].map(s => (
-              <div key={s.label} className="glass rounded-2xl p-5">
-                <p className="text-xs font-semibold mb-2" style={{color:'rgba(255,255,255,0.4)',letterSpacing:'0.5px'}}>{s.label.toUpperCase()}</p>
-                <p className="text-2xl font-bold font-mono" style={{color:s.color}}>{s.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Estimates List */}
-          <div className="glass rounded-3xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4" style={{borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
-              <h2 className="text-lg font-bold">Recent Estimates</h2>
-              <button onClick={onNew} className="btn-primary text-sm px-5 py-2.5"><IPlus/> New</button>
             </div>
+          )}
 
-            {estimates === null ? (
-              <div className="p-6 space-y-3">
-                {[1,2,3].map(i=><div key={i} className="skeleton h-14 rounded-xl"/>)}
+          {/* STEP 3 */}
+          {step===3 && (
+            <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Damage Photos</h2>
+                <p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Upload close-up shots for AI analysis</p>
               </div>
-            ) : estimates.length === 0 ? (
-              <div className="text-center py-16 px-6">
-                <div className="w-12 h-12 mx-auto mb-4 opacity-20"><ICar/></div>
-                <p style={{color:'rgba(255,255,255,0.4)'}}>No estimates yet. Create your first one.</p>
-                <button onClick={onNew} className="btn-primary mt-5 mx-auto">Create Estimate <IChev/></button>
+              <label style={{
+                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+                width:'100%',height:180,borderRadius:18,cursor:'pointer',
+                border:'2px dashed var(--input-border)',background:'var(--input-bg)',
+                transition:'all 0.2s',gap:8
+              }}>
+                {uploading
+                  ? <ISpin/>
+                  : <>
+                      <div style={{color:'var(--accent)',opacity:0.8}}><IUpload/></div>
+                      <span style={{fontSize:14,fontWeight:600,color:'var(--text2)'}}>Tap to Upload</span>
+                      <span style={{fontSize:12,color:'var(--text3)'}}>Multiple files accepted</span>
+                    </>
+                }
+                <input type="file" multiple accept="image/*" style={{display:'none'}} onChange={uploadFiles} disabled={uploading}/>
+              </label>
+              {imgs.length>0 && (
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+                  {imgs.map((u,i)=><img key={i} src={u} alt="" className="photo-thumb"/>)}
+                </div>
+              )}
+              <div style={{display:'flex',gap:10}}>
+                <button className="btn-g" onClick={()=>setStep(2)} style={{flex:'0 0 auto'}}>Back</button>
+                <button className="btn-p" disabled={imgs.length<1||uploading} onClick={()=>setStep(4)} style={{flex:1}}>
+                  Analyze Damage <IChev/>
+                </button>
               </div>
-            ) : (
-              <div className="divide-y" style={{divideColor:'rgba(255,255,255,0.05)'}}>
-                {estimates.map(est => (
-                  <div key={est.id}>
-                    <div
-                      className="px-6 py-4 flex items-center gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
-                      onClick={() => setSelected(selected===est.id ? null : est.id)}
-                    >
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{background:'rgba(26,79,255,0.15)',border:'1px solid rgba(26,79,255,0.2)'}}>
-                        <ICar/>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{est.vehicle?.make} {est.vehicle?.model} <span className="font-mono text-xs" style={{color:'rgba(255,255,255,0.4)'}}>{est.vehicle?.vin}</span></p>
-                        <p className="text-xs mt-0.5" style={{color:'rgba(255,255,255,0.35)'}}>
-                          {est.createdAt ? new Date(est.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Unknown date'}
-                          {est.technicianName ? ` · ${est.technicianName}` : ''}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-mono font-bold text-sm hidden sm:block" style={{color:'#00f5ff'}}>R {(est.financials?.grandTotal||0).toFixed(2)}</span>
-                        <span className={`badge badge-${est.status||'pending'}`}>
-                          {est.status === 'pending' ? '⬤ PENDING' : est.status === 'approved' ? '⬤ APPROVED' : '⬤ REJECTED'}
-                        </span>
-                        <svg className={`w-4 h-4 transition-transform duration-200 ${selected===est.id?'rotate-90':''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" style={{color:'rgba(255,255,255,0.3)'}}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                      </div>
+            </div>
+          )}
+
+          {/* STEP 4 */}
+          {step===4 && (
+            <div className="anim-up" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:300,gap:20}}>
+              {analyzing
+                ? <>
+                    <div className="anim-float" style={{position:'relative'}}>
+                      <ICamera/>
+                      <div className="anim-scan" style={{position:'absolute',top:0,left:0,width:'100%',height:2,borderRadius:4,background:'linear-gradient(90deg,transparent,var(--accent),transparent)',boxShadow:'0 0 8px var(--accent)'}}/>
                     </div>
+                    <div style={{textAlign:'center'}}>
+                      <p style={{fontSize:18,fontWeight:800,color:'var(--accent)',marginBottom:6}}>Neural Analysis Running…</p>
+                      <p style={{fontSize:13,color:'var(--text2)'}}>Mapping {hit.length||2} panels · Calculating repair costs</p>
+                    </div>
+                    <div style={{display:'flex',gap:5}}>
+                      {[0,1,2,3,4].map(i=>(
+                        <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'var(--accent)',opacity:0.6,animation:'fadeIn 1s ease-in-out infinite',animationDelay:`${i*0.18}s`}}/>
+                      ))}
+                    </div>
+                  </>
+                : <>
+                    <div style={{padding:16,borderRadius:20,background:'rgba(0,184,110,0.1)',border:'1px solid rgba(0,184,110,0.2)'}}>
+                      <svg className="w-12 h-12" fill="none" stroke="var(--green)" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
+                    </div>
+                    <div style={{textAlign:'center'}}>
+                      <p style={{fontSize:22,fontWeight:800,color:'var(--green)',marginBottom:4}}>Analysis Complete</p>
+                      <p style={{fontSize:13,color:'var(--text2)'}}>{fin?.lineItems.length} damage items detected</p>
+                    </div>
+                    <button className="btn-p" onClick={()=>setStep(5)} style={{minWidth:220}}>View & Edit Estimate <IChev/></button>
+                  </>
+              }
+            </div>
+          )}
 
-                    {/* Expanded detail */}
-                    {selected === est.id && (
-                      <div className="px-6 pb-5 animate-slide-up">
-                        <div className="rounded-2xl p-4 space-y-4" style={{background:'rgba(0,0,0,0.25)',border:'1px solid rgba(255,255,255,0.06)'}}>
-                          {/* Damaged panels */}
-                          {est.damagedPanels && est.damagedPanels.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>DAMAGED PANELS</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {est.damagedPanels.map(id => (
-                                  <span key={id} className="badge" style={{background:'rgba(255,59,59,0.1)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.2)',fontSize:'10px'}}>
-                                    {CAR_PANELS.find(p=>p.id===id)?.label || id}
-                                  </span>
-                                ))}
+          {/* STEP 5 */}
+          {step===5 && fin && (
+            <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+                <div>
+                  <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Estimate Summary</h2>
+                  <p style={{fontSize:12,color:'var(--text2)',margin:'4px 0 0'}}>Edit hours, parts, or add custom items</p>
+                </div>
+                <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,auth.currentUser?.displayName,null)}
+                  style={{flexShrink:0,padding:'9px 16px',fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}>
+                  <IDl/> PDF
+                </button>
+              </div>
+
+              {/* Line items */}
+              <div style={{background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:16,padding:'4px 14px 12px'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr auto auto auto auto',gap:8,padding:'8px 0',borderBottom:'1px solid var(--border)',marginBottom:4}}>
+                  {['ITEM','HRS','PARTS','TOTAL',''].map((h,i)=>(
+                    <span key={i} className="mono" style={{fontSize:9,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px',textAlign:i>0?'right':'left'}}>{h}</span>
+                  ))}
+                </div>
+                {fin.lineItems.map((item,idx)=>(
+                  <LineRow key={idx} item={item} idx={idx} onChange={updateItem} onDelete={deleteItem}/>
+                ))}
+                <div style={{display:'flex',gap:8,marginTop:12,paddingTop:12,borderTop:'1px dashed var(--border)'}}>
+                  <input className="field" style={{flex:1,padding:'10px 14px',fontSize:13}} placeholder="Add custom line item…"
+                    value={newDesc} onChange={e=>setNewDesc(e.target.value)}
+                    onKeyDown={e=>e.key==='Enter'&&addItem()}/>
+                  <button onClick={addItem} style={{
+                    background:'rgba(77,123,255,0.1)',color:'var(--accent)',
+                    border:'1px solid rgba(77,123,255,0.25)',borderRadius:12,
+                    padding:'0 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:6,
+                    fontFamily:'Inter',fontWeight:700,fontSize:13,flexShrink:0,minHeight:48
+                  }}><IPlus/> Add</button>
+                </div>
+              </div>
+
+              {/* Totals */}
+              <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'14px 16px'}}>
+                {[
+                  [`Labor (${fin.totalHours.toFixed(1)}h × R${LABOR})`,(fin.totalHours*LABOR).toFixed(2)],
+                  ['Parts / Materials',fin.totalParts.toFixed(2)],
+                  ['Subtotal',fin.subtotal.toFixed(2)],
+                  ['VAT 15%',fin.tax.toFixed(2)],
+                ].map(([l,v])=>(
+                  <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',fontSize:13,color:'var(--text2)'}}>
+                    <span>{l}</span><span className="mono" style={{color:'var(--text)',fontWeight:600}}>R {v}</span>
+                  </div>
+                ))}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}>
+                  <span style={{fontSize:15,fontWeight:800,color:'var(--accent)'}}>GRAND TOTAL</span>
+                  <span className="mono" style={{fontSize:20,fontWeight:800,color:'var(--accent)'}}>R {fin.grandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div style={{display:'flex',gap:10,flexDirection:'column'}}>
+                <button className="btn-p" onClick={save} disabled={saving} style={{width:'100%'}}>
+                  {saving ? <ISpin/> : <><ICheck/> Save to Database</>}
+                </button>
+                <div style={{display:'flex',gap:8}}>
+                  <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,auth.currentUser?.displayName,null)} style={{flex:1,fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> Download PDF</button>
+                  <button className="btn-g" onClick={()=>setStep(1)} style={{flex:1,fontSize:13}}>Discard</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── DASHBOARD ───────────────────────── */
+  function Dash({ onNew }) {
+    const [ests, setEsts] = useState(null);
+    const [open, setOpen] = useState(null);
+
+    useEffect(()=>{
+      const ref = db.ref('estimates').orderByChild('createdAt').limitToLast(60);
+      ref.on('value', snap=>{
+        if (!snap.exists()) { setEsts([]); return; }
+        const arr=[]; snap.forEach(c=>arr.push({id:c.key,...c.val()})); arr.reverse(); setEsts(arr);
+      });
+      return ()=>ref.off();
+    },[]);
+
+    const setStatus = async (id,status) => db.ref(`estimates/${id}`).update({status});
+
+    const approved = ests ? ests.filter(e=>e.status==='approved') : [];
+    const revenue  = approved.reduce((s,e)=>s+(e.financials?.grandTotal||0),0);
+
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:16}}>
+        {/* Stats */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          {[
+            {l:'Total',v:ests?ests.length:'–',c:'var(--accent)'},
+            {l:'Pending',v:ests?ests.filter(e=>e.status==='pending').length:'–',c:'var(--amber)'},
+            {l:'Approved',v:ests?approved.length:'–',c:'var(--green)'},
+            {l:'Revenue',v:ests?`R ${Math.round(revenue).toLocaleString()}`:'–',c:'var(--green)'},
+          ].map(s=>(
+            <div key={s.l} className="stat-card">
+              <p style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,letterSpacing:'0.4px'}}>{s.l.toUpperCase()}</p>
+              <p className="mono" style={{fontSize:22,fontWeight:800,color:s.c}}>{s.v}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Estimates list */}
+        <div className="surface" style={{borderRadius:20,overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid var(--border)'}}>
+            <h2 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Recent Estimates</h2>
+            <button className="btn-p" onClick={onNew} style={{padding:'9px 18px',fontSize:13}}><IPlus/> New</button>
+          </div>
+
+          {ests===null ? (
+            <div style={{padding:16,display:'flex',flexDirection:'column',gap:10}}>
+              {[1,2,3].map(i=><div key={i} className="skel" style={{height:60}}/>)}
+            </div>
+          ) : ests.length===0 ? (
+            <div style={{textAlign:'center',padding:'48px 24px'}}>
+              <ICar cls="w-10 h-10" style={{opacity:0.2,margin:'0 auto 12px'}}/>
+              <p style={{color:'var(--text2)',fontSize:14,marginBottom:16}}>No estimates yet.</p>
+              <button className="btn-p" onClick={onNew} style={{margin:'0 auto'}}>Create Estimate <IChev/></button>
+            </div>
+          ) : (
+            <div>
+              {ests.map(est=>(
+                <div key={est.id}>
+                  <div className="est-row" onClick={()=>setOpen(open===est.id?null:est.id)}>
+                    <div style={{width:38,height:38,borderRadius:12,background:'rgba(77,123,255,0.1)',border:'1px solid rgba(77,123,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',flexShrink:0}}>
+                      <ICar/>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontSize:14,fontWeight:700,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                        {est.vehicle?.make} {est.vehicle?.model}
+                        <span className="mono" style={{fontSize:10,color:'var(--text3)',marginLeft:6}}>{est.vehicle?.vin}</span>
+                      </p>
+                      <p style={{fontSize:11,color:'var(--text3)',margin:'3px 0 0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                        {est.createdAt?new Date(est.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):'–'}
+                        {est.technicianName?` · ${est.technicianName}`:''}
+                      </p>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
+                      <span className={`badge badge-${est.status||'pending'}`}>
+                        {est.status==='pending'?'⬤ PENDING':est.status==='approved'?'⬤ APPROVED':'⬤ REJECTED'}
+                      </span>
+                      <span className="mono" style={{fontSize:11,fontWeight:700,color:'var(--accent)'}}>R {(est.financials?.grandTotal||0).toFixed(0)}</span>
+                    </div>
+                    <IChevD open={open===est.id}/>
+                  </div>
+                  {open===est.id && (
+                    <div className="anim-up" style={{padding:'0 20px 16px',background:'var(--surface2)'}}>
+                      <div style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',flexDirection:'column',gap:12}}>
+                        {est.damagedPanels?.length>0 && (
+                          <div>
+                            <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:7}}>DAMAGED PANELS</p>
+                            <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
+                              {est.damagedPanels.map(id=>(
+                                <span key={id} className="badge" style={{background:'rgba(224,48,48,0.08)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.18)',fontSize:10}}>
+                                  {PANELS.find(p=>p.id===id)?.label||id}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {est.financials?.lineItems && (
+                          <div>
+                            <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:7}}>LINE ITEMS</p>
+                            {est.financials.lineItems.map((item,i)=>(
+                              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}>
+                                <span style={{color:'var(--text2)'}}>{item.description}</span>
+                                <span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {item.total?.toFixed(0)}</span>
                               </div>
+                            ))}
+                          </div>
+                        )}
+                        {est.photos?.length>0 && (
+                          <div>
+                            <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:7}}>PHOTOS ({est.photos.length})</p>
+                            <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4}}>
+                              {est.photos.map((u,i)=><img key={i} src={u} alt="" style={{width:72,height:52,objectFit:'cover',borderRadius:10,border:'1px solid var(--border)',flexShrink:0}}/>)}
                             </div>
-                          )}
-                          {/* Line items */}
-                          {est.financials?.lineItems && (
-                            <div>
-                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>LINE ITEMS</p>
-                              <div className="space-y-1">
-                                {est.financials.lineItems.map((item,i) => (
-                                  <div key={i} className="flex justify-between text-sm py-1" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
-                                    <span style={{color:'rgba(255,255,255,0.6)'}}>{item.description}</span>
-                                    <span className="font-mono font-bold" style={{color:'#e8eeff'}}>R {item.total?.toFixed(2)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {/* Photos strip */}
-                          {est.photos && est.photos.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>PHOTOS ({est.photos.length})</p>
-                              <div className="flex gap-2 overflow-x-auto">
-                                {est.photos.map((url,i) => <img key={i} src={url} alt="" className="w-20 h-14 object-cover rounded-lg shrink-0" style={{border:'1px solid rgba(255,255,255,0.1)'}}/>)}
-                              </div>
-                            </div>
-                          )}
-                          {/* Grand total + actions */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-                            <div className="text-lg font-bold font-mono" style={{color:'#00f5ff'}}>
-                              Grand Total: R {(est.financials?.grandTotal||0).toFixed(2)}
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              <button onClick={()=>exportPDF(est.vehicle||{}, est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0}, est.damagedPanels||[], est.technicianName, est.id)}
-                                className="btn-ghost flex items-center gap-1.5 text-xs px-3 py-2" style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)'}}>
-                                <IDownload/> PDF
-                              </button>
-                              {est.status !== 'approved' && (
-                                <button onClick={()=>updateStatus(est.id,'approved')} className="text-xs px-4 py-2 rounded-full font-semibold transition-all" style={{background:'rgba(0,255,136,0.12)',color:'#00ff88',border:'1px solid rgba(0,255,136,0.25)'}}>
-                                  ✓ Approve
-                                </button>
-                              )}
-                              {est.status !== 'rejected' && (
-                                <button onClick={()=>updateStatus(est.id,'rejected')} className="text-xs px-4 py-2 rounded-full font-semibold transition-all" style={{background:'rgba(255,59,59,0.1)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.25)'}}>
-                                  ✕ Reject
-                                </button>
-                              )}
-                              {est.status !== 'pending' && (
-                                <button onClick={()=>updateStatus(est.id,'pending')} className="btn-ghost text-xs px-4 py-2">
-                                  Reset
-                                </button>
-                              )}
-                            </div>
+                          </div>
+                        )}
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingTop:4}}>
+                          <span className="mono" style={{fontSize:16,fontWeight:800,color:'var(--accent)'}}>R {(est.financials?.grandTotal||0).toFixed(2)}</span>
+                          <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+                            <button onClick={()=>exportPDF(est.vehicle||{},est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0},est.damagedPanels||[],est.technicianName,est.id)}
+                              className="btn-g" style={{padding:'7px 14px',fontSize:12,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> PDF</button>
+                            {est.status!=='approved'&&<button onClick={()=>setStatus(est.id,'approved')} style={{padding:'7px 14px',borderRadius:100,fontSize:12,fontWeight:700,background:'rgba(0,184,110,0.1)',color:'var(--green)',border:'1px solid rgba(0,184,110,0.2)',cursor:'pointer',fontFamily:'Inter'}}>✓ Approve</button>}
+                            {est.status!=='rejected'&&<button onClick={()=>setStatus(est.id,'rejected')} style={{padding:'7px 14px',borderRadius:100,fontSize:12,fontWeight:700,background:'rgba(224,48,48,0.08)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.18)',cursor:'pointer',fontFamily:'Inter'}}>✕ Reject</button>}
+                            {est.status!=='pending'&&<button onClick={()=>setStatus(est.id,'pending')} className="btn-g" style={{padding:'7px 14px',fontSize:12}}>Reset</button>}
                           </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // ─── APP SHELL ────────────────────────────────────────────────
-    function App() {
-      const [user, setUser] = useState(null);
-      const [view, setView] = useState('dashboard');
-      const [loadingAuth, setLoadingAuth] = useState(true);
-
-      useEffect(() => {
-        const unsub = auth.onAuthStateChanged(u => { setUser(u); setLoadingAuth(false); });
-        return unsub;
-      }, []);
-
-      const login = async () => {
-        try { await auth.signInWithPopup(googleProvider); }
-        catch(e) { alert('Login failed: ' + e.message); }
-      };
-
-      if (loadingAuth) return (
-        <div className="min-h-screen flex items-center justify-center">
-          <ISpin/>
-        </div>
-      );
-
-      if (!user) return (
-        <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
-          <div className="absolute inset-0" style={{background:'radial-gradient(ellipse at 20% 50%, rgba(26,79,255,0.12) 0%,transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(0,245,255,0.08) 0%,transparent 50%)'}}/>
-          <div className="w-full max-w-sm glass rounded-3xl p-8 animate-slide-up relative z-10 neon-border">
-            <div className="flex justify-center mb-8 animate-float">
-              <div className="w-16 h-16 p-3.5 rounded-2xl" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)',boxShadow:'0 8px 30px rgba(26,79,255,0.5)'}}>
-                <IWrench/>
-              </div>
-            </div>
-            <h1 className="text-3xl font-extrabold text-center mb-1">VynixPanelB</h1>
-            <p className="text-center text-sm mb-8" style={{color:'rgba(255,255,255,0.4)'}}>Technician Workspace</p>
-            <button onClick={login} className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-full font-semibold transition-all hover:-translate-y-1" style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',color:'#e8eeff'}}>
-              <IGoog/> Continue with Google
-            </button>
-          </div>
-        </div>
-      );
-
-      return (
-        <div className="min-h-screen flex flex-col md:flex-row">
-          {/* Sidebar */}
-          <nav className="hidden md:flex flex-col w-64 h-screen sticky top-0 p-5" style={{background:'rgba(7,12,26,0.95)',borderRight:'1px solid rgba(255,255,255,0.06)'}}>
-            <div className="flex items-center gap-3 mb-8 px-2">
-              <div className="w-9 h-9 p-2 rounded-xl shrink-0" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)'}}>
-                <IWrench/>
-              </div>
-              <span className="text-lg font-extrabold tracking-tight">VynixPanelB</span>
-            </div>
-            <div className="space-y-1 flex-1">
-              {[
-                {id:'dashboard', label:'Dashboard', Icon: IDash},
-                {id:'wizard', label:'New Estimate', Icon: ICar},
-              ].map(({id,label,Icon}) => (
-                <button key={id} onClick={()=>setView(id)} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all" style={view===id?{background:'rgba(26,79,255,0.18)',color:'#7eb3ff',border:'1px solid rgba(26,79,255,0.25)'}:{color:'rgba(255,255,255,0.45)',border:'1px solid transparent'}}>
-                  <Icon/> {label}
-                </button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-            <div style={{borderTop:'1px solid rgba(255,255,255,0.07)',paddingTop:'1rem'}}>
-              <div className="flex items-center gap-3 px-2 mb-3">
-                <img src={user.photoURL||`https://ui-avatars.com/api/?name=${user.displayName}&background=1a4fff&color=fff`} alt="" className="w-9 h-9 rounded-full shrink-0"/>
-                <div className="overflow-hidden">
-                  <p className="text-sm font-semibold truncate">{user.displayName||'Technician'}</p>
-                  <p className="text-xs truncate" style={{color:'rgba(255,255,255,0.35)'}}>{user.email}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── APP ─────────────────────────────── */
+  function App() {
+    const [user,    setUser]    = useState(null);
+    const [view,    setView]    = useState('dashboard');
+    const [loading, setLoading] = useState(true);
+    const [dark,    setDark]    = useState(true);
+    const [sheet,   setSheet]   = useState(false); // logout sheet
+
+    // Apply theme
+    useEffect(()=>{
+      document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+      document.getElementById('meta-theme').content = dark?'#070c1a':'#f0f4ff';
+    },[dark]);
+
+    useEffect(()=>{
+      return auth.onAuthStateChanged(u=>{setUser(u); setLoading(false);});
+    },[]);
+
+    const login = async ()=>{
+      try { await auth.signInWithPopup(gp); }
+      catch(e) { alert('Login failed: '+e.message); }
+    };
+
+    const confirmLogout = ()=>{ setSheet(false); auth.signOut(); };
+
+    if (loading) return (
+      <div style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <ISpin cls="w-10 h-10"/>
+      </div>
+    );
+
+    if (!user) return (
+      <div style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center',padding:20,position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 20% 40%, rgba(26,79,255,0.12),transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(0,245,255,0.07),transparent 50%)'}}/>
+        <div className="surface anim-up" style={{width:'100%',maxWidth:380,borderRadius:28,padding:'36px 28px',position:'relative',zIndex:1,boxShadow:'var(--shadow-lg)'}}>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:28}}>
+            <div className="anim-float" style={{width:64,height:64,padding:14,borderRadius:18,background:'linear-gradient(135deg,#1a4fff,#0033e6)',boxShadow:'0 8px 28px rgba(26,79,255,0.45)',color:'#fff'}}>
+              <IWrench/>
+            </div>
+          </div>
+          <h1 style={{fontSize:28,fontWeight:900,textAlign:'center',letterSpacing:'-0.5px',color:'var(--text)',margin:'0 0 6px'}}>VynixPanelB</h1>
+          <p style={{textAlign:'center',fontSize:14,color:'var(--text2)',marginBottom:28}}>Technician Workspace</p>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
+            <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+          </div>
+          <button onClick={login} style={{
+            width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:12,
+            padding:'15px 20px',borderRadius:100,fontFamily:'Inter',fontWeight:700,fontSize:15,
+            background:'var(--input-bg)',border:'1px solid var(--border)',color:'var(--text)',cursor:'pointer',
+            transition:'all 0.2s'
+          }}>
+            <IGoog/> Continue with Google
+          </button>
+        </div>
+      </div>
+    );
+
+    return (
+      <div style={{minHeight:'100dvh',display:'flex',flexDirection:'row'}}>
+        {/* ── Desktop Sidebar ── */}
+        <nav className="sidebar" style={{display:'none'}} id="sidebar">
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:28,padding:'0 4px'}}>
+            <div style={{width:36,height:36,padding:8,borderRadius:12,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}>
+              <IWrench/>
+            </div>
+            <span style={{fontSize:17,fontWeight:900,letterSpacing:'-0.3px',color:'var(--text)'}}>VynixPanelB</span>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:4,flex:1}}>
+            {[{id:'dashboard',l:'Dashboard',I:IDash},{id:'wizard',l:'New Estimate',I:ICar}].map(({id,l,I})=>(
+              <button key={id} className={`snav-item ${view===id?'active':''}`} onClick={()=>setView(id)}>
+                <I/> {l}
+              </button>
+            ))}
+          </div>
+          <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
+            <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+            <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 4px 12px'}}>
+              <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'T')}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
+              <div style={{overflow:'hidden',flex:1}}>
+                <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.displayName||'Technician'}</p>
+                <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.email}</p>
+              </div>
+            </div>
+            <button onClick={()=>setSheet(true)} style={{
+              width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+              padding:'11px',borderRadius:14,fontFamily:'Inter',fontWeight:700,fontSize:13,
+              background:'rgba(224,48,48,0.08)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.15)',cursor:'pointer',transition:'all 0.2s'
+            }}>
+              <ILogout/> Sign Out
+            </button>
+          </div>
+        </nav>
+
+        {/* ── Main content ── */}
+        <main id="main-content" style={{flex:1,padding:'16px 16px',paddingBottom:'calc(88px + env(safe-area-inset-bottom))',overflowY:'auto',minHeight:'100dvh'}}>
+          <div style={{maxWidth:760,margin:'0 auto'}}>
+            {/* Mobile header */}
+            <header style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:34,height:34,padding:7,borderRadius:11,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}>
+                  <IWrench/>
+                </div>
+                <div>
+                  <p style={{fontSize:16,fontWeight:900,color:'var(--text)',margin:0,letterSpacing:'-0.3px'}}>VynixPanelB</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:0}}>{view==='dashboard'?'Overview':'New Estimate'}</p>
                 </div>
               </div>
-              <button onClick={()=>auth.signOut()} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold" style={{background:'rgba(255,59,59,0.08)',color:'rgba(255,59,59,0.8)',border:'1px solid rgba(255,59,59,0.15)'}}>
-                <ILogout/> Sign Out
-              </button>
-            </div>
-          </nav>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+                <img src={user.photoURL||''} alt="" style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border)'}}/>
+              </div>
+            </header>
 
-          {/* Main */}
-          <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 overflow-y-auto">
-            <div className="max-w-5xl mx-auto">
-              <header className="mb-6 flex items-center justify-between animate-slide-up">
-                <div className="md:hidden flex items-center gap-3">
-                  <div className="w-8 h-8 p-1.5 rounded-xl" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)'}}><IWrench/></div>
-                  <span className="font-extrabold">VynixPanelB</span>
-                </div>
-                <div className="hidden md:block">
-                  <h1 className="text-2xl font-bold">{view==='dashboard'?'Dashboard':'New Estimate'}</h1>
-                  <p className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.4)'}}>{view==='dashboard'?'Real-time estimates from Firebase':'Follow the steps below'}</p>
-                </div>
-                <img src={user.photoURL||''} alt="" className="w-9 h-9 rounded-full md:hidden" style={{border:'1px solid rgba(255,255,255,0.1)'}}/>
-              </header>
+            {view==='wizard'
+              ? <Wizard onDone={()=>setView('dashboard')}/>
+              : <Dash onNew={()=>setView('wizard')}/>
+            }
+          </div>
+        </main>
 
-              {view === 'wizard'
-                ? <EstimateWizard onComplete={()=>setView('dashboard')}/>
-                : <Dashboard onNew={()=>setView('wizard')}/>
-              }
-            </div>
-          </main>
+        {/* ── Mobile Bottom Nav ── */}
+        <nav className="mobile-nav">
+          <button className={`mnav-btn ${view==='dashboard'?'active':''}`} onClick={()=>setView('dashboard')}>
+            <IDash/> HOME
+          </button>
+          <button className="mnav-fab" onClick={()=>setView('wizard')}>
+            <ICar/>
+          </button>
+          <button className="mnav-btn" onClick={()=>setSheet(true)} style={{color:sheet?'var(--red)':'var(--text3)'}}>
+            <ILogout/> LOGOUT
+          </button>
+        </nav>
 
-          {/* Mobile bottom nav */}
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-6 py-3 flex justify-around items-center"
-            style={{background:'rgba(7,12,26,0.95)',backdropFilter:'blur(20px)',borderTop:'1px solid rgba(255,255,255,0.07)',paddingBottom:'calc(0.75rem + env(safe-area-inset-bottom))'}}>
-            <button onClick={()=>setView('dashboard')} className="flex flex-col items-center gap-1 p-2" style={{color:view==='dashboard'?'#00f5ff':'rgba(255,255,255,0.35)'}}>
-              <IDash/><span className="text-[9px] font-bold tracking-widest">HOME</span>
-            </button>
-            <button onClick={()=>setView('wizard')} className="p-4 rounded-full -translate-y-5" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)',boxShadow:'0 0 25px rgba(26,79,255,0.6)',border:'3px solid rgba(7,12,26,0.9)'}}>
-              <ICar/>
-            </button>
-            <button onClick={()=>auth.signOut()} className="flex flex-col items-center gap-1 p-2" style={{color:'rgba(255,59,59,0.6)'}}>
-              <ILogout/><span className="text-[9px] font-bold tracking-widest">LOGOUT</span>
-            </button>
-          </nav>
-        </div>
-      );
-    }
+        {/* ── Logout Bottom Sheet ── */}
+        {sheet && <LogoutSheet onConfirm={confirmLogout} onCancel={()=>setSheet(false)}/>}
+      </div>
+    );
+  }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-  </script>
+  /* ─── INJECT DESKTOP SIDEBAR VIS VIA CSS ── */
+  const sidebarStyle = document.createElement('style');
+  sidebarStyle.textContent = `@media(min-width:768px){#sidebar{display:flex!important}#main-content{padding-bottom:24px!important}.mobile-nav{display:none!important}}`;
+  document.head.appendChild(sidebarStyle);
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
