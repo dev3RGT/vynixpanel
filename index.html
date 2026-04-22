@@ -198,7 +198,6 @@
     }
     .responsive-panel {
       position: fixed; z-index: 201; background: var(--bg2); border: 1px solid var(--border);
-      /* Mobile default: Bottom sheet */
       bottom: 0; left: 0; right: 0; top: auto;
       border-radius: 24px 24px 0 0;
       padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
@@ -209,14 +208,13 @@
     }
     @media (min-width: 768px) {
       .responsive-panel {
-        /* Desktop: Centered modal */
         top: 50%; left: 50%; bottom: auto; right: auto;
         transform: translate(-50%, -50%);
         width: 420px; border-radius: 24px; padding: 32px;
         animation: modalIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
         box-shadow: var(--shadow-lg);
       }
-      .responsive-handle { display: none; } /* Hide drag handle on desktop */
+      .responsive-handle { display: none; }
     }
 
     /* ─── MOBILE BOTTOM NAV ─── */
@@ -372,7 +370,6 @@
   }
 
   /* ─── MODALS (Logout & Profile) ───────── */
-  // Responsive Modal Shell (Bottom Sheet on Mobile, Modal on Desktop)
   function ResponsiveModal({ children, onCancel }) {
     return (
       <>
@@ -650,7 +647,7 @@
           createdAt: Date.now() // Uses explicit timestamp for immediate local sorting sync
         });
         onDone();
-      } catch(e){ console.error(e); alert('Error saving.'); }
+      } catch(e){ console.error(e); alert('Error saving: ' + e.message); }
       setSaving(false);
     };
 
@@ -874,11 +871,19 @@
     const [open, setOpen] = useState(null);
 
     useEffect(()=>{
-      // Listen to real-time database changes for persistence on refresh
-      const ref = db.ref('estimates').orderByChild('createdAt').limitToLast(60);
+      // Removed server-side orderByChild to prevent silent index errors
+      // Sorts completely client-side for reliable local refresh rendering.
+      const ref = db.ref('estimates').limitToLast(60);
       ref.on('value', snap=>{
         if (!snap.exists()) { setEsts([]); return; }
-        const arr=[]; snap.forEach(c=>arr.push({id:c.key,...c.val()})); arr.reverse(); setEsts(arr);
+        const arr=[]; 
+        snap.forEach(c=>arr.push({id:c.key,...c.val()})); 
+        arr.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)); // explicit local sort by explicit Date.now() timestamp
+        setEsts(arr);
+      }, err => {
+        console.error("Firebase Dashboard Error:", err);
+        alert("Database connection blocked. Please check your Firebase Realtime DB Security Rules.");
+        setEsts([]);
       });
       return ()=>ref.off();
     },[]);
@@ -985,7 +990,6 @@
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingTop:4}}>
                           <span className="mono" style={{fontSize:16,fontWeight:800,color:'var(--accent)'}}>R {(est.financials?.grandTotal||0).toFixed(2)}</span>
                           <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-                            {/* Uses the saved shop/technician name from the estimate history to preserve the record exactly as it was created */}
                             <button onClick={()=>exportPDF(est.vehicle||{},est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0},est.damagedPanels||[],{name: est.technicianName, shop: est.shopName},est.id)}
                               className="btn-g" style={{padding:'7px 14px',fontSize:12,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> PDF</button>
                             {est.status!=='approved'&&<button onClick={()=>setStatus(est.id,'approved')} style={{padding:'7px 14px',borderRadius:100,fontSize:12,fontWeight:700,background:'rgba(0,184,110,0.1)',color:'var(--green)',border:'1px solid rgba(0,184,110,0.2)',cursor:'pointer',fontFamily:'Inter'}}>✓ Approve</button>}
@@ -1011,7 +1015,7 @@
     const [profile, setProfile] = useState({ name: '', shop: '' });
     const [view,    setView]    = useState('dashboard');
     const [loading, setLoading] = useState(true);
-    const [sheet,   setSheet]   = useState(false); // logout sheet
+    const [sheet,   setSheet]   = useState(false); 
     const [showProfile, setShowProfile] = useState(false);
 
     // Initialize dark mode from localStorage or default to true
@@ -1031,7 +1035,6 @@
       return auth.onAuthStateChanged(u=>{
         setUser(u);
         if (u) {
-          // Listen to User Profile for persistence and sync
           const profileRef = db.ref(`users/${u.uid}`);
           profileRef.on('value', snap => {
             if (snap.exists()) {
@@ -1117,7 +1120,6 @@
               <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
             </div>
             
-            {/* Clickable Profile Section */}
             <div onClick={() => setShowProfile(true)} className="surface" style={{display:'flex',alignItems:'center',gap:10,padding:'12px',borderRadius:16,marginBottom:12,cursor:'pointer',transition:'background 0.2s'}}>
               <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
               <div style={{overflow:'hidden',flex:1}}>
@@ -1156,7 +1158,6 @@
               </div>
             </header>
 
-            {/* Desktop header spacing adjustment */}
             <div className="hidden md:block h-[20px]"></div>
 
             {view==='wizard'
@@ -1186,7 +1187,6 @@
     );
   }
 
-  /* ─── INJECT DESKTOP SIDEBAR VIS VIA CSS ── */
   const sidebarStyle = document.createElement('style');
   sidebarStyle.textContent = `@media(min-width:768px){#sidebar{display:flex!important}#main-content{padding-bottom:24px!important}.mobile-nav{display:none!important}}`;
   document.head.appendChild(sidebarStyle);
