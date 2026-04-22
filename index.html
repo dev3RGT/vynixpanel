@@ -464,7 +464,8 @@ footer {
 /* ─────────────────────────────────────────
    CONFIG & STATE
 ───────────────────────────────────────── */
-const GOOGLE_API_KEY = "AIzaSyDXehvfhK0xjX8GvSyUMg1Go_0dTmpoQc0";
+// UPDATED KEY
+const GOOGLE_API_KEY = "AIzaSyBdcLGodSRzvhLgU2mOmQTKoeA5BlVW-hw";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
@@ -642,15 +643,14 @@ async function sendMessage() {
   showTyping();
 
   try {
-    // ULTIMATE FALLBACK ENDPOINT: Changed to gemini-pro which works globally on all keys
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`, {
+    // UPDATED ENDPOINT: gemini-2.5-flash with your new key
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         contents: geminiHistory,
-        // System instructions are passed inside the contents array for gemini-pro to ensure maximum compatibility
         systemInstruction: {
           parts: [{ text: "You are Clora, a sophisticated and warmly helpful AI assistant. Be concise, thoughtful, and precise. Keep responses conversational." }]
         }
