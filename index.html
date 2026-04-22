@@ -6,29 +6,54 @@
   <title>VynixPanelB - AI Damage Estimator</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          colors: { gray: { 900: '#0f172a', 800: '#1e293b' } }
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a' }
+          },
+          animation: {
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'float': 'float 3s ease-in-out infinite',
+            'scan': 'scan 1.5s ease-in-out infinite',
+            'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            scan: {
+              '0%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(64px)' },
+              '100%': { transform: 'translateY(0)' },
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '.7' },
+            }
+          }
         }
       }
     }
   </script>
 
   <style>
-    body { background-color: #0f172a; color: white; margin: 0; font-family: system-ui, sans-serif; }
-    @keyframes scan {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(64px); }
-      100% { transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-    .animate-scan { animation: scan 1.5s ease-in-out infinite; }
+    body { background-color: #f8fafc; color: #0f172a; margin: 0; -webkit-font-smoothing: antialiased; }
+    /* Hide scrollbar for a cleaner look */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -40,7 +65,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -61,6 +86,7 @@
     }
     const auth = firebase.auth();
     const db = firebase.database();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
 
     // --- CONSTANTS ---
     const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/dqkujefxj/image/upload';
@@ -78,6 +104,7 @@
     const IconCamera = () => <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
     const IconCheckCircle = () => <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>;
     const IconSmallCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
+    const IconGoogle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
 
     // --- ESTIMATE WIZARD COMPONENT ---
     function EstimateWizard({ onComplete }) {
@@ -187,10 +214,11 @@
 
       return (
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="flex items-center justify-between bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-6 py-4">
+          {/* Wizard Header Progress */}
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl border border-white shadow-sm rounded-full px-6 py-4 animate-slide-up">
             {[1, 2, 3, 4].map((num) => (
-              <div key={num} className={`flex items-center gap-2 ${step >= num ? 'text-blue-400' : 'text-gray-600'}`}>
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 ${step >= num ? 'border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'border-gray-600'}`}>
+              <div key={num} className={`flex items-center gap-2 ${step >= num ? 'text-brand-600' : 'text-slate-400'}`}>
+                <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${step >= num ? 'border-brand-500 bg-brand-50 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-110' : 'border-slate-300 bg-white'}`}>
                   {num}
                 </div>
                 <div className="hidden sm:block text-sm font-semibold">
@@ -200,21 +228,22 @@
             ))}
           </div>
 
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 md:p-8 min-h-[400px]">
+          {/* Wizard Content Panel */}
+          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-xl rounded-3xl p-6 md:p-8 min-h-[400px] transition-all duration-500">
             {step === 1 && (
-              <div className="space-y-6 animate-fadeIn">
-                <h2 className="text-2xl font-bold">Vehicle Details</h2>
+              <div className="space-y-6 animate-slide-up">
+                <h2 className="text-2xl font-bold text-slate-800">Vehicle Details</h2>
                 <div className="space-y-4">
-                  <input type="text" placeholder="VIN Number" value={vehicleInfo.vin} onChange={(e) => setVehicleInfo({...vehicleInfo, vin: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-3 focus:border-blue-500 outline-none transition-colors" />
+                  <input type="text" placeholder="VIN Number" value={vehicleInfo.vin} onChange={(e) => setVehicleInfo({...vehicleInfo, vin: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm" />
                   <div className="flex gap-4">
-                    <input type="text" placeholder="Make" value={vehicleInfo.make} onChange={(e) => setVehicleInfo({...vehicleInfo, make: e.target.value})} className="w-1/2 bg-white/5 border border-white/10 rounded-full px-4 py-3 focus:border-blue-500 outline-none transition-colors" />
-                    <input type="text" placeholder="Model" value={vehicleInfo.model} onChange={(e) => setVehicleInfo({...vehicleInfo, model: e.target.value})} className="w-1/2 bg-white/5 border border-white/10 rounded-full px-4 py-3 focus:border-blue-500 outline-none transition-colors" />
+                    <input type="text" placeholder="Make" value={vehicleInfo.make} onChange={(e) => setVehicleInfo({...vehicleInfo, make: e.target.value})} className="w-1/2 bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm" />
+                    <input type="text" placeholder="Model" value={vehicleInfo.model} onChange={(e) => setVehicleInfo({...vehicleInfo, model: e.target.value})} className="w-1/2 bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm" />
                   </div>
                 </div>
                 <button 
                   disabled={!vehicleInfo.vin || !vehicleInfo.make} 
                   onClick={() => setStep(2)}
-                  className="mt-6 flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-semibold shadow-[0_0_15px_rgba(59,130,246,0.4)] disabled:shadow-none transition-all ml-auto"
+                  className="mt-6 flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 disabled:bg-slate-300 disabled:hover:translate-y-0 disabled:shadow-none text-white font-semibold transition-all ml-auto"
                 >
                   Next Step <IconChevronRight />
                 </button>
@@ -222,33 +251,36 @@
             )}
 
             {step === 2 && (
-              <div className="space-y-6 animate-fadeIn">
-                <h2 className="text-2xl font-bold">Damage Capture</h2>
-                <p className="text-gray-400">Upload at least 4 angles of the damage for accurate AI analysis.</p>
+              <div className="space-y-6 animate-slide-up">
+                <h2 className="text-2xl font-bold text-slate-800">Damage Capture</h2>
+                <p className="text-slate-500">Upload at least 4 angles of the damage for accurate AI analysis.</p>
                 
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/20 rounded-2xl cursor-pointer hover:bg-white/5 transition-colors">
+                <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-brand-300 bg-brand-50/50 rounded-3xl cursor-pointer hover:bg-brand-50 hover:border-brand-400 transition-all group">
                   {isUploading ? (
-                    <div className="text-blue-400"><IconSpinner /></div>
+                    <div className="text-brand-500"><IconSpinner /></div>
                   ) : (
-                    <div className="text-gray-400 flex flex-col items-center"><IconUpload /><span>Tap to Upload Images</span></div>
+                    <div className="text-slate-500 flex flex-col items-center group-hover:scale-105 transition-transform">
+                      <div className="text-brand-400"><IconUpload /></div>
+                      <span className="font-medium">Tap to Upload Images</span>
+                    </div>
                   )}
                   <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
                 </label>
 
                 {images.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mt-4">
+                  <div className="grid grid-cols-4 gap-3 mt-4">
                     {images.map((img, idx) => (
-                      <img key={idx} src={img} alt="Damage" className="w-full h-20 object-cover rounded-xl border border-white/10" />
+                      <img key={idx} src={img} alt="Damage" className="w-full h-24 object-cover rounded-2xl shadow-sm border border-slate-100 animate-slide-up" style={{ animationDelay: `${idx * 100}ms` }} />
                     ))}
                   </div>
                 )}
 
-                <div className="flex justify-between mt-6">
-                  <button onClick={() => setStep(1)} className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">Back</button>
+                <div className="flex justify-between mt-8">
+                  <button onClick={() => setStep(1)} className="px-6 py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors">Back</button>
                   <button 
                     disabled={images.length < 1 || isUploading} 
                     onClick={() => setStep(3)}
-                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-semibold shadow-[0_0_15px_rgba(59,130,246,0.4)] disabled:shadow-none transition-all"
+                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 disabled:bg-slate-300 disabled:hover:translate-y-0 disabled:shadow-none text-white font-semibold transition-all"
                   >
                     Run AI Analysis <IconChevronRight />
                   </button>
@@ -257,21 +289,21 @@
             )}
 
             {step === 3 && (
-              <div className="flex flex-col items-center justify-center h-64 space-y-6 animate-fadeIn">
+              <div className="flex flex-col items-center justify-center h-80 space-y-6 animate-slide-up">
                 {isAnalyzing ? (
                   <>
-                    <div className="relative">
-                      <div className="text-blue-500/50"><IconCamera /></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_10px_#60a5fa] animate-scan" />
+                    <div className="relative animate-float">
+                      <div className="text-brand-200"><IconCamera /></div>
+                      <div className="absolute top-0 left-0 w-full h-1 bg-brand-500 shadow-[0_0_15px_#3b82f6] animate-scan rounded-full" />
                     </div>
-                    <h2 className="text-xl font-bold animate-pulse">Running Neural Damage Analysis...</h2>
-                    <p className="text-gray-400">Detecting dents, scratches, and panel integrity.</p>
+                    <h2 className="text-xl font-bold text-slate-800 animate-pulse-soft">Running Neural Damage Analysis...</h2>
+                    <p className="text-slate-500 bg-brand-50 px-4 py-1 rounded-full text-sm">Detecting dents, scratches, and panel integrity</p>
                   </>
                 ) : (
                   <>
-                    <div className="text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.3)] rounded-full"><IconCheckCircle /></div>
-                    <h2 className="text-2xl font-bold">Analysis Complete</h2>
-                    <button onClick={() => setStep(4)} className="px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all">
+                    <div className="text-green-500 bg-green-50 p-2 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-slide-up"><IconCheckCircle /></div>
+                    <h2 className="text-2xl font-bold text-slate-800 animate-slide-up" style={{ animationDelay: '100ms' }}>Analysis Complete</h2>
+                    <button onClick={() => setStep(4)} className="px-8 py-4 mt-4 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 text-white font-semibold transition-all animate-slide-up" style={{ animationDelay: '200ms' }}>
                       View Estimate Breakdown
                     </button>
                   </>
@@ -280,34 +312,34 @@
             )}
 
             {step === 4 && estimateData && (
-              <div className="space-y-6 animate-fadeIn">
-                <h2 className="text-2xl font-bold border-b border-white/10 pb-4">Estimate Summary</h2>
+              <div className="space-y-6 animate-slide-up">
+                <h2 className="text-2xl font-bold text-slate-800 border-b border-slate-100 pb-4">Estimate Summary</h2>
                 
-                <div className="bg-black/20 rounded-xl p-4 border border-white/5 space-y-3">
-                  <h3 className="text-blue-400 font-semibold mb-2">Detected Line Items</h3>
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+                  <h3 className="text-brand-600 font-bold mb-3 flex items-center gap-2"><div className="w-4 h-4"><IconWrench/></div> Detected Line Items</h3>
                   {estimateData.lineItems.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-sm">
-                      <span className="text-gray-300">{item.description}</span>
-                      <span className="font-mono text-white">R {item.total.toFixed(2)}</span>
+                    <div key={idx} className="flex justify-between text-sm items-center py-1 border-b border-slate-200/50 last:border-0">
+                      <span className="text-slate-600 font-medium">{item.description}</span>
+                      <span className="font-mono text-slate-900 font-bold">R {item.total.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-2 text-right">
-                  <div className="text-sm text-gray-400">Total Labor ({estimateData.totalHours} hrs @ R{estimateData.laborRate}): <span className="text-white font-mono ml-4">R {(estimateData.totalHours * estimateData.laborRate).toFixed(2)}</span></div>
-                  <div className="text-sm text-gray-400">Total Parts: <span className="text-white font-mono ml-4">R {estimateData.totalParts.toFixed(2)}</span></div>
-                  <div className="text-sm text-gray-400">Subtotal: <span className="text-white font-mono ml-4">R {estimateData.subtotal.toFixed(2)}</span></div>
-                  <div className="text-sm text-gray-400">VAT (15%): <span className="text-white font-mono ml-4">R {estimateData.tax.toFixed(2)}</span></div>
-                  <div className="text-xl font-bold text-blue-400 mt-4 border-t border-white/10 pt-4">
-                    Grand Total: <span className="font-mono">R {estimateData.grandTotal.toFixed(2)}</span>
+                <div className="space-y-2 text-right bg-white p-4 rounded-2xl border border-slate-100">
+                  <div className="text-sm text-slate-500 flex justify-end gap-4">Total Labor ({estimateData.totalHours} hrs @ R{estimateData.laborRate}): <span className="text-slate-800 font-mono w-24">R {(estimateData.totalHours * estimateData.laborRate).toFixed(2)}</span></div>
+                  <div className="text-sm text-slate-500 flex justify-end gap-4">Total Parts: <span className="text-slate-800 font-mono w-24">R {estimateData.totalParts.toFixed(2)}</span></div>
+                  <div className="text-sm text-slate-500 flex justify-end gap-4">Subtotal: <span className="text-slate-800 font-mono w-24">R {estimateData.subtotal.toFixed(2)}</span></div>
+                  <div className="text-sm text-slate-500 flex justify-end gap-4">VAT (15%): <span className="text-slate-800 font-mono w-24">R {estimateData.tax.toFixed(2)}</span></div>
+                  <div className="text-xl font-bold text-brand-600 mt-4 pt-4 border-t border-slate-200 flex justify-end gap-4 items-center">
+                    Grand Total: <span className="font-mono bg-brand-50 px-3 py-1 rounded-lg">R {estimateData.grandTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="flex justify-between mt-8">
-                  <button onClick={() => setStep(1)} className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">Discard</button>
+                <div className="flex justify-between mt-8 pt-4">
+                  <button onClick={() => setStep(1)} className="px-6 py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors">Discard</button>
                   <button 
                     onClick={handleSaveEstimate}
-                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all"
+                    className="flex items-center gap-2 px-8 py-3 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 text-white font-semibold transition-all"
                   >
                     Save to Database <IconSmallCheck />
                   </button>
@@ -322,87 +354,146 @@
     // --- MAIN APP SHELL ---
     function App() {
       const [user, setUser] = useState(null);
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
       const [view, setView] = useState('dashboard'); 
+      const [loadingAuth, setLoadingAuth] = useState(true);
 
       useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
           setUser(currentUser);
+          setLoadingAuth(false);
         });
         return () => unsubscribe();
       }, []);
 
-      const handleLogin = async (e) => {
-        e.preventDefault();
+      const handleGoogleLogin = async () => {
         try {
-          await auth.signInWithEmailAndPassword(email, password);
+          await auth.signInWithPopup(googleProvider);
         } catch (error) {
+          console.error("Login failed:", error);
           alert("Login failed: " + error.message);
         }
       };
 
       const handleLogout = () => auth.signOut();
 
+      if (loadingAuth) {
+        return <div className="min-h-screen flex items-center justify-center bg-slate-50"><IconSpinner className="text-brand-500"/></div>;
+      }
+
       if (!user) {
         return (
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl">
-              <div className="flex justify-center mb-6">
-                <div className="w-14 h-14 p-3 bg-blue-600/20 text-blue-400 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.4)]">
+          <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Decorative Blobs */}
+            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" style={{ animationDelay: '1.5s' }}></div>
+            
+            <div className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 rounded-[2rem] p-10 shadow-2xl animate-slide-up relative z-10">
+              <div className="flex justify-center mb-8 animate-float">
+                <div className="w-20 h-20 p-4 bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl shadow-lg shadow-brand-500/30 transform rotate-3">
                   <IconWrench />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-center mb-8">VynixPanelB Login</h2>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <input type="email" placeholder="Technician Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-3 outline-none focus:border-blue-500 transition-colors" required />
-                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-3 outline-none focus:border-blue-500 transition-colors" required />
-                <button type="submit" className="w-full py-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all">Secure Login</button>
-              </form>
+              <h2 className="text-3xl font-extrabold text-center text-slate-800 mb-2">VynixPanelB</h2>
+              <p className="text-center text-slate-500 mb-8 font-medium">Technician Workspace</p>
+              
+              <button 
+                onClick={handleGoogleLogin} 
+                className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+              >
+                <IconGoogle />
+                Continue with Google
+              </button>
             </div>
           </div>
         );
       }
 
       return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-gray-900">
-          <nav className="hidden md:flex flex-col w-64 bg-white/5 backdrop-blur-md border-r border-white/10 p-6">
-            <div className="flex items-center gap-3 mb-10 text-xl font-bold text-blue-400">
-              <div className="w-6 h-6"><IconWrench /></div> VynixPanelB
+        <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-800 font-sans">
+          {/* Desktop Sidebar */}
+          <nav className="hidden md:flex flex-col w-72 bg-white border-r border-slate-200 p-6 shadow-sm z-10">
+            <div className="flex items-center gap-3 mb-10 px-2">
+              <div className="w-10 h-10 p-2 bg-brand-600 text-white rounded-xl shadow-md"><IconWrench /></div>
+              <span className="text-2xl font-bold tracking-tight">VynixPanelB</span>
             </div>
-            <div className="space-y-4 flex-1">
-              <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-full transition-all ${view === 'dashboard' ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'hover:bg-white/5'}`}>
+            
+            <div className="space-y-2 flex-1">
+              <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-medium transition-all duration-300 ${view === 'dashboard' ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
                 <IconDashboard /> Dashboard
               </button>
-              <button onClick={() => setView('wizard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-full transition-all ${view === 'wizard' ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'hover:bg-white/5'}`}>
+              <button onClick={() => setView('wizard')} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-medium transition-all duration-300 ${view === 'wizard' ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
                 <IconCar /> New Estimate
               </button>
             </div>
-            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-full transition-all">
-              <IconLogout /> Logout
-            </button>
+
+            <div className="border-t border-slate-100 pt-6 mt-6">
+              <div className="flex items-center gap-3 px-4 mb-4">
+                <img src={user.photoURL || "https://ui-avatars.com/api/?name="+user.displayName} alt="Avatar" className="w-10 h-10 rounded-full border border-slate-200" />
+                <div className="overflow-hidden">
+                  <p className="text-sm font-semibold truncate">{user.displayName || "Technician"}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+              <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors font-medium">
+                <IconLogout /> Sign Out
+              </button>
+            </div>
           </nav>
 
-          <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 overflow-y-auto">
-            {view === 'wizard' ? (
-              <EstimateWizard onComplete={() => setView('dashboard')} />
-            ) : (
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-                <h2 className="text-2xl font-bold mb-4">Recent Estimates</h2>
-                <p className="text-gray-400">Estimates stored in Firebase realtime database will appear here.</p>
-              </div>
-            )}
+          {/* Main Content */}
+          <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 overflow-y-auto relative">
+            {/* Subtle background element */}
+            <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-brand-50 to-transparent -z-10"></div>
+            
+            <div className="max-w-5xl mx-auto">
+              <header className="mb-8 hidden md:block animate-slide-up">
+                <h1 className="text-3xl font-bold text-slate-800">{view === 'dashboard' ? 'Dashboard Overview' : 'Create Estimate'}</h1>
+                <p className="text-slate-500 mt-1">{view === 'dashboard' ? 'Review your recent AI analyses and repairs.' : 'Follow the steps to scan vehicle damage.'}</p>
+              </header>
+
+              {view === 'wizard' ? (
+                <EstimateWizard onComplete={() => setView('dashboard')} />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
+                  {/* Dashboard Stats Placeholder */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                    <p className="text-slate-500 text-sm font-medium mb-1">Total Estimates</p>
+                    <p className="text-3xl font-bold text-slate-800">24</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                    <p className="text-slate-500 text-sm font-medium mb-1">Pending Approval</p>
+                    <p className="text-3xl font-bold text-amber-500">8</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                    <p className="text-slate-500 text-sm font-medium mb-1">Revenue (Month)</p>
+                    <p className="text-3xl font-bold text-green-500">R 45,200</p>
+                  </div>
+
+                  <div className="md:col-span-3 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm mt-4">
+                    <h2 className="text-xl font-bold mb-4 text-slate-800">Recent Estimates</h2>
+                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <IconCar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-500 font-medium">Estimates stored in Firebase realtime database will appear here.</p>
+                      <button onClick={() => setView('wizard')} className="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-full text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm">Start New Estimate</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </main>
 
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900/90 backdrop-blur-md border-t border-white/10 p-4 flex justify-around items-center z-50">
-            <button onClick={() => setView('dashboard')} className={`p-3 rounded-full ${view === 'dashboard' ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'text-gray-400'}`}>
+          {/* Mobile Bottom Navigation */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 flex justify-around items-center z-50 pb-safe">
+            <button onClick={() => setView('dashboard')} className={`p-3 rounded-2xl flex flex-col items-center gap-1 transition-all ${view === 'dashboard' ? 'text-brand-600 bg-brand-50' : 'text-slate-400 hover:text-slate-600'}`}>
               <IconDashboard />
+              <span className="text-[10px] font-semibold">Home</span>
             </button>
-            <button onClick={() => setView('wizard')} className={`p-3 rounded-full ${view === 'wizard' ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'text-gray-400'}`}>
+            <button onClick={() => setView('wizard')} className="p-4 rounded-full bg-brand-600 text-white shadow-lg shadow-brand-500/30 transform -translate-y-4 hover:scale-105 transition-transform border-4 border-slate-50">
               <IconCar />
             </button>
-            <button onClick={handleLogout} className="p-3 rounded-full text-red-400 hover:bg-red-500/10">
+            <button onClick={handleLogout} className="p-3 rounded-2xl flex flex-col items-center gap-1 text-slate-400 hover:text-red-500 transition-all">
               <IconLogout />
+              <span className="text-[10px] font-semibold">Logout</span>
             </button>
           </nav>
         </div>
