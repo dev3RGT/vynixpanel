@@ -158,7 +158,7 @@
     .edit-n {
       background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text);
       border-radius: 9px; padding: 7px 10px; font-family: 'JetBrains Mono', monospace;
-      font-size: 13px; width: 88px; outline: none; transition: border-color 0.2s;
+      font-size: 13px; outline: none; transition: border-color 0.2s; text-align: right;
     }
     .edit-n:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
 
@@ -553,28 +553,36 @@
     return { totalHours, totalParts, subtotal, tax, grandTotal: subtotal+tax };
   }
 
-  /* ─── LINE ITEM ROW ───────────────────── */
+  /* ─── MOBILE OPTIMIZED LINE ITEM ROW ─── */
   function LineRow({ item, idx, onChange, onDelete }) {
     return (
-      <div style={{display:'grid',gridTemplateColumns:'1fr auto auto auto auto',gap:8,alignItems:'center',padding:'12px 0',borderBottom:'1px solid var(--border2)'}}>
-        <span style={{fontSize:13,fontWeight:600,color:'var(--text)',wordBreak:'break-word',lineHeight:1.4}}>{item.description}</span>
-        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end'}}>
-          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px',whiteSpace:'nowrap'}}>HRS</label>
-          <input type="number" className="edit-n" value={item.laborHours} min="0" step="0.5"
-            onChange={e=>{const h=parseFloat(e.target.value)||0; onChange(idx,{...item,laborHours:h,laborCost:h*LABOR,total:h*LABOR+item.partsCost});}}/>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 sm:py-3 border-b border-[var(--border2)] gap-3 sm:gap-4">
+        {/* Description & Mobile Delete Button */}
+        <div className="flex-1 flex justify-between items-start sm:block">
+          <span style={{fontSize:13,fontWeight:600,color:'var(--text)',wordBreak:'break-word',lineHeight:1.4}}>{item.description}</span>
+          <button className="sm:hidden text-[var(--red)] opacity-70 p-1" onClick={()=>onDelete(idx)}><ITrash/></button>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end'}}>
-          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px',whiteSpace:'nowrap'}}>PARTS</label>
-          <input type="number" className="edit-n" value={item.partsCost} min="0" step="50"
-            onChange={e=>{const p=parseFloat(e.target.value)||0; onChange(idx,{...item,partsCost:p,total:item.laborCost+p});}}/>
+
+        {/* Inputs & Desktop Delete Button */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full sm:w-auto">
+          <div className="flex flex-col gap-1 items-start sm:items-end">
+            <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono'}}>HRS</label>
+            <input type="number" className="edit-n w-[70px] sm:w-[80px]" value={item.laborHours} min="0" step="0.5"
+              onChange={e=>{const h=parseFloat(e.target.value)||0; onChange(idx,{...item,laborHours:h,laborCost:h*LABOR,total:h*LABOR+item.partsCost});}}/>
+          </div>
+          <div className="flex flex-col gap-1 items-start sm:items-end">
+            <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono'}}>PARTS(R)</label>
+            <input type="number" className="edit-n w-[80px] sm:w-[88px]" value={item.partsCost} min="0" step="50"
+              onChange={e=>{const p=parseFloat(e.target.value)||0; onChange(idx,{...item,partsCost:p,total:item.laborCost+p});}}/>
+          </div>
+          <div className="flex flex-col gap-1 items-end min-w-[60px]">
+            <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono'}}>TOTAL</label>
+            <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',paddingTop:4}}>{item.total.toFixed(0)}</span>
+          </div>
+          <button className="hidden sm:flex text-[var(--red)] opacity-70 p-2 items-center justify-center ml-2" onClick={()=>onDelete(idx)}>
+            <ITrash/>
+          </button>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end',minWidth:72}}>
-          <label style={{fontSize:9,color:'var(--text3)',fontFamily:'JetBrains Mono',letterSpacing:'0.5px'}}>TOTAL</label>
-          <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',paddingTop:6}}>{item.total.toFixed(0)}</span>
-        </div>
-        <button onClick={()=>onDelete(idx)} style={{padding:8,borderRadius:10,border:'none',background:'transparent',cursor:'pointer',color:'var(--red)',opacity:0.7,display:'flex',alignItems:'center',justifyContent:'center',marginTop:8,minWidth:32,minHeight:32}}>
-          <ITrash/>
-        </button>
       </div>
     );
   }
@@ -639,7 +647,7 @@
           shopName: profile?.shop || 'Vynix Auto',
           vehicle:veh, photos:imgs, damagedPanels:hit,
           financials:fin, status:'pending',
-          createdAt:firebase.database.ServerValue.TIMESTAMP
+          createdAt: Date.now() // Uses explicit timestamp for immediate local sorting sync
         });
         onDone();
       } catch(e){ console.error(e); alert('Error saving.'); }
@@ -787,37 +795,44 @@
           {/* STEP 5 */}
           {step===5 && fin && (
             <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
-              <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+              
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
                   <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Estimate Summary</h2>
                   <p style={{fontSize:12,color:'var(--text2)',margin:'4px 0 0'}}>Edit hours, parts, or add custom items</p>
                 </div>
-                <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,profile,null)}
+                <button className="btn-g w-full sm:w-auto" onClick={()=>exportPDF(veh,fin,hit,profile,null)}
                   style={{flexShrink:0,padding:'9px 16px',fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}>
-                  <IDl/> PDF
+                  <IDl/> Export PDF
                 </button>
               </div>
 
-              {/* Line items */}
+              {/* Line items Container */}
               <div style={{background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:16,padding:'4px 14px 12px'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr auto auto auto auto',gap:8,padding:'8px 0',borderBottom:'1px solid var(--border)',marginBottom:4}}>
+                
+                {/* Desktop Headers */}
+                <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto] gap-8 py-3 border-b border-[var(--border)] mb-1">
                   {['ITEM','HRS','PARTS','TOTAL',''].map((h,i)=>(
                     <span key={i} className="mono" style={{fontSize:9,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px',textAlign:i>0?'right':'left'}}>{h}</span>
                   ))}
                 </div>
+
+                {/* Rows */}
                 {fin.lineItems.map((item,idx)=>(
                   <LineRow key={idx} item={item} idx={idx} onChange={updateItem} onDelete={deleteItem}/>
                 ))}
-                <div style={{display:'flex',gap:8,marginTop:12,paddingTop:12,borderTop:'1px dashed var(--border)'}}>
-                  <input className="field" style={{flex:1,padding:'10px 14px',fontSize:13}} placeholder="Add custom line item…"
+
+                {/* Add Custom Item - Responsive Layout */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-dashed border-[var(--border)]">
+                  <input className="field sm:flex-1" style={{padding:'10px 14px',fontSize:13}} placeholder="Add custom line item…"
                     value={newDesc} onChange={e=>setNewDesc(e.target.value)}
                     onKeyDown={e=>e.key==='Enter'&&addItem()}/>
-                  <button onClick={addItem} style={{
+                  <button onClick={addItem} className="w-full sm:w-auto" style={{
                     background:'rgba(77,123,255,0.1)',color:'var(--accent)',
                     border:'1px solid rgba(77,123,255,0.25)',borderRadius:12,
-                    padding:'0 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:6,
-                    fontFamily:'Inter',fontWeight:700,fontSize:13,flexShrink:0,minHeight:48
-                  }}><IPlus/> Add</button>
+                    padding:'0 20px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                    fontFamily:'Inter',fontWeight:700,fontSize:13,flexShrink:0,minHeight:46
+                  }}><IPlus/> Add Item</button>
                 </div>
               </div>
 
@@ -839,14 +854,12 @@
                 </div>
               </div>
 
-              <div style={{display:'flex',gap:10,flexDirection:'column'}}>
-                <button className="btn-p" onClick={save} disabled={saving} style={{width:'100%'}}>
-                  {saving ? <ISpin/> : <><ICheck/> Save to Database</>}
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3 mt-2">
+                <button className="btn-p w-full" onClick={save} disabled={saving} style={{padding:'16px'}}>
+                  {saving ? <ISpin/> : <><ICheck/> Save Estimate</>}
                 </button>
-                <div style={{display:'flex',gap:8}}>
-                  <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,profile,null)} style={{flex:1,fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> Download PDF</button>
-                  <button className="btn-g" onClick={()=>setStep(1)} style={{flex:1,fontSize:13}}>Discard</button>
-                </div>
+                <button className="btn-g w-full" onClick={()=>setStep(1)} style={{padding:'14px',fontSize:14}}>Discard & Start Over</button>
               </div>
             </div>
           )}
@@ -998,11 +1011,17 @@
     const [profile, setProfile] = useState({ name: '', shop: '' });
     const [view,    setView]    = useState('dashboard');
     const [loading, setLoading] = useState(true);
-    const [dark,    setDark]    = useState(true);
     const [sheet,   setSheet]   = useState(false); // logout sheet
     const [showProfile, setShowProfile] = useState(false);
 
+    // Initialize dark mode from localStorage or default to true
+    const [dark, setDark] = useState(() => {
+      const savedTheme = localStorage.getItem('vynix_theme_dark');
+      return savedTheme !== null ? JSON.parse(savedTheme) : true;
+    });
+
     useEffect(()=>{
+      localStorage.setItem('vynix_theme_dark', JSON.stringify(dark));
       document.documentElement.setAttribute('data-theme', dark?'dark':'light');
       document.getElementById('meta-theme').content = dark?'#070c1a':'#f0f4ff';
     },[dark]);
@@ -1094,10 +1113,12 @@
             ))}
           </div>
           <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
-            <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:16}}>
+              <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+            </div>
             
             {/* Clickable Profile Section */}
-            <div onClick={() => setShowProfile(true)} style={{display:'flex',alignItems:'center',gap:10,padding:'14px 4px 12px',cursor:'pointer'}}>
+            <div onClick={() => setShowProfile(true)} className="surface" style={{display:'flex',alignItems:'center',gap:10,padding:'12px',borderRadius:16,marginBottom:12,cursor:'pointer',transition:'background 0.2s'}}>
               <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
               <div style={{overflow:'hidden',flex:1}}>
                 <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{profile.name || 'Technician'}</p>
@@ -1119,7 +1140,7 @@
         <main id="main-content" style={{flex:1,padding:'16px 16px',paddingBottom:'calc(88px + env(safe-area-inset-bottom))',overflowY:'auto',minHeight:'100dvh'}}>
           <div style={{maxWidth:760,margin:'0 auto'}}>
             {/* Mobile header */}
-            <header style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+            <header className="md:hidden" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:34,height:34,padding:7,borderRadius:11,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}>
                   <IWrench/>
@@ -1135,6 +1156,9 @@
               </div>
             </header>
 
+            {/* Desktop header spacing adjustment */}
+            <div className="hidden md:block h-[20px]"></div>
+
             {view==='wizard'
               ? <Wizard onDone={()=>setView('dashboard')} profile={profile} />
               : <Dash onNew={()=>setView('wizard')} profile={profile} />
@@ -1143,7 +1167,7 @@
         </main>
 
         {/* ── Mobile Bottom Nav ── */}
-        <nav className="mobile-nav">
+        <nav className="mobile-nav md:hidden">
           <button className={`mnav-btn ${view==='dashboard'?'active':''}`} onClick={()=>setView('dashboard')}>
             <IDash/> HOME
           </button>
