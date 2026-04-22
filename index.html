@@ -13,6 +13,7 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -83,12 +84,8 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html { font-size: 16px; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: none;
-      margin: 0;
+      background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased; overscroll-behavior-y: none; margin: 0;
       transition: background 0.3s ease, color 0.3s ease;
     }
     ::-webkit-scrollbar { display: none; }
@@ -96,89 +93,52 @@
 
     /* ─── GLASS & SURFACES ─── */
     .surface {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: background 0.3s ease, border-color 0.3s ease;
+      background: var(--surface); border: 1px solid var(--border);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     }
     .surface-solid {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      transition: background 0.3s ease;
+      background: var(--bg2); border: 1px solid var(--border);
     }
 
     /* ─── INPUTS ─── */
     .field {
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 14px 18px;
-      width: 100%;
-      outline: none;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 500;
-      transition: all 0.2s;
+      background: var(--input-bg); border: 1px solid var(--input-border);
+      color: var(--text); border-radius: 14px; padding: 14px 18px;
+      width: 100%; outline: none; font-family: 'Inter', sans-serif;
+      font-size: 15px; font-weight: 500; transition: all 0.2s;
       -webkit-appearance: none;
     }
     .field:focus {
-      background: rgba(77,123,255,0.08);
-      border-color: var(--accent);
+      background: rgba(77,123,255,0.08); border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
     .field::placeholder { color: var(--text3); }
 
     /* ─── BUTTONS ─── */
     .btn-p {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      border: none;
-      border-radius: 100px;
-      padding: 14px 26px;
-      font-family: 'Inter', sans-serif;
-      font-weight: 700;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.22s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      -webkit-appearance: none;
-      touch-action: manipulation;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+      border: none; border-radius: 100px; padding: 14px 26px;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 15px;
+      cursor: pointer; transition: all 0.22s; display: inline-flex;
+      align-items: center; justify-content: center; gap: 8px; touch-action: manipulation;
     }
     .btn-p:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
     .btn-p:active { transform: scale(0.97); }
-    .btn-p:disabled { background: var(--input-bg); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-p:disabled { background: var(--input-bg); color: var(--text3); cursor: not-allowed; box-shadow: none; transform: none; }
 
     .btn-g {
-      background: var(--input-bg);
-      color: var(--text2);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 13px 22px;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      -webkit-appearance: none;
-      touch-action: manipulation;
+      background: var(--input-bg); color: var(--text2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 13px 22px; font-family: 'Inter', sans-serif;
+      font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
     }
     .btn-g:hover { background: var(--border); color: var(--text); }
     .btn-g:active { transform: scale(0.97); }
 
     /* ─── BADGES ─── */
     .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 10px; border-radius: 100px;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+      display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+      border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
       font-family: 'JetBrains Mono', monospace;
     }
     .badge-pending  { background: rgba(232,160,0,0.12); color: var(--amber); border: 1px solid rgba(232,160,0,0.25); }
@@ -196,207 +156,131 @@
 
     /* ─── EDIT INPUT ─── */
     .edit-n {
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      color: var(--text);
-      border-radius: 9px;
-      padding: 7px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      width: 88px;
-      outline: none;
-      -webkit-appearance: none;
-      transition: border-color 0.2s;
+      background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text);
+      border-radius: 9px; padding: 7px 10px; font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; width: 88px; outline: none; transition: border-color 0.2s;
     }
     .edit-n:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
 
     /* ─── SKELETON ─── */
     @keyframes shimmer { 0%{background-position:-500px 0} 100%{background-position:500px 0} }
-    .skel {
-      background: var(--skel);
-      background-size: 500px 100%;
-      animation: shimmer 1.6s infinite;
-      border-radius: 14px;
-    }
+    .skel { background: var(--skel); background-size: 500px 100%; animation: shimmer 1.6s infinite; border-radius: 14px; }
 
     /* ─── ANIMATIONS ─── */
     @keyframes slideUp { 0%{opacity:0;transform:translateY(16px)} 100%{opacity:1;transform:translateY(0)} }
-    @keyframes fadeIn  { 0%{opacity:0} 100%{opacity:1} }
     @keyframes floatY  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes scanLine{ 0%{transform:translateY(0)} 50%{transform:translateY(70px)} 100%{transform:translateY(0)} }
     @keyframes sheetUp { 0%{transform:translateY(100%);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    @keyframes modalIn { 0%{opacity:0;transform:translate(-50%,-45%) scale(0.95)} 100%{opacity:1;transform:translate(-50%,-50%) scale(1)} }
     @keyframes overlayIn{ 0%{opacity:0} 100%{opacity:1} }
-    @keyframes toggleSlide { 0%{transform:translateX(0)} 100%{transform:translateX(28px)} }
+    
     .anim-up   { animation: slideUp 0.38s cubic-bezier(0.16,1,0.3,1) forwards; }
     .anim-float{ animation: floatY 3s ease-in-out infinite; }
     .anim-scan { animation: scanLine 1.8s ease-in-out infinite; }
-    .anim-fade { animation: fadeIn 0.25s ease forwards; }
-    .sheet-up  { animation: sheetUp 0.36s cubic-bezier(0.16,1,0.3,1) forwards; }
     .overlay-in{ animation: overlayIn 0.2s ease forwards; }
 
     /* ─── DARK MODE PILL TOGGLE ─── */
     .dm-pill {
-      display: flex;
-      align-items: center;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 3px;
-      gap: 2px;
-      cursor: pointer;
-      transition: background 0.3s;
-      user-select: none;
-      touch-action: manipulation;
+      display: flex; align-items: center; background: var(--input-bg);
+      border: 1px solid var(--border); border-radius: 100px; padding: 3px;
+      gap: 2px; cursor: pointer; user-select: none; touch-action: manipulation;
     }
     .dm-btn {
-      width: 32px; height: 32px;
-      border-radius: 100px;
+      width: 32px; height: 32px; border-radius: 100px;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      color: var(--text3);
+      transition: all 0.25s; color: var(--text3);
     }
-    .dm-btn.active {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 2px 10px var(--accent-glow);
-    }
+    .dm-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 10px var(--accent-glow); }
 
-    /* ─── BOTTOM SHEET OVERLAY ─── */
-    .sheet-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(4px);
+    /* ─── RESPONSIVE MODAL/SHEET (MOBILE VS DESKTOP) ─── */
+    .responsive-overlay {
+      position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
     }
-    .sheet-panel {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 201;
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
+    .responsive-panel {
+      position: fixed; z-index: 201; background: var(--bg2); border: 1px solid var(--border);
+      /* Mobile default: Bottom sheet */
+      bottom: 0; left: 0; right: 0; top: auto;
       border-radius: 24px 24px 0 0;
-      padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+      padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+      animation: sheetUp 0.36s cubic-bezier(0.16,1,0.3,1) forwards;
     }
-    .sheet-handle {
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 100px;
-      margin: 10px auto 20px;
+    .responsive-handle {
+      width: 36px; height: 4px; background: var(--border); border-radius: 100px; margin: 0 auto 20px;
+    }
+    @media (min-width: 768px) {
+      .responsive-panel {
+        /* Desktop: Centered modal */
+        top: 50%; left: 50%; bottom: auto; right: auto;
+        transform: translate(-50%, -50%);
+        width: 420px; border-radius: 24px; padding: 32px;
+        animation: modalIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+        box-shadow: var(--shadow-lg);
+      }
+      .responsive-handle { display: none; } /* Hide drag handle on desktop */
     }
 
     /* ─── MOBILE BOTTOM NAV ─── */
     .mobile-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--surface); border-top: 1px solid var(--border);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
       padding: 8px 24px calc(8px + env(safe-area-inset-bottom));
       display: flex; align-items: center; justify-content: space-around;
     }
     .mnav-btn {
       display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 6px 12px; border-radius: 16px;
-      border: none; background: transparent; cursor: pointer;
+      padding: 6px 12px; border: none; background: transparent; cursor: pointer;
       font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
-      letter-spacing: 0.6px; color: var(--text3);
-      transition: all 0.2s; touch-action: manipulation;
-      min-width: 56px;
+      letter-spacing: 0.6px; color: var(--text3); transition: all 0.2s;
     }
     .mnav-btn.active { color: var(--accent); }
-    .mnav-btn svg { transition: transform 0.2s; }
-    .mnav-btn.active svg { transform: scale(1.1); }
     .mnav-fab {
       width: 52px; height: 52px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border: none; cursor: pointer; color: #fff;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 20px var(--accent-glow);
-      transform: translateY(-12px);
-      transition: all 0.22s; touch-action: manipulation;
+      box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-12px);
     }
     .mnav-fab:active { transform: translateY(-12px) scale(0.93); }
 
     /* ─── SIDEBAR ─── */
     .sidebar {
       width: 260px; height: 100vh; position: sticky; top: 0;
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
-      padding: 24px 16px;
-      display: flex; flex-direction: column;
-      transition: background 0.3s;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      padding: 24px 16px; display: flex; flex-direction: column;
     }
     .snav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; border-radius: 14px;
-      border: 1px solid transparent;
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px;
       font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
       cursor: pointer; background: transparent; color: var(--text2);
-      width: 100%; transition: all 0.18s; touch-action: manipulation;
+      border: 1px solid transparent; transition: all 0.18s;
     }
-    .snav-item.active {
-      background: rgba(77,123,255,0.1);
-      color: var(--accent);
-      border-color: rgba(77,123,255,0.2);
-    }
+    .snav-item.active { background: rgba(77,123,255,0.1); color: var(--accent); border-color: rgba(77,123,255,0.2); }
     .snav-item:not(.active):hover { background: var(--surface); color: var(--text); }
 
-    /* ─── STAT CARDS ─── */
-    .stat-card {
-      padding: 18px 20px; border-radius: 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      transition: all 0.25s;
-    }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-
-    /* ─── ESTIMATE ROW ─── */
+    .stat-card { padding: 18px 20px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); }
     .est-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 20px; cursor: pointer;
-      border-bottom: 1px solid var(--border2);
-      transition: background 0.15s;
-      -webkit-user-select: none; user-select: none;
+      display: flex; align-items: center; gap: 12px; padding: 14px 20px; cursor: pointer;
+      border-bottom: 1px solid var(--border2); transition: background 0.15s; user-select: none;
     }
     .est-row:hover { background: rgba(77,123,255,0.04); }
-    .est-row:active { background: rgba(77,123,255,0.08); }
-    .est-row:last-child { border-bottom: none; }
-
-    /* ─── MISC ─── */
-    .divider { height: 1px; background: var(--border); }
+    
     .mono { font-family: 'JetBrains Mono', monospace; }
-
-    /* ─── SMOOTH SCROLL for wizard steps ─── */
-    .wizard-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ─── SAFE AREA PADDING ─── */
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-
-    /* ─── PHOTO GRID ─── */
-    .photo-thumb {
-      width: 100%; aspect-ratio: 1;
-      object-fit: cover; border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    /* ─── step progress dot ─── */
     .step-dot {
-      width: 30px; height: 30px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 800;
-      transition: all 0.25s;
-      flex-shrink: 0;
+      width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800; transition: all 0.25s; flex-shrink: 0;
     }
     .step-dot.on  { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-glow); }
     .step-dot.off { background: var(--input-bg); color: var(--text3); }
-
-    @media (max-width: 640px) {
-      .btn-p, .btn-g { min-height: 48px; } /* touch target */
-    }
+    
+    @media (max-width: 640px) { .btn-p, .btn-g { min-height: 48px; } }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
 <script type="text/babel">
-  const { useState, useEffect, useRef, useCallback } = React;
+  const { useState, useEffect, useRef } = React;
 
   /* ─── FIREBASE ─────────────────────────── */
   const firebaseConfig = {
@@ -463,7 +347,6 @@
   const IGoog = () => <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
   const IChevD = ({open}) => <svg className="w-4 h-4 flex-shrink-0" style={{transform:open?'rotate(90deg)':'rotate(0deg)',transition:'transform 0.2s',color:'var(--text3)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
 
-  /* Dark mode icon: screen / monitor for LIGHT, circuit/eye for DARK */
   const IScreenLight = () => (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -476,57 +359,92 @@
       <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
     </svg>
   );
+  const IUser = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>;
 
   /* ─── DARK MODE PILL ──────────────────── */
   function DarkModePill({ dark, onToggle }) {
     return (
       <div className="dm-pill" onClick={onToggle} role="button" aria-label="Toggle theme" style={{minWidth:76}}>
-        <div className={`dm-btn ${!dark ? 'active' : ''}`} title="Light mode">
-          <IScreenLight />
-        </div>
-        <div className={`dm-btn ${dark ? 'active' : ''}`} title="Dark mode">
-          <ICircuitDark />
-        </div>
+        <div className={`dm-btn ${!dark ? 'active' : ''}`} title="Light mode"><IScreenLight /></div>
+        <div className={`dm-btn ${dark ? 'active' : ''}`} title="Dark mode"><ICircuitDark /></div>
       </div>
     );
   }
 
-  /* ─── LOGOUT BOTTOM SHEET ─────────────── */
-  function LogoutSheet({ onConfirm, onCancel }) {
+  /* ─── MODALS (Logout & Profile) ───────── */
+  // Responsive Modal Shell (Bottom Sheet on Mobile, Modal on Desktop)
+  function ResponsiveModal({ children, onCancel }) {
     return (
       <>
-        <div className="sheet-overlay overlay-in" onClick={onCancel} />
-        <div className="sheet-panel sheet-up">
-          <div className="sheet-handle"/>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:12,paddingBottom:8}}>
-            <div style={{
-              width:56,height:56,borderRadius:16,
-              background:'rgba(224,48,48,0.1)',
-              border:'1px solid rgba(224,48,48,0.2)',
-              display:'flex',alignItems:'center',justifyContent:'center',
-              color:'var(--red)',marginBottom:4
-            }}>
-              <ILogout cls="w-6 h-6"/>
-            </div>
-            <div>
-              <p style={{fontSize:18,fontWeight:800,color:'var(--text)',marginBottom:6}}>Sign Out?</p>
-              <p style={{fontSize:14,color:'var(--text2)',lineHeight:1.5}}>You'll need to sign in again to access your estimates and workspace.</p>
-            </div>
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:20}}>
-            <button
-              onClick={onConfirm}
-              style={{
-                background:'var(--red)',color:'#fff',border:'none',
-                borderRadius:100,padding:'15px 0',fontFamily:'Inter',
-                fontWeight:700,fontSize:15,cursor:'pointer',width:'100%',
-                transition:'opacity 0.2s'
-              }}
-            >Sign Out</button>
-            <button className="btn-g" onClick={onCancel} style={{width:'100%',padding:'14px 0',fontSize:15}}>Cancel</button>
-          </div>
+        <div className="responsive-overlay overlay-in" onClick={onCancel} />
+        <div className="responsive-panel">
+          <div className="responsive-handle"/>
+          {children}
         </div>
       </>
+    );
+  }
+
+  function LogoutModal({ onConfirm, onCancel }) {
+    return (
+      <ResponsiveModal onCancel={onCancel}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:12,paddingBottom:8}}>
+          <div style={{
+            width:56,height:56,borderRadius:16, background:'rgba(224,48,48,0.1)',
+            border:'1px solid rgba(224,48,48,0.2)', display:'flex',alignItems:'center',justifyContent:'center',
+            color:'var(--red)',marginBottom:4
+          }}>
+            <ILogout cls="w-6 h-6"/>
+          </div>
+          <div>
+            <p style={{fontSize:18,fontWeight:800,color:'var(--text)',marginBottom:6}}>Sign Out?</p>
+            <p style={{fontSize:14,color:'var(--text2)',lineHeight:1.5}}>You'll need to sign in again to access your estimates.</p>
+          </div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:20}}>
+          <button onClick={onConfirm} style={{
+            background:'var(--red)',color:'#fff',border:'none', borderRadius:100,padding:'15px 0',
+            fontFamily:'Inter',fontWeight:700,fontSize:15,cursor:'pointer',width:'100%', transition:'opacity 0.2s'
+          }}>Sign Out</button>
+          <button className="btn-g" onClick={onCancel} style={{width:'100%',padding:'14px 0',fontSize:15}}>Cancel</button>
+        </div>
+      </ResponsiveModal>
+    );
+  }
+
+  function ProfileModal({ profile, onSave, onCancel }) {
+    const [name, setName] = useState(profile.name || '');
+    const [shop, setShop] = useState(profile.shop || '');
+
+    return (
+      <ResponsiveModal onCancel={onCancel}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:12,paddingBottom:16}}>
+          <div style={{
+            width:56,height:56,borderRadius:16, background:'linear-gradient(135deg,var(--accent),var(--accent2))',
+            display:'flex',alignItems:'center',justifyContent:'center', color:'#fff',marginBottom:4
+          }}>
+            <IUser/>
+          </div>
+          <div>
+            <p style={{fontSize:18,fontWeight:800,color:'var(--text)',marginBottom:2}}>Edit Profile</p>
+            <p style={{fontSize:13,color:'var(--text2)'}}>Update your details for PDF reports.</p>
+          </div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <div>
+            <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginLeft:4,marginBottom:6,display:'block'}}>YOUR NAME</label>
+            <input className="field" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Katlego" />
+          </div>
+          <div>
+            <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginLeft:4,marginBottom:6,display:'block'}}>SHOP NAME</label>
+            <input className="field" value={shop} onChange={e=>setShop(e.target.value)} placeholder="e.g. Vynix Auto Repair" />
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:24}}>
+          <button className="btn-g" onClick={onCancel} style={{flex:1,padding:'14px 0'}}>Cancel</button>
+          <button className="btn-p" onClick={()=>onSave(name,shop)} style={{flex:1,padding:'14px 0'}}>Save Profile</button>
+        </div>
+      </ResponsiveModal>
     );
   }
 
@@ -541,8 +459,7 @@
           <rect x="40" y="10" width="200" height="294" rx="28" className="c-body"/>
           {PANELS.map(p=>(
             <rect key={p.id} x={p.x} y={p.y} width={p.w} height={p.h} rx="4"
-              className={selected.includes(p.id)?'p-hit':'p-ok'}
-              onClick={()=>onToggle(p.id)}>
+              className={selected.includes(p.id)?'p-hit':'p-ok'} onClick={()=>onToggle(p.id)}>
               <title>{p.label}</title>
             </rect>
           ))}
@@ -551,8 +468,6 @@
           <line x1="140" y1="10" x2="140" y2="304" stroke="var(--border)" strokeWidth="1" strokeDasharray="4,4"/>
           <text x="140" y="7"   textAnchor="middle" fill="var(--text3)" fontSize="6" fontFamily="JetBrains Mono">FRONT</text>
           <text x="140" y="308" textAnchor="middle" fill="var(--text3)" fontSize="6" fontFamily="JetBrains Mono">REAR</text>
-          <text x="14" y="160" textAnchor="middle" fill="var(--text3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(-90,14,160)">DRIVER</text>
-          <text x="266" y="160" textAnchor="middle" fill="var(--text3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(90,266,160)">PASSENGER</text>
         </svg>
         <p style={{fontSize:11,color:'var(--text3)',marginTop:8,fontFamily:'JetBrains Mono',textAlign:'center'}}>Tap panels to mark as damaged</p>
       </div>
@@ -560,24 +475,30 @@
   }
 
   /* ─── PDF EXPORT ──────────────────────── */
-  function exportPDF(vehicle, fin, panels, tech, id) {
+  function exportPDF(vehicle, fin, panels, profile, id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const pw = doc.internal.pageSize.getWidth();
+    
+    const shopName = profile?.shop || 'VynixPanelB Auto';
+    const techName = profile?.name || 'Technician';
+
     doc.setFillColor(7,12,26); doc.rect(0,0,pw,38,'F');
     doc.setFillColor(26,79,255); doc.rect(0,0,4,38,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(232,238,255);
-    doc.text('VynixPanelB',14,16);
+    doc.text(shopName,14,16);
     doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(150,170,220);
     doc.text('AI-Powered Damage Estimate',14,23);
     doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`,14,29);
     doc.text(`Ref: ${id?id.slice(-8).toUpperCase():'DRAFT'}`,pw-14,29,{align:'right'});
-    doc.text(`Technician: ${tech||'N/A'}`,pw-14,23,{align:'right'});
+    doc.text(`Prepared by: ${techName}`,pw-14,23,{align:'right'});
+    
     doc.setFillColor(15,22,55); doc.roundedRect(10,44,pw-20,22,3,3,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,245,255);
     doc.text('VEHICLE DETAILS',16,53);
     doc.setFont('helvetica','normal'); doc.setTextColor(200,210,240);
     doc.text(`Make: ${vehicle.make||'–'}   Model: ${vehicle.model||'–'}   VIN: ${vehicle.vin||'–'}`,16,60);
+    
     let nextY = 72;
     if (panels && panels.length > 0) {
       doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,245,255);
@@ -588,6 +509,7 @@
       doc.text(split,16,nextY+6);
       nextY += 6 + split.length * 5 + 8;
     }
+    
     doc.autoTable({
       startY: nextY,
       head:[['Description','Labor Hrs','Labor (R)','Parts (R)','Total (R)']],
@@ -598,6 +520,7 @@
       columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'}},
       margin:{left:10,right:10}, theme:'grid',
     });
+    
     let fy = doc.lastAutoTable.finalY + 8;
     doc.setFillColor(240,244,255); doc.roundedRect(pw-82,fy,72,46,3,3,'F');
     doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(80,100,150);
@@ -613,6 +536,7 @@
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(26,79,255);
     doc.text('GRAND TOTAL',pw-84,fy+44,{align:'right'});
     doc.text(`R ${fin.grandTotal.toFixed(2)}`,rc,fy+44,{align:'right'});
+    
     const ph = doc.internal.pageSize.getHeight();
     doc.setFillColor(7,12,26); doc.rect(0,ph-14,pw,14,'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,120,160);
@@ -656,7 +580,7 @@
   }
 
   /* ─── ESTIMATE WIZARD ─────────────────── */
-  function Wizard({ onDone }) {
+  function Wizard({ onDone, profile }) {
     const [step, setStep]   = useState(1);
     const [uploading, setUploading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
@@ -710,8 +634,9 @@
       if(!fin)return; setSaving(true);
       try {
         await db.ref('estimates').push({
-          technicianId:auth.currentUser?.uid||'anon',
-          technicianName:auth.currentUser?.displayName||'Technician',
+          technicianId: auth.currentUser?.uid || 'anon',
+          technicianName: profile?.name || 'Technician',
+          shopName: profile?.shop || 'Vynix Auto',
           vehicle:veh, photos:imgs, damagedPanels:hit,
           financials:fin, status:'pending',
           createdAt:firebase.database.ServerValue.TIMESTAMP
@@ -725,7 +650,6 @@
 
     return (
       <div style={{maxWidth:680,margin:'0 auto'}}>
-        {/* Step progress */}
         <div className="surface" style={{borderRadius:100,padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
           {STEP_LABELS.map((lbl,i)=>{
             const n=i+1, on=step>=n;
@@ -767,9 +691,7 @@
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
                 <CarWireframe selected={hit} onToggle={togglePanel}/>
                 <div>
-                  <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>
-                    SELECTED ({hit.length})
-                  </p>
+                  <p className="mono" style={{fontSize:10,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>SELECTED ({hit.length})</p>
                   {hit.length===0
                     ? <p style={{fontSize:13,color:'var(--text3)'}}>Tap diagram to select panels</p>
                     : <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
@@ -843,7 +765,7 @@
                       <p style={{fontSize:13,color:'var(--text2)'}}>Mapping {hit.length||2} panels · Calculating repair costs</p>
                     </div>
                     <div style={{display:'flex',gap:5}}>
-                      {[0,1,2,3,4].map(i=>(
+                      {[0,1,2,3,4].map(i)=>(
                         <div key={i} style={{width:6,height:6,borderRadius:'50%',background:'var(--accent)',opacity:0.6,animation:'fadeIn 1s ease-in-out infinite',animationDelay:`${i*0.18}s`}}/>
                       ))}
                     </div>
@@ -870,7 +792,7 @@
                   <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Estimate Summary</h2>
                   <p style={{fontSize:12,color:'var(--text2)',margin:'4px 0 0'}}>Edit hours, parts, or add custom items</p>
                 </div>
-                <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,auth.currentUser?.displayName,null)}
+                <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,profile,null)}
                   style={{flexShrink:0,padding:'9px 16px',fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}>
                   <IDl/> PDF
                 </button>
@@ -922,7 +844,7 @@
                   {saving ? <ISpin/> : <><ICheck/> Save to Database</>}
                 </button>
                 <div style={{display:'flex',gap:8}}>
-                  <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,auth.currentUser?.displayName,null)} style={{flex:1,fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> Download PDF</button>
+                  <button className="btn-g" onClick={()=>exportPDF(veh,fin,hit,profile,null)} style={{flex:1,fontSize:13,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> Download PDF</button>
                   <button className="btn-g" onClick={()=>setStep(1)} style={{flex:1,fontSize:13}}>Discard</button>
                 </div>
               </div>
@@ -934,11 +856,12 @@
   }
 
   /* ─── DASHBOARD ───────────────────────── */
-  function Dash({ onNew }) {
+  function Dash({ onNew, profile }) {
     const [ests, setEsts] = useState(null);
     const [open, setOpen] = useState(null);
 
     useEffect(()=>{
+      // Listen to real-time database changes for persistence on refresh
       const ref = db.ref('estimates').orderByChild('createdAt').limitToLast(60);
       ref.on('value', snap=>{
         if (!snap.exists()) { setEsts([]); return; }
@@ -1001,7 +924,7 @@
                       </p>
                       <p style={{fontSize:11,color:'var(--text3)',margin:'3px 0 0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                         {est.createdAt?new Date(est.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):'–'}
-                        {est.technicianName?` · ${est.technicianName}`:''}
+                        {est.shopName?` · ${est.shopName}`:''}
                       </p>
                     </div>
                     <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:5,flexShrink:0}}>
@@ -1049,7 +972,8 @@
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10,paddingTop:4}}>
                           <span className="mono" style={{fontSize:16,fontWeight:800,color:'var(--accent)'}}>R {(est.financials?.grandTotal||0).toFixed(2)}</span>
                           <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-                            <button onClick={()=>exportPDF(est.vehicle||{},est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0},est.damagedPanels||[],est.technicianName,est.id)}
+                            {/* Uses the saved shop/technician name from the estimate history to preserve the record exactly as it was created */}
+                            <button onClick={()=>exportPDF(est.vehicle||{},est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0},est.damagedPanels||[],{name: est.technicianName, shop: est.shopName},est.id)}
                               className="btn-g" style={{padding:'7px 14px',fontSize:12,color:'var(--accent)',borderColor:'rgba(77,123,255,0.25)'}}><IDl/> PDF</button>
                             {est.status!=='approved'&&<button onClick={()=>setStatus(est.id,'approved')} style={{padding:'7px 14px',borderRadius:100,fontSize:12,fontWeight:700,background:'rgba(0,184,110,0.1)',color:'var(--green)',border:'1px solid rgba(0,184,110,0.2)',cursor:'pointer',fontFamily:'Inter'}}>✓ Approve</button>}
                             {est.status!=='rejected'&&<button onClick={()=>setStatus(est.id,'rejected')} style={{padding:'7px 14px',borderRadius:100,fontSize:12,fontWeight:700,background:'rgba(224,48,48,0.08)',color:'var(--red)',border:'1px solid rgba(224,48,48,0.18)',cursor:'pointer',fontFamily:'Inter'}}>✕ Reject</button>}
@@ -1071,19 +995,37 @@
   /* ─── APP ─────────────────────────────── */
   function App() {
     const [user,    setUser]    = useState(null);
+    const [profile, setProfile] = useState({ name: '', shop: '' });
     const [view,    setView]    = useState('dashboard');
     const [loading, setLoading] = useState(true);
     const [dark,    setDark]    = useState(true);
     const [sheet,   setSheet]   = useState(false); // logout sheet
+    const [showProfile, setShowProfile] = useState(false);
 
-    // Apply theme
     useEffect(()=>{
       document.documentElement.setAttribute('data-theme', dark?'dark':'light');
       document.getElementById('meta-theme').content = dark?'#070c1a':'#f0f4ff';
     },[dark]);
 
+    // Handle Authentication & Real-time Profile Loading
     useEffect(()=>{
-      return auth.onAuthStateChanged(u=>{setUser(u); setLoading(false);});
+      return auth.onAuthStateChanged(u=>{
+        setUser(u);
+        if (u) {
+          // Listen to User Profile for persistence and sync
+          const profileRef = db.ref(`users/${u.uid}`);
+          profileRef.on('value', snap => {
+            if (snap.exists()) {
+              setProfile(snap.val());
+            } else {
+              const defaultProfile = { name: u.displayName || 'Technician', shop: 'VynixPanelB Auto' };
+              profileRef.set(defaultProfile);
+              setProfile(defaultProfile);
+            }
+          });
+        }
+        setLoading(false);
+      });
     },[]);
 
     const login = async ()=>{
@@ -1092,6 +1034,15 @@
     };
 
     const confirmLogout = ()=>{ setSheet(false); auth.signOut(); };
+
+    const saveProfile = async (name, shop) => {
+      try {
+        await db.ref(`users/${user.uid}`).update({ name, shop });
+        setShowProfile(false);
+      } catch (error) {
+        alert("Could not update profile: " + error.message);
+      }
+    };
 
     if (loading) return (
       <div style={{minHeight:'100dvh',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -1144,13 +1095,16 @@
           </div>
           <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
             <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
-            <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 4px 12px'}}>
-              <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'T')}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
+            
+            {/* Clickable Profile Section */}
+            <div onClick={() => setShowProfile(true)} style={{display:'flex',alignItems:'center',gap:10,padding:'14px 4px 12px',cursor:'pointer'}}>
+              <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
               <div style={{overflow:'hidden',flex:1}}>
-                <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.displayName||'Technician'}</p>
-                <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.email}</p>
+                <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{profile.name || 'Technician'}</p>
+                <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{profile.shop || 'Shop Name'}</p>
               </div>
             </div>
+
             <button onClick={()=>setSheet(true)} style={{
               width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:8,
               padding:'11px',borderRadius:14,fontFamily:'Inter',fontWeight:700,fontSize:13,
@@ -1177,13 +1131,13 @@
               </div>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
-                <img src={user.photoURL||''} alt="" style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border)'}}/>
+                <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" onClick={()=>setShowProfile(true)} style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border)',cursor:'pointer'}}/>
               </div>
             </header>
 
             {view==='wizard'
-              ? <Wizard onDone={()=>setView('dashboard')}/>
-              : <Dash onNew={()=>setView('wizard')}/>
+              ? <Wizard onDone={()=>setView('dashboard')} profile={profile} />
+              : <Dash onNew={()=>setView('wizard')} profile={profile} />
             }
           </div>
         </main>
@@ -1201,8 +1155,9 @@
           </button>
         </nav>
 
-        {/* ── Logout Bottom Sheet ── */}
-        {sheet && <LogoutSheet onConfirm={confirmLogout} onCancel={()=>setSheet(false)}/>}
+        {/* ── Modals / Sheets ── */}
+        {sheet && <LogoutModal onConfirm={confirmLogout} onCancel={()=>setSheet(false)}/>}
+        {showProfile && <ProfileModal profile={profile} onSave={saveProfile} onCancel={()=>setShowProfile(false)}/>}
       </div>
     );
   }
