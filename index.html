@@ -3,45 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#f8fafc" />
+  <meta name="theme-color" content="#0a0f1e" />
   <title>VynixPanelB - AI Damage Estimator</title>
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- jsPDF for client-side PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          fontFamily: { sans: ['Syne', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
           colors: {
-            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a' }
+            ink: { 50:'#f0f4ff', 100:'#dce6ff', 200:'#b9cdff', 300:'#85a8ff', 400:'#4d7bff', 500:'#1a4fff', 600:'#0033e6', 700:'#0028b8', 800:'#001f8a', 900:'#00155c' },
+            neon: { cyan:'#00f5ff', green:'#00ff88', amber:'#ffb800', red:'#ff3b3b' },
           },
           animation: {
-            'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'float': 'float 3s ease-in-out infinite',
-            'scan': 'scan 1.5s ease-in-out infinite',
-            'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slide-up':'slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
+            'fade-in':'fadeIn 0.3s ease forwards',
+            'pulse-neon':'pulseNeon 2s ease-in-out infinite',
+            'scan':'scan 1.8s ease-in-out infinite',
+            'float':'float 3s ease-in-out infinite',
           },
           keyframes: {
-            slideUp: {
-              '0%': { opacity: '0', transform: 'translateY(15px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-8px)' },
-            },
-            scan: {
-              '0%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(64px)' },
-              '100%': { transform: 'translateY(0)' },
-            },
-            pulseSoft: {
-              '0%, 100%': { opacity: '1' },
-              '50%': { opacity: '.7' },
-            }
+            slideUp:{'0%':{opacity:'0',transform:'translateY(14px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
+            fadeIn:{'0%':{opacity:'0'},'100%':{opacity:'1'}},
+            pulseNeon:{'0%,100%':{boxShadow:'0 0 8px #00f5ff44'},'50%':{boxShadow:'0 0 24px #00f5ffaa'}},
+            scan:{'0%':{transform:'translateY(0)'},'50%':{transform:'translateY(72px)'},'100%':{transform:'translateY(0)'}},
+            float:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-8px)'}},
           }
         }
       }
@@ -49,315 +42,770 @@
   </script>
 
   <style>
-    body { 
-      background-color: #f8fafc; 
-      color: #0f172a; 
-      margin: 0; 
-      -webkit-font-smoothing: antialiased; 
-      -webkit-tap-highlight-color: transparent; /* Removes blue tap highlight on mobile */
-      overscroll-behavior-y: none; /* Prevents pull-to-refresh blank spaces */
-    }
-    
-    /* Hide scrollbar for a clean, app-like feel */
-    ::-webkit-scrollbar { display: none; }
-    * { scrollbar-width: none; }
+    body{background:#070c1a;color:#e8eeff;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;font-family:'Syne',sans-serif;}
+    ::-webkit-scrollbar{display:none;}*{scrollbar-width:none;}
+    .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);}
+    .glass-heavy{background:rgba(10,15,40,0.85);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);}
+    .neon-border{border:1px solid rgba(0,245,255,0.3);box-shadow:0 0 20px rgba(0,245,255,0.08),inset 0 0 20px rgba(0,245,255,0.03);}
+    .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e8eeff;border-radius:14px;padding:14px 18px;width:100%;outline:none;font-family:'Syne',sans-serif;font-size:15px;transition:all 0.2s;}
+    .input-field:focus{background:rgba(0,245,255,0.06);border-color:rgba(0,245,255,0.5);box-shadow:0 0 0 3px rgba(0,245,255,0.1);}
+    .input-field::placeholder{color:rgba(255,255,255,0.3);}
+    .btn-primary{background:linear-gradient(135deg,#1a4fff,#0033e6);color:#fff;border:none;border-radius:100px;padding:14px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:8px;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(26,79,255,0.5);}
+    .btn-primary:disabled{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);cursor:not-allowed;transform:none;box-shadow:none;}
+    .btn-ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:13px 24px;font-family:'Syne',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;}
+    .btn-ghost:hover{background:rgba(255,255,255,0.1);color:#fff;}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:0.5px;font-family:'JetBrains Mono',monospace;}
+    .badge-pending{background:rgba(255,184,0,0.15);color:#ffb800;border:1px solid rgba(255,184,0,0.3);}
+    .badge-approved{background:rgba(0,255,136,0.1);color:#00ff88;border:1px solid rgba(0,255,136,0.25);}
+    .badge-rejected{background:rgba(255,59,59,0.1);color:#ff3b3b;border:1px solid rgba(255,59,59,0.25);}
+    .panel-hit{fill:rgba(255,59,59,0.5);stroke:#ff3b3b;stroke-width:2;cursor:pointer;transition:all 0.2s;}
+    .panel-hit:hover{fill:rgba(255,59,59,0.7);}
+    .panel-normal{fill:rgba(0,245,255,0.04);stroke:rgba(0,245,255,0.25);stroke-width:1.5;cursor:pointer;transition:all 0.2s;}
+    .panel-normal:hover{fill:rgba(0,245,255,0.15);stroke:rgba(0,245,255,0.6);}
+    .car-body{fill:rgba(0,245,255,0.06);stroke:rgba(0,245,255,0.4);stroke-width:1.5;}
+    .car-glass{fill:rgba(0,245,255,0.12);stroke:rgba(0,245,255,0.3);stroke-width:1;}
+    .car-wheel{fill:rgba(255,255,255,0.06);stroke:rgba(255,255,255,0.25);stroke-width:1.5;}
+    .edit-input{background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.3);color:#e8eeff;border-radius:8px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;width:90px;outline:none;}
+    .edit-input:focus{border-color:#00f5ff;box-shadow:0 0 0 2px rgba(0,245,255,0.15);}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 100%);background-size:400px 100%;animation:shimmer 1.5s infinite;}
   </style>
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-[100dvh]">
+<body>
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef, useCallback } = React;
 
-    // --- FIREBASE INITIALIZATION ---
+    // Firebase Init
     const firebaseConfig = {
       apiKey: "AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",
       authDomain: "test-17881.firebaseapp.com",
       projectId: "test-17881",
       storageBucket: "test-17881.firebasestorage.app",
       messagingSenderId: "1057428047643",
-      appId: "1:1057428047643:web:f3801c0d933225a5cd35be"
+      appId: "1:1057428047643:web:f3801c0d933225a5cd35be",
+      databaseURL: "https://test-17881-default-rtdb.firebaseio.com"
     };
-
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
     const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-    // --- CONSTANTS ---
-    const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/dqkujefxj/image/upload';
-    const CLOUDINARY_UPLOAD_PRESET = 'banter_box';
-    const LABOR_RATE_ZAR = 750;
+    const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dqkujefxj/image/upload';
+    const CLOUDINARY_PRESET = 'banter_box';
+    const LABOR_RATE = 750;
 
-    // --- ICONS (Inline SVGs) ---
-    const IconWrench = () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
-    const IconDashboard = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
-    const IconCar = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
-    const IconLogout = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5-5-5m5 5H9"/></svg>;
-    const IconUpload = () => <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4l4-4 4 4"/></svg>;
-    const IconSpinner = () => <svg className="w-10 h-10 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeDasharray="30" strokeDashoffset="10" strokeLinecap="round" opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>;
-    const IconChevronRight = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
-    const IconCamera = () => <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
-    const IconCheckCircle = () => <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>;
-    const IconSmallCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
-    const IconGoogle = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+    // ─── SVG ICONS ────────────────────────────────────────────────
+    const IWrench = () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+    const IDash = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>;
+    const ICar = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.8l-1.4 2.5C1.5 10.6 1 11.3 1 12v4c0 .6.4 1 1 1h2m15 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m-10 0a2.5 2.5 0 1 1-5 0m5 0a2.5 2.5 0 1 0-5 0m10-4H9"/></svg>;
+    const ILogout = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14l5-5-5-5m5 5H9"/></svg>;
+    const IUpload = () => <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m-4-4l4-4 4 4"/></svg>;
+    const IChev = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>;
+    const ICheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
+    const IDownload = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16l-4-4h2.5V4h3v8H16l-4 4zm-8 4h16"/></svg>;
+    const IPlus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14"/></svg>;
+    const ITrash = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>;
+    const ISpin = () => <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#00f5ff" strokeWidth="4" strokeLinecap="round"/></svg>;
+    const ICamera = () => <svg className="w-16 h-16" fill="none" stroke="rgba(0,245,255,0.6)" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
+    const IGoog = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+    const IEdit = () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>;
 
-    // --- ESTIMATE WIZARD COMPONENT ---
+    // ─── CAR WIREFRAME MAP COMPONENT ──────────────────────────────
+    const CAR_PANELS = [
+      { id:'front-bumper',   label:'Front Bumper',   x:80,  y:10,  w:120, h:28 },
+      { id:'hood',           label:'Hood',           x:80,  y:42,  w:120, h:55 },
+      { id:'front-left',     label:'Front Left Fender', x:40, y:42, w:36, h:55 },
+      { id:'front-right',    label:'Front Right Fender', x:204, y:42, w:36, h:55 },
+      { id:'windshield',     label:'Windshield',     x:90,  y:100, w:100, h:36 },
+      { id:'roof',           label:'Roof',           x:80,  y:138, w:120, h:50 },
+      { id:'rear-windshield',label:'Rear Windshield',x:90,  y:190, w:100, h:32 },
+      { id:'left-door-front',label:'Left Front Door',x:40,  y:100, w:36, h:88 },
+      { id:'left-door-rear', label:'Left Rear Door', x:40,  y:192, w:36, h:56 },
+      { id:'right-door-front',label:'Right Front Door',x:204,y:100,w:36, h:88 },
+      { id:'right-door-rear',label:'Right Rear Door',x:204, y:192, w:36, h:56 },
+      { id:'trunk',          label:'Trunk / Boot',   x:80,  y:224, w:120, h:50 },
+      { id:'rear-left',      label:'Rear Left Fender',x:40, y:192, w:36, h:82 },
+      { id:'rear-right',     label:'Rear Right Fender',x:204,y:192,w:36, h:82 },
+      { id:'rear-bumper',    label:'Rear Bumper',    x:80,  y:276, w:120, h:28 },
+    ];
+
+    function CarWireframe({ selected, onToggle }) {
+      return (
+        <div className="flex flex-col items-center">
+          <svg viewBox="0 0 280 310" className="w-full max-w-[260px]" style={{filter:'drop-shadow(0 0 20px rgba(0,245,255,0.15))'}}>
+            {/* Wheels */}
+            {[[28,88,22,44],[230,88,22,44],[28,202,22,44],[230,202,22,44]].map(([cx,cy,rx,ry],i)=>(
+              <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} className="car-wheel"/>
+            ))}
+            {/* Car outline body */}
+            <rect x="40" y="10" width="200" height="294" rx="28" className="car-body"/>
+            {/* Panel hit zones */}
+            {CAR_PANELS.map(p => (
+              <rect
+                key={p.id}
+                x={p.x} y={p.y} width={p.w} height={p.h} rx="4"
+                className={selected.includes(p.id) ? 'panel-hit' : 'panel-normal'}
+                onClick={() => onToggle(p.id)}
+              >
+                <title>{p.label}</title>
+              </rect>
+            ))}
+            {/* Windshields slightly different */}
+            <rect x="90" y="100" width="100" height="36" rx="4" className="car-glass" style={{pointerEvents:'none'}}/>
+            <rect x="90" y="190" width="100" height="32" rx="4" className="car-glass" style={{pointerEvents:'none'}}/>
+            {/* Center line */}
+            <line x1="140" y1="10" x2="140" y2="304" stroke="rgba(0,245,255,0.1)" strokeWidth="1" strokeDasharray="4,4"/>
+            {/* Label: FRONT / REAR */}
+            <text x="140" y="7" textAnchor="middle" fill="rgba(0,245,255,0.4)" fontSize="6" fontFamily="JetBrains Mono">FRONT</text>
+            <text x="140" y="308" textAnchor="middle" fill="rgba(0,245,255,0.4)" fontSize="6" fontFamily="JetBrains Mono">REAR</text>
+            <text x="14" y="160" textAnchor="middle" fill="rgba(0,245,255,0.3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(-90,14,160)">DRIVER</text>
+            <text x="266" y="160" textAnchor="middle" fill="rgba(0,245,255,0.3)" fontSize="5" fontFamily="JetBrains Mono" transform="rotate(90,266,160)">PASSENGER</text>
+          </svg>
+          <p className="text-xs text-center mt-2" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>Tap panels to mark as damaged</p>
+        </div>
+      );
+    }
+
+    // ─── PDF EXPORT ───────────────────────────────────────────────
+    function exportPDF(vehicle, estimateData, damagedPanels, techName, estimateId) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+      const pw = doc.internal.pageSize.getWidth();
+
+      // Header bar
+      doc.setFillColor(7,12,26);
+      doc.rect(0,0,pw,38,'F');
+      doc.setFillColor(26,79,255);
+      doc.rect(0,0,4,38,'F');
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(22);
+      doc.setTextColor(232,238,255);
+      doc.text('VynixPanelB', 14, 16);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(150,170,220);
+      doc.text('AI-Powered Damage Estimate', 14, 23);
+      doc.text(`Issued: ${new Date().toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'})}`, 14, 29);
+      doc.text(`Ref: ${estimateId ? estimateId.slice(-8).toUpperCase() : 'DRAFT'}`, pw-14, 29, {align:'right'});
+      doc.text(`Technician: ${techName || 'N/A'}`, pw-14, 23, {align:'right'});
+
+      // Vehicle section
+      doc.setFillColor(15,22,55);
+      doc.roundedRect(10,44,pw-20,22,3,3,'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0,245,255);
+      doc.text('VEHICLE DETAILS', 16, 53);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(200,210,240);
+      doc.text(`Make: ${vehicle.make || '–'}   Model: ${vehicle.model || '–'}   VIN: ${vehicle.vin || '–'}`, 16, 60);
+
+      // Damaged panels
+      if (damagedPanels && damagedPanels.length > 0) {
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(9);
+        doc.setTextColor(0,245,255);
+        doc.text('DAMAGE MAPPING', 16, 76);
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        doc.setTextColor(200,210,240);
+        const panelNames = damagedPanels.map(id => CAR_PANELS.find(p=>p.id===id)?.label || id).join(', ');
+        const split = doc.splitTextToSize(panelNames, pw - 32);
+        doc.text(split, 16, 82);
+      }
+
+      // Line items table
+      const startY = damagedPanels && damagedPanels.length > 0 ? 95 : 76;
+      doc.autoTable({
+        startY,
+        head: [['Description','Labor Hrs','Labor Cost (R)','Parts Cost (R)','Total (R)']],
+        body: estimateData.lineItems.map(i => [
+          i.description, i.laborHours.toFixed(1),
+          i.laborCost.toFixed(2), i.partsCost.toFixed(2), i.total.toFixed(2)
+        ]),
+        headStyles:{fillColor:[26,79,255],textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+        bodyStyles:{textColor:[30,40,80],fontSize:8,fillColor:[240,244,255]},
+        alternateRowStyles:{fillColor:[228,234,255]},
+        columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right',fontStyle:'bold'}},
+        margin:{left:10,right:10},
+        theme:'grid',
+      });
+
+      let finalY = doc.lastAutoTable.finalY + 8;
+
+      // Totals box
+      doc.setFillColor(240,244,255);
+      doc.roundedRect(pw-80, finalY, 70, 45, 3, 3, 'F');
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(80,100,150);
+      const rCol = pw-14;
+      doc.text(`Labor (${estimateData.totalHours}h @ R${LABOR_RATE}/h)`, pw-82, finalY+9, {align:'right'});
+      doc.text(`R ${(estimateData.totalHours*LABOR_RATE).toFixed(2)}`, rCol, finalY+9, {align:'right'});
+      doc.text('Parts / Materials', pw-82, finalY+17, {align:'right'});
+      doc.text(`R ${estimateData.totalParts.toFixed(2)}`, rCol, finalY+17, {align:'right'});
+      doc.text('Subtotal', pw-82, finalY+25, {align:'right'});
+      doc.text(`R ${estimateData.subtotal.toFixed(2)}`, rCol, finalY+25, {align:'right'});
+      doc.text('VAT 15%', pw-82, finalY+33, {align:'right'});
+      doc.text(`R ${estimateData.tax.toFixed(2)}`, rCol, finalY+33, {align:'right'});
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(26,79,255);
+      doc.text('GRAND TOTAL', pw-82, finalY+43, {align:'right'});
+      doc.text(`R ${estimateData.grandTotal.toFixed(2)}`, rCol, finalY+43, {align:'right'});
+
+      // Footer
+      const pageH = doc.internal.pageSize.getHeight();
+      doc.setFillColor(7,12,26);
+      doc.rect(0, pageH-16, pw, 16, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100,120,160);
+      doc.text('VynixPanelB | AI Damage Estimation Platform | This is a computer-generated estimate.', pw/2, pageH-8, {align:'center'});
+
+      doc.save(`Estimate_${vehicle.make || 'Vehicle'}_${vehicle.model || ''}_${Date.now()}.pdf`);
+    }
+
+    // ─── EDITABLE LINE ITEM ROW ────────────────────────────────────
+    function LineItemRow({ item, index, onChange, onDelete }) {
+      return (
+        <div className="grid grid-cols-12 gap-2 items-center py-3 border-b" style={{borderColor:'rgba(255,255,255,0.06)'}}>
+          <div className="col-span-12 sm:col-span-4 text-sm" style={{color:'rgba(255,255,255,0.8)'}}>{item.description}</div>
+          <div className="col-span-4 sm:col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>HOURS</label>
+            <input type="number" className="edit-input" value={item.laborHours} min="0" step="0.5"
+              onChange={e => {
+                const h = parseFloat(e.target.value) || 0;
+                onChange(index, { ...item, laborHours: h, laborCost: h * LABOR_RATE, total: h * LABOR_RATE + item.partsCost });
+              }} />
+          </div>
+          <div className="col-span-4 sm:col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>PARTS (R)</label>
+            <input type="number" className="edit-input" value={item.partsCost} min="0" step="50"
+              onChange={e => {
+                const p = parseFloat(e.target.value) || 0;
+                onChange(index, { ...item, partsCost: p, total: item.laborCost + p });
+              }} />
+          </div>
+          <div className="col-span-3 sm:col-span-3 flex flex-col gap-0.5">
+            <label className="text-[10px]" style={{color:'rgba(255,255,255,0.35)',fontFamily:'JetBrains Mono'}}>TOTAL (R)</label>
+            <span className="font-mono font-bold text-sm pt-1.5" style={{color:'#00f5ff'}}>{item.total.toFixed(2)}</span>
+          </div>
+          <div className="col-span-1 flex justify-end">
+            <button onClick={() => onDelete(index)} className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors" style={{color:'rgba(255,59,59,0.7)'}}>
+              <ITrash />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── ESTIMATE WIZARD ──────────────────────────────────────────
     function EstimateWizard({ onComplete }) {
       const [step, setStep] = useState(1);
       const [isUploading, setIsUploading] = useState(false);
       const [isAnalyzing, setIsAnalyzing] = useState(false);
-      
-      const [vehicleInfo, setVehicleInfo] = useState({ vin: '', make: '', model: '' });
+      const [vehicleInfo, setVehicleInfo] = useState({ vin:'', make:'', model:'' });
       const [images, setImages] = useState([]);
+      const [damagedPanels, setDamagedPanels] = useState([]);
       const [estimateData, setEstimateData] = useState(null);
+      const [newItemDesc, setNewItemDesc] = useState('');
+      const [saving, setSaving] = useState(false);
 
-      // Cloudinary Upload Logic
+      const togglePanel = (id) => setDamagedPanels(prev => prev.includes(id) ? prev.filter(p=>p!==id) : [...prev, id]);
+
       const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
-        if (files.length === 0) return;
-        
+        if (!files.length) return;
         setIsUploading(true);
-        const uploadedUrls = [];
-
         for (const file of files) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
+          const fd = new FormData();
+          fd.append('file', file);
+          fd.append('upload_preset', CLOUDINARY_PRESET);
           try {
-            const response = await fetch(CLOUDINARY_UPLOAD_URL, {
-              method: 'POST',
-              body: formData,
-            });
-            const data = await response.json();
-            if (data.secure_url) {
-              uploadedUrls.push(data.secure_url);
-            }
-          } catch (error) {
-            console.error("Cloudinary upload failed:", error);
-          }
+            const res = await fetch(CLOUDINARY_URL, {method:'POST',body:fd});
+            const d = await res.json();
+            if (d.secure_url) setImages(prev => [...prev, d.secure_url]);
+          } catch(err) { console.error(err); }
         }
-
-        setImages((prev) => [...prev, ...uploadedUrls]);
         setIsUploading(false);
       };
 
-      // AI Simulation Logic
+      // AI Analysis (uses damaged panels to generate line items)
       useEffect(() => {
-        if (step === 3) {
+        if (step === 4) {
           setIsAnalyzing(true);
           const timer = setTimeout(() => {
-            const damageTypes = [
-              { type: 'Dent (Deep)', panels: 2, hoursPerPanel: 2.5, partsCost: 450 },
-              { type: 'Scratch (Surface)', panels: 1, hoursPerPanel: 1.0, partsCost: 150 },
-            ];
-            
-            let totalHours = 0;
-            let totalParts = 0;
-            
-            const lineItems = damageTypes.map(damage => {
-              const laborHours = damage.panels * damage.hoursPerPanel;
-              const laborCost = laborHours * LABOR_RATE_ZAR;
-              const itemPartsCost = damage.panels * damage.partsCost;
+            const panelDamageMap = {
+              'front-bumper':  { partsCost: 2800, hoursPerPanel: 2.0 },
+              'rear-bumper':   { partsCost: 2600, hoursPerPanel: 2.0 },
+              'hood':          { partsCost: 4500, hoursPerPanel: 3.0 },
+              'trunk':         { partsCost: 4200, hoursPerPanel: 3.0 },
+              'roof':          { partsCost: 5500, hoursPerPanel: 4.0 },
+              'front-left':    { partsCost: 3200, hoursPerPanel: 2.5 },
+              'front-right':   { partsCost: 3200, hoursPerPanel: 2.5 },
+              'rear-left':     { partsCost: 3000, hoursPerPanel: 2.5 },
+              'rear-right':    { partsCost: 3000, hoursPerPanel: 2.5 },
+              'left-door-front':{ partsCost: 3800, hoursPerPanel: 3.0 },
+              'left-door-rear':{ partsCost: 3600, hoursPerPanel: 3.0 },
+              'right-door-front':{ partsCost: 3800, hoursPerPanel: 3.0 },
+              'right-door-rear':{ partsCost: 3600, hoursPerPanel: 3.0 },
+              'windshield':    { partsCost: 4200, hoursPerPanel: 1.5 },
+              'rear-windshield':{ partsCost: 3800, hoursPerPanel: 1.5 },
+            };
+            const panelsToProcess = damagedPanels.length > 0 ? damagedPanels : ['front-bumper','hood'];
+            let totalHours = 0, totalParts = 0;
+            const lineItems = panelsToProcess.map(pid => {
+              const info = panelDamageMap[pid] || { partsCost: 1500, hoursPerPanel: 2 };
+              const label = CAR_PANELS.find(p=>p.id===pid)?.label || pid;
+              const laborHours = info.hoursPerPanel;
+              const laborCost = laborHours * LABOR_RATE;
+              const partsCost = info.partsCost;
               totalHours += laborHours;
-              totalParts += itemPartsCost;
-              
-              return {
-                description: `${damage.type} - ${damage.panels} panel(s)`,
-                laborHours,
-                laborCost,
-                partsCost: itemPartsCost,
-                total: laborCost + itemPartsCost
-              };
+              totalParts += partsCost;
+              return { description: label, laborHours, laborCost, partsCost, total: laborCost + partsCost };
             });
-
-            const subtotal = (totalHours * LABOR_RATE_ZAR) + totalParts;
-            const tax = subtotal * 0.15; 
-
-            setEstimateData({
-              lineItems, totalHours, laborRate: LABOR_RATE_ZAR, totalParts, subtotal, tax, grandTotal: subtotal + tax
-            });
-            
+            const subtotal = totalHours * LABOR_RATE + totalParts;
+            const tax = subtotal * 0.15;
+            setEstimateData({ lineItems, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax });
             setIsAnalyzing(false);
-          }, 3500); 
-
+          }, 3200);
           return () => clearTimeout(timer);
         }
       }, [step]);
 
-      // Save to Firebase RTDB
-      const handleSaveEstimate = async () => {
-        if (!estimateData) return;
-        
-        const estimatePayload = {
-          technicianId: auth.currentUser?.uid || 'unknown',
-          vehicle: vehicleInfo,
-          photos: images,
-          financials: estimateData,
-          status: 'pending',
-          createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        try {
-          await db.ref('estimates').push(estimatePayload);
-          onComplete(); 
-        } catch (error) {
-          console.error("Firebase save failed:", error);
-          alert("Error saving estimate.");
-        }
+      // Editable items helpers
+      const updateLineItem = (idx, updated) => {
+        setEstimateData(prev => {
+          const items = [...prev.lineItems];
+          items[idx] = updated;
+          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
+          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
+          const subtotal = totalHours * LABOR_RATE + totalParts;
+          const tax = subtotal * 0.15;
+          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
+        });
+      };
+      const deleteLineItem = (idx) => {
+        setEstimateData(prev => {
+          const items = prev.lineItems.filter((_,i) => i !== idx);
+          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
+          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
+          const subtotal = totalHours * LABOR_RATE + totalParts;
+          const tax = subtotal * 0.15;
+          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
+        });
+      };
+      const addLineItem = () => {
+        if (!newItemDesc.trim()) return;
+        const newItem = { description: newItemDesc.trim(), laborHours: 1, laborCost: LABOR_RATE, partsCost: 500, total: LABOR_RATE + 500 };
+        setEstimateData(prev => {
+          const items = [...prev.lineItems, newItem];
+          const totalHours = items.reduce((s,i) => s + i.laborHours, 0);
+          const totalParts = items.reduce((s,i) => s + i.partsCost, 0);
+          const subtotal = totalHours * LABOR_RATE + totalParts;
+          const tax = subtotal * 0.15;
+          return { ...prev, lineItems: items, totalHours, totalParts, subtotal, tax, grandTotal: subtotal + tax };
+        });
+        setNewItemDesc('');
       };
 
+      const handleSave = async () => {
+        if (!estimateData) return;
+        setSaving(true);
+        try {
+          const ref = await db.ref('estimates').push({
+            technicianId: auth.currentUser?.uid || 'unknown',
+            technicianName: auth.currentUser?.displayName || 'Technician',
+            vehicle: vehicleInfo,
+            photos: images,
+            damagedPanels,
+            financials: estimateData,
+            status: 'pending',
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+          });
+          onComplete();
+        } catch(err) {
+          console.error(err);
+          alert('Error saving estimate.');
+        }
+        setSaving(false);
+      };
+
+      const STEPS = ['Vehicle','Panels','Photos','AI Scan','Summary'];
+
       return (
-        <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
-          {/* Wizard Header Progress - Optimized for mobile scrolling/fitting */}
-          <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl border border-white shadow-sm rounded-full px-4 py-3 sm:px-6 sm:py-4 animate-slide-up">
-            {[1, 2, 3, 4].map((num) => (
-              <div key={num} className={`flex items-center gap-2 ${step >= num ? 'text-brand-600' : 'text-slate-400'}`}>
-                <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300 ${step >= num ? 'border-brand-500 bg-brand-50 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-110' : 'border-slate-300 bg-white'}`}>
-                  {num}
+        <div className="max-w-3xl mx-auto space-y-5">
+          {/* Step bar */}
+          <div className="glass rounded-full px-4 py-3 flex items-center justify-between animate-slide-up">
+            {STEPS.map((label, i) => {
+              const num = i + 1;
+              const active = step >= num;
+              return (
+                <div key={num} className="flex items-center gap-1.5">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${active ? 'bg-ink-500 text-white shadow-[0_0_12px_rgba(26,79,255,0.6)]' : 'bg-white/5 text-white/30'}`}>{num}</div>
+                  <span className={`hidden sm:block text-xs font-semibold transition-colors ${active ? 'text-white/80' : 'text-white/25'}`}>{label}</span>
                 </div>
-                <div className="hidden md:block text-sm font-semibold">
-                  {num === 1 ? 'Vehicle' : num === 2 ? 'Capture' : num === 3 ? 'AI Scan' : 'Summary'}
+              );
+            })}
+          </div>
+
+          <div className="glass rounded-3xl p-6 sm:p-8 min-h-96">
+
+            {/* STEP 1 - Vehicle */}
+            {step === 1 && (
+              <div className="space-y-5 animate-slide-up">
+                <div>
+                  <h2 className="text-2xl font-bold">Vehicle Details</h2>
+                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Enter the vehicle information for this estimate</p>
                 </div>
+                <input className="input-field" placeholder="VIN Number" value={vehicleInfo.vin} onChange={e=>setVehicleInfo({...vehicleInfo,vin:e.target.value})}/>
+                <div className="grid grid-cols-2 gap-4">
+                  <input className="input-field" placeholder="Make (e.g. Toyota)" value={vehicleInfo.make} onChange={e=>setVehicleInfo({...vehicleInfo,make:e.target.value})}/>
+                  <input className="input-field" placeholder="Model (e.g. Corolla)" value={vehicleInfo.model} onChange={e=>setVehicleInfo({...vehicleInfo,model:e.target.value})}/>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button className="btn-primary" disabled={!vehicleInfo.vin||!vehicleInfo.make} onClick={()=>setStep(2)}>Panel Mapping <IChev/></button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2 - Damage Map */}
+            {step === 2 && (
+              <div className="space-y-5 animate-slide-up">
+                <div>
+                  <h2 className="text-2xl font-bold">Interactive Damage Map</h2>
+                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Tap the panels that are damaged on the car diagram below</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                  <CarWireframe selected={damagedPanels} onToggle={togglePanel} />
+                  <div>
+                    <p className="text-xs font-bold mb-3" style={{color:'rgba(0,245,255,0.7)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>SELECTED PANELS ({damagedPanels.length})</p>
+                    {damagedPanels.length === 0
+                      ? <p className="text-sm" style={{color:'rgba(255,255,255,0.3)'}}>No panels selected yet. Tap on the diagram.</p>
+                      : <div className="flex flex-wrap gap-2">
+                          {damagedPanels.map(id => (
+                            <span key={id} className="badge" style={{background:'rgba(255,59,59,0.12)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.25)'}}>
+                              {CAR_PANELS.find(p=>p.id===id)?.label || id}
+                              <button onClick={()=>togglePanel(id)} style={{opacity:0.6,marginLeft:2}}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                    }
+                  </div>
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+                  <button className="btn-ghost" onClick={()=>setStep(1)}>Back</button>
+                  <button className="btn-primary" onClick={()=>setStep(3)}>
+                    {damagedPanels.length > 0 ? `Continue with ${damagedPanels.length} panel(s)` : 'Skip'} <IChev/>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 - Photos */}
+            {step === 3 && (
+              <div className="space-y-5 animate-slide-up">
+                <div>
+                  <h2 className="text-2xl font-bold">Damage Photos</h2>
+                  <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>Upload close-up shots of the damaged areas for AI analysis</p>
+                </div>
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all hover:border-cyan-400/60 hover:bg-cyan-400/5" style={{borderColor:'rgba(0,245,255,0.2)'}}>
+                  {isUploading
+                    ? <div style={{color:'#00f5ff'}}><ISpin/></div>
+                    : <div className="flex flex-col items-center" style={{color:'rgba(0,245,255,0.5)'}}>
+                        <IUpload/>
+                        <span className="text-sm font-medium mt-2">Tap to Upload</span>
+                        <span className="text-xs mt-1" style={{color:'rgba(255,255,255,0.3)'}}>Multiple files accepted</span>
+                      </div>
+                  }
+                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading}/>
+                </label>
+                {images.length > 0 && (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {images.map((img,i) => (
+                      <img key={i} src={img} alt="" className="w-full h-20 object-cover rounded-xl" style={{border:'1px solid rgba(0,245,255,0.15)'}}/>
+                    ))}
+                  </div>
+                )}
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+                  <button className="btn-ghost" onClick={()=>setStep(2)}>Back</button>
+                  <button className="btn-primary" disabled={images.length<1||isUploading} onClick={()=>setStep(4)}>Run AI Analysis <IChev/></button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4 - AI Scan */}
+            {step === 4 && (
+              <div className="flex flex-col items-center justify-center min-h-64 gap-6 animate-slide-up">
+                {isAnalyzing ? (
+                  <>
+                    <div className="relative animate-float">
+                      <ICamera/>
+                      <div className="absolute top-0 left-0 w-full h-0.5 rounded-full animate-scan" style={{background:'linear-gradient(90deg,transparent,#00f5ff,transparent)',boxShadow:'0 0 10px #00f5ff'}}/>
+                    </div>
+                    <div className="text-center">
+                      <h2 className="text-xl font-bold" style={{color:'#00f5ff'}}>Neural Analysis Running…</h2>
+                      <p className="text-sm mt-2" style={{color:'rgba(255,255,255,0.4)'}}>Mapping {damagedPanels.length || 2} panels · Calculating repair estimates</p>
+                    </div>
+                    <div className="flex gap-1.5">{[0,1,2,3,4].map(i=><div key={i} className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background:'#00f5ff',opacity:0.6,animationDelay:`${i*0.15}s`}}/>)}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-4 rounded-full" style={{background:'rgba(0,255,136,0.1)',boxShadow:'0 0 30px rgba(0,255,136,0.2)'}}>
+                      <svg className="w-14 h-14" fill="none" stroke="#00ff88" viewBox="0 0 24 24" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
+                    </div>
+                    <div className="text-center">
+                      <h2 className="text-2xl font-bold" style={{color:'#00ff88'}}>Analysis Complete</h2>
+                      <p className="text-sm mt-1" style={{color:'rgba(255,255,255,0.4)'}}>{estimateData?.lineItems.length} damage items detected</p>
+                    </div>
+                    <button className="btn-primary" onClick={()=>setStep(5)}>View & Edit Estimate <IChev/></button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* STEP 5 - Editable Summary */}
+            {step === 5 && estimateData && (
+              <div className="space-y-5 animate-slide-up">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">Estimate Summary</h2>
+                    <p className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.4)'}}>Edit hours, parts costs, or add custom line items</p>
+                  </div>
+                  <button
+                    onClick={()=>exportPDF(vehicleInfo, estimateData, damagedPanels, auth.currentUser?.displayName, null)}
+                    className="btn-ghost flex items-center gap-2 text-sm px-4 py-2"
+                    style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)',flexShrink:0}}
+                  >
+                    <IDownload/> PDF
+                  </button>
+                </div>
+
+                {/* Editable line items */}
+                <div className="rounded-2xl p-4" style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)'}}>
+                  <div className="hidden sm:grid grid-cols-12 gap-2 pb-2 mb-1 text-[10px] font-bold" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'0.8px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+                    <div className="col-span-4">DESCRIPTION</div><div className="col-span-2">HOURS</div><div className="col-span-2">PARTS (R)</div><div className="col-span-3">TOTAL (R)</div><div className="col-span-1"></div>
+                  </div>
+                  {estimateData.lineItems.map((item, idx) => (
+                    <LineItemRow key={idx} item={item} index={idx} onChange={updateLineItem} onDelete={deleteLineItem}/>
+                  ))}
+                  {/* Add custom item */}
+                  <div className="flex gap-2 mt-3 pt-3" style={{borderTop:'1px dashed rgba(255,255,255,0.08)'}}>
+                    <input className="input-field flex-1" placeholder="Add custom line item description…" value={newItemDesc} onChange={e=>setNewItemDesc(e.target.value)}
+                      onKeyDown={e=>e.key==='Enter'&&addLineItem()} style={{padding:'10px 14px',fontSize:'13px'}}/>
+                    <button onClick={addLineItem} className="p-3 rounded-xl flex items-center gap-1.5 text-sm font-semibold" style={{background:'rgba(0,245,255,0.1)',color:'#00f5ff',border:'1px solid rgba(0,245,255,0.2)',flexShrink:0}}>
+                      <IPlus/><span className="hidden sm:inline">Add</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="rounded-2xl p-4 space-y-2 text-right" style={{background:'rgba(26,79,255,0.06)',border:'1px solid rgba(26,79,255,0.2)'}}>
+                  {[
+                    [`Labor (${estimateData.totalHours.toFixed(1)}h × R${LABOR_RATE})`, (estimateData.totalHours*LABOR_RATE).toFixed(2)],
+                    ['Parts / Materials', estimateData.totalParts.toFixed(2)],
+                    ['Subtotal', estimateData.subtotal.toFixed(2)],
+                    ['VAT 15%', estimateData.tax.toFixed(2)],
+                  ].map(([label,val])=>(
+                    <div key={label} className="flex justify-between text-sm" style={{color:'rgba(255,255,255,0.5)'}}>
+                      <span>{label}</span><span className="font-mono" style={{color:'rgba(255,255,255,0.8)'}}>R {val}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-3 mt-3" style={{borderTop:'1px solid rgba(26,79,255,0.3)'}}>
+                    <span className="text-base font-bold" style={{color:'#00f5ff'}}>GRAND TOTAL</span>
+                    <span className="text-xl font-bold font-mono" style={{color:'#00f5ff'}}>R {estimateData.grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+                  <button className="btn-ghost" onClick={()=>setStep(1)}>Discard</button>
+                  <div className="flex gap-3">
+                    <button onClick={()=>exportPDF(vehicleInfo, estimateData, damagedPanels, auth.currentUser?.displayName, null)}
+                      className="btn-ghost flex items-center gap-2" style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)'}}>
+                      <IDownload/> Download PDF
+                    </button>
+                    <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                      {saving ? <ISpin/> : <><ICheck/> Save Estimate</>}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── LIVE DASHBOARD ───────────────────────────────────────────
+    function Dashboard({ onNew }) {
+      const [estimates, setEstimates] = useState(null);
+      const [selected, setSelected] = useState(null);
+
+      useEffect(() => {
+        const ref = db.ref('estimates').orderByChild('createdAt').limitToLast(50);
+        ref.on('value', snap => {
+          if (!snap.exists()) { setEstimates([]); return; }
+          const arr = [];
+          snap.forEach(child => arr.push({ id: child.key, ...child.val() }));
+          arr.reverse();
+          setEstimates(arr);
+        });
+        return () => ref.off();
+      }, []);
+
+      const updateStatus = async (id, status) => {
+        await db.ref(`estimates/${id}`).update({ status });
+      };
+
+      const totalRevenue = estimates ? estimates.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.financials?.grandTotal||0),0) : 0;
+      const pending = estimates ? estimates.filter(e=>e.status==='pending').length : 0;
+
+      return (
+        <div className="space-y-6 animate-slide-up">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label:'Total Estimates', value: estimates ? estimates.length : '–', color:'#00f5ff' },
+              { label:'Pending Approval', value: estimates ? pending : '–', color:'#ffb800' },
+              { label:'Approved', value: estimates ? estimates.filter(e=>e.status==='approved').length : '–', color:'#00ff88' },
+              { label:'Revenue (Approved)', value: estimates ? `R ${totalRevenue.toLocaleString('en-ZA',{minimumFractionDigits:0,maximumFractionDigits:0})}` : '–', color:'#00ff88' },
+            ].map(s => (
+              <div key={s.label} className="glass rounded-2xl p-5">
+                <p className="text-xs font-semibold mb-2" style={{color:'rgba(255,255,255,0.4)',letterSpacing:'0.5px'}}>{s.label.toUpperCase()}</p>
+                <p className="text-2xl font-bold font-mono" style={{color:s.color}}>{s.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Wizard Content Panel */}
-          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-xl rounded-[2rem] p-5 sm:p-8 min-h-[400px] transition-all duration-500">
-            
-            {/* STEP 1 */}
-            {step === 1 && (
-              <div className="space-y-6 animate-slide-up">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Vehicle Details</h2>
-                <div className="space-y-4">
-                  <input type="text" placeholder="VIN Number" value={vehicleInfo.vin} onChange={(e) => setVehicleInfo({...vehicleInfo, vin: e.target.value})} className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm text-base" />
-                  {/* Mobile responsive flex-col to sm:flex-row */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <input type="text" placeholder="Make" value={vehicleInfo.make} onChange={(e) => setVehicleInfo({...vehicleInfo, make: e.target.value})} className="w-full sm:w-1/2 bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm text-base" />
-                    <input type="text" placeholder="Model" value={vehicleInfo.model} onChange={(e) => setVehicleInfo({...vehicleInfo, model: e.target.value})} className="w-full sm:w-1/2 bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl px-5 py-4 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none transition-all shadow-sm text-base" />
-                  </div>
-                </div>
-                <button 
-                  disabled={!vehicleInfo.vin || !vehicleInfo.make} 
-                  onClick={() => setStep(2)}
-                  className="mt-6 flex items-center justify-center gap-2 w-full md:w-auto px-8 py-4 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 disabled:bg-slate-300 disabled:hover:translate-y-0 disabled:shadow-none text-white font-semibold transition-all ml-auto text-lg md:text-base"
-                >
-                  Next Step <IconChevronRight />
-                </button>
+          {/* Estimates List */}
+          <div className="glass rounded-3xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4" style={{borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
+              <h2 className="text-lg font-bold">Recent Estimates</h2>
+              <button onClick={onNew} className="btn-primary text-sm px-5 py-2.5"><IPlus/> New</button>
+            </div>
+
+            {estimates === null ? (
+              <div className="p-6 space-y-3">
+                {[1,2,3].map(i=><div key={i} className="skeleton h-14 rounded-xl"/>)}
               </div>
-            )}
-
-            {/* STEP 2 */}
-            {step === 2 && (
-              <div className="space-y-6 animate-slide-up">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Damage Capture</h2>
-                <p className="text-slate-500 text-sm sm:text-base">Upload at least 4 angles of the damage for accurate AI analysis.</p>
-                
-                <label className="flex flex-col items-center justify-center w-full h-48 sm:h-56 border-2 border-dashed border-brand-300 bg-brand-50/50 rounded-3xl cursor-pointer hover:bg-brand-50 hover:border-brand-400 transition-all group">
-                  {isUploading ? (
-                    <div className="text-brand-500"><IconSpinner /></div>
-                  ) : (
-                    <div className="text-slate-500 flex flex-col items-center group-hover:scale-105 transition-transform">
-                      <div className="text-brand-400"><IconUpload /></div>
-                      <span className="font-medium text-sm sm:text-base">Tap to Upload Images</span>
-                    </div>
-                  )}
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
-                </label>
-
-                {images.length > 0 && (
-                  /* Mobile responsive grid columns */
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                    {images.map((img, idx) => (
-                      <img key={idx} src={img} alt="Damage" className="w-full h-24 object-cover rounded-2xl shadow-sm border border-slate-100 animate-slide-up" style={{ animationDelay: `${idx * 100}ms` }} />
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 mt-8">
-                  <button onClick={() => setStep(1)} className="w-full sm:w-auto px-6 py-4 sm:py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors">Back</button>
-                  <button 
-                    disabled={images.length < 1 || isUploading} 
-                    onClick={() => setStep(3)}
-                    className="flex justify-center items-center gap-2 w-full sm:w-auto px-8 py-4 sm:py-3 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 disabled:bg-slate-300 disabled:hover:translate-y-0 disabled:shadow-none text-white font-semibold transition-all"
-                  >
-                    Run AI Analysis <IconChevronRight />
-                  </button>
-                </div>
+            ) : estimates.length === 0 ? (
+              <div className="text-center py-16 px-6">
+                <div className="w-12 h-12 mx-auto mb-4 opacity-20"><ICar/></div>
+                <p style={{color:'rgba(255,255,255,0.4)'}}>No estimates yet. Create your first one.</p>
+                <button onClick={onNew} className="btn-primary mt-5 mx-auto">Create Estimate <IChev/></button>
               </div>
-            )}
-
-            {/* STEP 3 */}
-            {step === 3 && (
-              <div className="flex flex-col items-center justify-center h-[50vh] sm:h-80 space-y-6 animate-slide-up">
-                {isAnalyzing ? (
-                  <>
-                    <div className="relative animate-float">
-                      <div className="text-brand-200"><IconCamera /></div>
-                      <div className="absolute top-0 left-0 w-full h-1 bg-brand-500 shadow-[0_0_15px_#3b82f6] animate-scan rounded-full" />
+            ) : (
+              <div className="divide-y" style={{divideColor:'rgba(255,255,255,0.05)'}}>
+                {estimates.map(est => (
+                  <div key={est.id}>
+                    <div
+                      className="px-6 py-4 flex items-center gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                      onClick={() => setSelected(selected===est.id ? null : est.id)}
+                    >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{background:'rgba(26,79,255,0.15)',border:'1px solid rgba(26,79,255,0.2)'}}>
+                        <ICar/>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{est.vehicle?.make} {est.vehicle?.model} <span className="font-mono text-xs" style={{color:'rgba(255,255,255,0.4)'}}>{est.vehicle?.vin}</span></p>
+                        <p className="text-xs mt-0.5" style={{color:'rgba(255,255,255,0.35)'}}>
+                          {est.createdAt ? new Date(est.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Unknown date'}
+                          {est.technicianName ? ` · ${est.technicianName}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="font-mono font-bold text-sm hidden sm:block" style={{color:'#00f5ff'}}>R {(est.financials?.grandTotal||0).toFixed(2)}</span>
+                        <span className={`badge badge-${est.status||'pending'}`}>
+                          {est.status === 'pending' ? '⬤ PENDING' : est.status === 'approved' ? '⬤ APPROVED' : '⬤ REJECTED'}
+                        </span>
+                        <svg className={`w-4 h-4 transition-transform duration-200 ${selected===est.id?'rotate-90':''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" style={{color:'rgba(255,255,255,0.3)'}}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                      </div>
                     </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 animate-pulse-soft text-center">Running Neural Analysis...</h2>
-                    <p className="text-slate-500 bg-brand-50 px-4 py-1 rounded-full text-xs sm:text-sm text-center">Detecting dents, scratches, and panel integrity</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-green-500 bg-green-50 p-3 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.3)] animate-slide-up"><IconCheckCircle /></div>
-                    <h2 className="text-2xl font-bold text-slate-800 animate-slide-up" style={{ animationDelay: '100ms' }}>Analysis Complete</h2>
-                    <button onClick={() => setStep(4)} className="w-full sm:w-auto px-8 py-4 mt-4 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 text-white font-semibold transition-all animate-slide-up" style={{ animationDelay: '200ms' }}>
-                      View Estimate Breakdown
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
 
-            {/* STEP 4 */}
-            {step === 4 && estimateData && (
-              <div className="space-y-6 animate-slide-up">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 border-b border-slate-100 pb-4">Estimate Summary</h2>
-                
-                <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
-                  <h3 className="text-brand-600 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base"><div className="w-4 h-4"><IconWrench/></div> Detected Line Items</h3>
-                  {estimateData.lineItems.map((item, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row justify-between text-sm py-2 border-b border-slate-200/50 last:border-0 gap-1">
-                      <span className="text-slate-600 font-medium">{item.description}</span>
-                      <span className="font-mono text-slate-900 font-bold text-right">R {item.total.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 text-right bg-white p-4 rounded-2xl border border-slate-100 text-xs sm:text-sm">
-                  <div className="text-slate-500 flex justify-between sm:justify-end gap-4">Total Labor ({estimateData.totalHours}h): <span className="text-slate-800 font-mono w-24 text-right">R {(estimateData.totalHours * estimateData.laborRate).toFixed(2)}</span></div>
-                  <div className="text-slate-500 flex justify-between sm:justify-end gap-4">Total Parts: <span className="text-slate-800 font-mono w-24 text-right">R {estimateData.totalParts.toFixed(2)}</span></div>
-                  <div className="text-slate-500 flex justify-between sm:justify-end gap-4">Subtotal: <span className="text-slate-800 font-mono w-24 text-right">R {estimateData.subtotal.toFixed(2)}</span></div>
-                  <div className="text-slate-500 flex justify-between sm:justify-end gap-4">VAT (15%): <span className="text-slate-800 font-mono w-24 text-right">R {estimateData.tax.toFixed(2)}</span></div>
-                  <div className="text-lg sm:text-xl font-bold text-brand-600 mt-4 pt-4 border-t border-slate-200 flex justify-between sm:justify-end gap-4 items-center">
-                    Grand Total: <span className="font-mono bg-brand-50 px-3 py-1 rounded-lg">R {estimateData.grandTotal.toFixed(2)}</span>
+                    {/* Expanded detail */}
+                    {selected === est.id && (
+                      <div className="px-6 pb-5 animate-slide-up">
+                        <div className="rounded-2xl p-4 space-y-4" style={{background:'rgba(0,0,0,0.25)',border:'1px solid rgba(255,255,255,0.06)'}}>
+                          {/* Damaged panels */}
+                          {est.damagedPanels && est.damagedPanels.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>DAMAGED PANELS</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {est.damagedPanels.map(id => (
+                                  <span key={id} className="badge" style={{background:'rgba(255,59,59,0.1)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.2)',fontSize:'10px'}}>
+                                    {CAR_PANELS.find(p=>p.id===id)?.label || id}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Line items */}
+                          {est.financials?.lineItems && (
+                            <div>
+                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>LINE ITEMS</p>
+                              <div className="space-y-1">
+                                {est.financials.lineItems.map((item,i) => (
+                                  <div key={i} className="flex justify-between text-sm py-1" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+                                    <span style={{color:'rgba(255,255,255,0.6)'}}>{item.description}</span>
+                                    <span className="font-mono font-bold" style={{color:'#e8eeff'}}>R {item.total?.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Photos strip */}
+                          {est.photos && est.photos.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold mb-2" style={{color:'rgba(0,245,255,0.5)',fontFamily:'JetBrains Mono',letterSpacing:'1px'}}>PHOTOS ({est.photos.length})</p>
+                              <div className="flex gap-2 overflow-x-auto">
+                                {est.photos.map((url,i) => <img key={i} src={url} alt="" className="w-20 h-14 object-cover rounded-lg shrink-0" style={{border:'1px solid rgba(255,255,255,0.1)'}}/>)}
+                              </div>
+                            </div>
+                          )}
+                          {/* Grand total + actions */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+                            <div className="text-lg font-bold font-mono" style={{color:'#00f5ff'}}>
+                              Grand Total: R {(est.financials?.grandTotal||0).toFixed(2)}
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <button onClick={()=>exportPDF(est.vehicle||{}, est.financials||{lineItems:[],totalHours:0,totalParts:0,subtotal:0,tax:0,grandTotal:0}, est.damagedPanels||[], est.technicianName, est.id)}
+                                className="btn-ghost flex items-center gap-1.5 text-xs px-3 py-2" style={{color:'#00f5ff',borderColor:'rgba(0,245,255,0.25)'}}>
+                                <IDownload/> PDF
+                              </button>
+                              {est.status !== 'approved' && (
+                                <button onClick={()=>updateStatus(est.id,'approved')} className="text-xs px-4 py-2 rounded-full font-semibold transition-all" style={{background:'rgba(0,255,136,0.12)',color:'#00ff88',border:'1px solid rgba(0,255,136,0.25)'}}>
+                                  ✓ Approve
+                                </button>
+                              )}
+                              {est.status !== 'rejected' && (
+                                <button onClick={()=>updateStatus(est.id,'rejected')} className="text-xs px-4 py-2 rounded-full font-semibold transition-all" style={{background:'rgba(255,59,59,0.1)',color:'#ff7070',border:'1px solid rgba(255,59,59,0.25)'}}>
+                                  ✕ Reject
+                                </button>
+                              )}
+                              {est.status !== 'pending' && (
+                                <button onClick={()=>updateStatus(est.id,'pending')} className="btn-ghost text-xs px-4 py-2">
+                                  Reset
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 mt-8 pt-4">
-                  <button onClick={() => setStep(1)} className="w-full sm:w-auto px-6 py-4 sm:py-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors">Discard</button>
-                  <button 
-                    onClick={handleSaveEstimate}
-                    className="flex justify-center items-center gap-2 w-full sm:w-auto px-8 py-4 sm:py-3 rounded-full bg-brand-600 hover:bg-brand-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/30 text-white font-semibold transition-all"
-                  >
-                    Save to Database <IconSmallCheck />
-                  </button>
-                </div>
+                ))}
               </div>
             )}
           </div>
@@ -365,169 +813,120 @@
       );
     }
 
-    // --- MAIN APP SHELL ---
+    // ─── APP SHELL ────────────────────────────────────────────────
     function App() {
       const [user, setUser] = useState(null);
-      const [view, setView] = useState('dashboard'); 
+      const [view, setView] = useState('dashboard');
       const [loadingAuth, setLoadingAuth] = useState(true);
 
       useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-          setUser(currentUser);
-          setLoadingAuth(false);
-        });
-        return () => unsubscribe();
+        const unsub = auth.onAuthStateChanged(u => { setUser(u); setLoadingAuth(false); });
+        return unsub;
       }, []);
 
-      const handleGoogleLogin = async () => {
-        try {
-          await auth.signInWithPopup(googleProvider);
-        } catch (error) {
-          console.error("Login failed:", error);
-          alert("Login failed: " + error.message);
-        }
+      const login = async () => {
+        try { await auth.signInWithPopup(googleProvider); }
+        catch(e) { alert('Login failed: ' + e.message); }
       };
 
-      const handleLogout = () => auth.signOut();
+      if (loadingAuth) return (
+        <div className="min-h-screen flex items-center justify-center">
+          <ISpin/>
+        </div>
+      );
 
-      if (loadingAuth) {
-        return <div className="min-h-screen flex items-center justify-center bg-slate-50"><IconSpinner className="text-brand-500"/></div>;
-      }
-
-      if (!user) {
-        return (
-          <div className="min-h-[100dvh] flex items-center justify-center p-5 relative overflow-hidden">
-            {/* Background Decorative Blobs */}
-            <div className="absolute top-[-10%] left-[-10%] w-72 h-72 md:w-96 md:h-96 bg-brand-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-72 h-72 md:w-96 md:h-96 bg-blue-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" style={{ animationDelay: '1.5s' }}></div>
-            
-            <div className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/40 rounded-[2rem] p-8 md:p-10 shadow-2xl animate-slide-up relative z-10">
-              <div className="flex justify-center mb-8 animate-float">
-                <div className="w-20 h-20 p-4 bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl shadow-lg shadow-brand-500/30 transform rotate-3">
-                  <IconWrench />
-                </div>
+      if (!user) return (
+        <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
+          <div className="absolute inset-0" style={{background:'radial-gradient(ellipse at 20% 50%, rgba(26,79,255,0.12) 0%,transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(0,245,255,0.08) 0%,transparent 50%)'}}/>
+          <div className="w-full max-w-sm glass rounded-3xl p-8 animate-slide-up relative z-10 neon-border">
+            <div className="flex justify-center mb-8 animate-float">
+              <div className="w-16 h-16 p-3.5 rounded-2xl" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)',boxShadow:'0 8px 30px rgba(26,79,255,0.5)'}}>
+                <IWrench/>
               </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-center text-slate-800 mb-2">VynixPanelB</h2>
-              <p className="text-center text-slate-500 mb-8 font-medium text-sm md:text-base">Technician Workspace</p>
-              
-              <button 
-                onClick={handleGoogleLogin} 
-                className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 text-[15px]"
-              >
-                <IconGoogle />
-                Continue with Google
-              </button>
             </div>
+            <h1 className="text-3xl font-extrabold text-center mb-1">VynixPanelB</h1>
+            <p className="text-center text-sm mb-8" style={{color:'rgba(255,255,255,0.4)'}}>Technician Workspace</p>
+            <button onClick={login} className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-full font-semibold transition-all hover:-translate-y-1" style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',color:'#e8eeff'}}>
+              <IGoog/> Continue with Google
+            </button>
           </div>
-        );
-      }
+        </div>
+      );
 
       return (
-        <div className="min-h-[100dvh] flex flex-col md:flex-row bg-slate-50 text-slate-800 font-sans">
-          
-          {/* Desktop Sidebar (Hidden on Mobile) */}
-          <nav className="hidden md:flex flex-col w-72 bg-white border-r border-slate-200 p-6 shadow-sm z-10 h-screen sticky top-0">
-            <div className="flex items-center gap-3 mb-10 px-2">
-              <div className="w-10 h-10 p-2 bg-brand-600 text-white rounded-xl shadow-md"><IconWrench /></div>
-              <span className="text-2xl font-bold tracking-tight">VynixPanelB</span>
+        <div className="min-h-screen flex flex-col md:flex-row">
+          {/* Sidebar */}
+          <nav className="hidden md:flex flex-col w-64 h-screen sticky top-0 p-5" style={{background:'rgba(7,12,26,0.95)',borderRight:'1px solid rgba(255,255,255,0.06)'}}>
+            <div className="flex items-center gap-3 mb-8 px-2">
+              <div className="w-9 h-9 p-2 rounded-xl shrink-0" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)'}}>
+                <IWrench/>
+              </div>
+              <span className="text-lg font-extrabold tracking-tight">VynixPanelB</span>
             </div>
-            
-            <div className="space-y-2 flex-1">
-              <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-medium transition-all duration-300 ${view === 'dashboard' ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
-                <IconDashboard /> Dashboard
-              </button>
-              <button onClick={() => setView('wizard')} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-medium transition-all duration-300 ${view === 'wizard' ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
-                <IconCar /> New Estimate
-              </button>
+            <div className="space-y-1 flex-1">
+              {[
+                {id:'dashboard', label:'Dashboard', Icon: IDash},
+                {id:'wizard', label:'New Estimate', Icon: ICar},
+              ].map(({id,label,Icon}) => (
+                <button key={id} onClick={()=>setView(id)} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all" style={view===id?{background:'rgba(26,79,255,0.18)',color:'#7eb3ff',border:'1px solid rgba(26,79,255,0.25)'}:{color:'rgba(255,255,255,0.45)',border:'1px solid transparent'}}>
+                  <Icon/> {label}
+                </button>
+              ))}
             </div>
-
-            <div className="border-t border-slate-100 pt-6 mt-6">
-              <div className="flex items-center gap-3 px-2 mb-4 w-full">
-                <img src={user.photoURL || "https://ui-avatars.com/api/?name="+user.displayName} alt="Avatar" className="w-10 h-10 rounded-full border border-slate-200 shrink-0" />
-                <div className="overflow-hidden min-w-0">
-                  <p className="text-sm font-semibold truncate">{user.displayName || "Technician"}</p>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+            <div style={{borderTop:'1px solid rgba(255,255,255,0.07)',paddingTop:'1rem'}}>
+              <div className="flex items-center gap-3 px-2 mb-3">
+                <img src={user.photoURL||`https://ui-avatars.com/api/?name=${user.displayName}&background=1a4fff&color=fff`} alt="" className="w-9 h-9 rounded-full shrink-0"/>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-semibold truncate">{user.displayName||'Technician'}</p>
+                  <p className="text-xs truncate" style={{color:'rgba(255,255,255,0.35)'}}>{user.email}</p>
                 </div>
               </div>
-              <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors font-medium">
-                <IconLogout /> Sign Out
+              <button onClick={()=>auth.signOut()} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold" style={{background:'rgba(255,59,59,0.08)',color:'rgba(255,59,59,0.8)',border:'1px solid rgba(255,59,59,0.15)'}}>
+                <ILogout/> Sign Out
               </button>
             </div>
           </nav>
 
-          {/* Main Content Area */}
-          {/* Note the custom pb calculation on mobile to avoid the bottom floating nav and safe area */}
-          <main className="flex-1 p-4 md:p-8 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-8 overflow-y-auto relative h-[100dvh] md:h-auto">
-            {/* Subtle background element */}
-            <div className="absolute top-0 left-0 w-full h-48 md:h-64 bg-gradient-to-b from-brand-50 to-transparent -z-10"></div>
-            
-            <div className="max-w-5xl mx-auto w-full">
-              <header className="mb-6 md:mb-8 pt-4 md:pt-0 animate-slide-up flex flex-col md:block items-center text-center md:text-left">
-                <div className="md:hidden w-12 h-12 p-2.5 bg-brand-600 text-white rounded-xl shadow-md mb-4"><IconWrench /></div>
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{view === 'dashboard' ? 'Dashboard Overview' : 'Create Estimate'}</h1>
-                <p className="text-slate-500 mt-1 text-sm md:text-base">{view === 'dashboard' ? 'Review your recent AI analyses and repairs.' : 'Follow the steps to scan vehicle damage.'}</p>
+          {/* Main */}
+          <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 overflow-y-auto">
+            <div className="max-w-5xl mx-auto">
+              <header className="mb-6 flex items-center justify-between animate-slide-up">
+                <div className="md:hidden flex items-center gap-3">
+                  <div className="w-8 h-8 p-1.5 rounded-xl" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)'}}><IWrench/></div>
+                  <span className="font-extrabold">VynixPanelB</span>
+                </div>
+                <div className="hidden md:block">
+                  <h1 className="text-2xl font-bold">{view==='dashboard'?'Dashboard':'New Estimate'}</h1>
+                  <p className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.4)'}}>{view==='dashboard'?'Real-time estimates from Firebase':'Follow the steps below'}</p>
+                </div>
+                <img src={user.photoURL||''} alt="" className="w-9 h-9 rounded-full md:hidden" style={{border:'1px solid rgba(255,255,255,0.1)'}}/>
               </header>
 
-              {view === 'wizard' ? (
-                <EstimateWizard onComplete={() => setView('dashboard')} />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up">
-                  {/* Dashboard Stats Placeholder */}
-                  <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                    <p className="text-slate-500 text-xs md:text-sm font-medium mb-1">Total Estimates</p>
-                    <p className="text-2xl md:text-3xl font-bold text-slate-800">24</p>
-                  </div>
-                  <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                    <p className="text-slate-500 text-xs md:text-sm font-medium mb-1">Pending Approval</p>
-                    <p className="text-2xl md:text-3xl font-bold text-amber-500">8</p>
-                  </div>
-                  <div className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center sm:col-span-2 md:col-span-1">
-                    <p className="text-slate-500 text-xs md:text-sm font-medium mb-1">Revenue (Month)</p>
-                    <p className="text-2xl md:text-3xl font-bold text-green-500">R 45,200</p>
-                  </div>
-
-                  <div className="md:col-span-3 bg-white border border-slate-100 rounded-3xl p-5 md:p-6 shadow-sm mt-2 md:mt-4">
-                    <h2 className="text-lg md:text-xl font-bold mb-4 text-slate-800">Recent Estimates</h2>
-                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 px-4">
-                      <IconCar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                      <p className="text-slate-500 font-medium text-sm md:text-base">Estimates stored in Firebase realtime database will appear here.</p>
-                      <button onClick={() => setView('wizard')} className="mt-5 px-6 py-3 md:py-2 bg-white border border-slate-200 rounded-full text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm w-full sm:w-auto">Start New Estimate</button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {view === 'wizard'
+                ? <EstimateWizard onComplete={()=>setView('dashboard')}/>
+                : <Dashboard onNew={()=>setView('wizard')}/>
+              }
             </div>
           </main>
 
-          {/* Mobile Bottom Navigation (Visible ONLY on Mobile) */}
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-            <button onClick={() => setView('dashboard')} className={`p-2 rounded-2xl flex flex-col items-center gap-1 transition-all flex-1 ${view === 'dashboard' ? 'text-brand-600' : 'text-slate-400'}`}>
-              <div className={`p-2 rounded-xl ${view === 'dashboard' ? 'bg-brand-50' : 'bg-transparent'}`}>
-                <IconDashboard />
-              </div>
-              <span className="text-[10px] font-bold tracking-wide">HOME</span>
+          {/* Mobile bottom nav */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-6 py-3 flex justify-around items-center"
+            style={{background:'rgba(7,12,26,0.95)',backdropFilter:'blur(20px)',borderTop:'1px solid rgba(255,255,255,0.07)',paddingBottom:'calc(0.75rem + env(safe-area-inset-bottom))'}}>
+            <button onClick={()=>setView('dashboard')} className="flex flex-col items-center gap-1 p-2" style={{color:view==='dashboard'?'#00f5ff':'rgba(255,255,255,0.35)'}}>
+              <IDash/><span className="text-[9px] font-bold tracking-widest">HOME</span>
             </button>
-            
-            {/* Prominent Floating Action Button for Wizard */}
-            <div className="flex-1 flex justify-center">
-              <button onClick={() => setView('wizard')} className="p-4 rounded-full bg-brand-600 text-white shadow-lg shadow-brand-500/40 transform -translate-y-6 hover:scale-105 active:scale-95 transition-all border-4 border-slate-50">
-                <IconCar />
-              </button>
-            </div>
-            
-            <button onClick={handleLogout} className="p-2 rounded-2xl flex flex-col items-center gap-1 text-slate-400 hover:text-red-500 transition-all flex-1">
-              <div className="p-2 bg-transparent">
-                <IconLogout />
-              </div>
-              <span className="text-[10px] font-bold tracking-wide">LOGOUT</span>
+            <button onClick={()=>setView('wizard')} className="p-4 rounded-full -translate-y-5" style={{background:'linear-gradient(135deg,#1a4fff,#0033e6)',boxShadow:'0 0 25px rgba(26,79,255,0.6)',border:'3px solid rgba(7,12,26,0.9)'}}>
+              <ICar/>
+            </button>
+            <button onClick={()=>auth.signOut()} className="flex flex-col items-center gap-1 p-2" style={{color:'rgba(255,59,59,0.6)'}}>
+              <ILogout/><span className="text-[9px] font-bold tracking-widest">LOGOUT</span>
             </button>
           </nav>
         </div>
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
 </html>
