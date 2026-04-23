@@ -573,21 +573,55 @@ function IntakeWizard({onDone,profile}){
   const submit=async(totals)=>{
     setSubmitting(true);
     try{
+      // [!] BULLETPROOFING: Guarantee NO 'undefined' variables ever reach Firebase
       const items=Object.values(services).map(s=>({
-        serviceId:s.id,name:s.name,qty:s.qty,
-        parts:s.parts,laborHours:s.labor*s.qty,
-        unitPrice:s.price,total:s.price*s.qty,icon:s.icon
+        serviceId: s.id || 'unknown_service',
+        name: s.name || 'Unknown Service',
+        qty: s.qty || 1,
+        parts: s.parts || [],
+        laborHours: (s.labor || 0) * (s.qty || 1),
+        unitPrice: s.price || 0,
+        total: (s.price || 0) * (s.qty || 1),
+        icon: s.icon || '🔧'
       }));
-      const ref = await db.ref('workshop_jobs').push({
-        vehicle, services:items, notes,
-        financials:{...totals,lineItems:items,laborRate:LABOR},
-        mechanic:{uid:auth.currentUser?.uid,name:profile?.name||'Mechanic',shop:profile?.shop||'Workshop'},
-        status:'pending_approval',
-        createdAt:Date.now(),
-        updatedAt:Date.now()
-      });
+
+      const payload = {
+        vehicle: {
+          make: vehicle.make || '',
+          model: vehicle.model || '',
+          year: vehicle.year || '',
+          engine: vehicle.engine || '',
+          reg: vehicle.reg || '',
+          vin: vehicle.vin || '',
+          km: vehicle.km || ''
+        },
+        services: items,
+        notes: notes || '',
+        financials: {
+          laborTotal: totals.laborTotal || 0,
+          partsTotal: totals.partsTotal || 0,
+          subtotal: totals.subtotal || 0,
+          vat: totals.vat || 0,
+          grandTotal: totals.grandTotal || 0,
+          lineItems: items,
+          laborRate: LABOR
+        },
+        mechanic: {
+          uid: auth.currentUser?.uid || 'unknown_user_id',
+          name: profile?.name || 'Mechanic',
+          shop: profile?.shop || 'Workshop'
+        },
+        status: 'pending_approval',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+
+      await db.ref('workshop_jobs').push(payload);
       onDone();
-    }catch(e){alert('Error: '+e.message);}
+    }catch(e){
+      console.error("Firebase Submission Error:", e);
+      alert('Error saving data: '+e.message);
+    }
     setSubmitting(false);
   };
 
