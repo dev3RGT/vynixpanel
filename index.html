@@ -594,7 +594,6 @@ function IntakeWizard({onDone,profile}){
   const submit=async(totals)=>{
     setSubmitting(true);
     try{
-      // [!] BULLETPROOFING: Guarantee NO 'undefined' variables ever reach Firebase
       const items=Object.values(services).map(s=>({
         serviceId: s.id || 'unknown_service',
         name: s.name || 'Unknown Service',
@@ -667,24 +666,8 @@ function IntakeWizard({onDone,profile}){
 }
 
 /* ─── JOBS DASHBOARD ─── */
-function JobsDash({onNew,profile}){
-  const [jobs,setJobs]=useState(null);
+function JobsDash({ onNew, profile, jobs }){
   const [open,setOpen]=useState(null);
-
-  useEffect(()=>{
-    // Increased to 500 to ensure all data is visible
-    const ref=db.ref('workshop_jobs').limitToLast(500);
-    // FIX: Assign callback to variable to properly unmount
-    const cb = ref.on('value',snap=>{
-      if(!snap.exists()){setJobs([]);return;}
-      const arr=[];
-      snap.forEach(c=>arr.push({id:c.key,...c.val()}));
-      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      setJobs(arr);
-    });
-    // FIX: Explicitly kill only THIS specific listener
-    return()=>ref.off('value', cb);
-  },[]);
 
   const active=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
 
@@ -780,6 +763,10 @@ function App(){
   const [profile,setProfile]=useState({name:'',shop:''});
   const [view,setView]=useState('dashboard');
   const [ready,setReady]=useState(false);
+  
+  // SINGLE SOURCE OF TRUTH for Mechanic App
+  const [jobs, setJobs] = useState(null);
+
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [dark,setDark]=useState(()=>{
     const s=localStorage.getItem('vynix_theme_dark');
@@ -792,7 +779,6 @@ function App(){
     document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';
   },[dark]);
 
-  // THIS IS THE GATEKEEPER. It checks Firebase immediately on load.
   useEffect(()=>{
     return auth.onAuthStateChanged(u=>{
       if(u){
@@ -807,16 +793,29 @@ function App(){
         });
         setReady(true);
       }
-      // if !u, the route guard (vanilla JS above) handles redirect
     });
   },[]);
 
-  const login=async()=>{try{await auth.signInWithPopup(gp);}catch(e){alert(e.message);}};
+  // ONE Master Listener
+  useEffect(()=>{
+    const ref = db.ref('workshop_jobs').limitToLast(500);
+    const cb = ref.on('value', snap => {
+      if(!snap.exists()) {
+        setJobs([]);
+        return;
+      }
+      const arr = [];
+      snap.forEach(child => {
+        arr.push({ id: child.key, ...child.val() });
+      });
+      arr.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setJobs(arr);
+    });
+    return () => ref.off('value', cb); // Safely kill only this listener
+  },[]);
 
-  // 1. Loading Screen (While Firebase verifies your session)
-  if(!ready||!user) return null; // Auth gate overlay handles this state
+  if(!ready||!user) return null; 
 
-  // 3. The Main App (Only renders if user exists)
   return(
     <div style={{minHeight:'100dvh',display:'flex',flexDirection:'row'}}>
       {/* Sidebar (Desktop) */}
@@ -836,7 +835,6 @@ function App(){
         <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
           <div style={{display:'flex',justifyContent:'center',marginBottom:16}}><DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/></div>
           
-          {/* Tapping this block opens the Account Modal on Desktop */}
           <div 
             className="surface" 
             onClick={() => setIsAccountOpen(true)}
@@ -856,7 +854,6 @@ function App(){
       {/* Main Window */}
       <main id="main-content" style={{flex:1,padding:'16px',paddingBottom:'calc(88px + env(safe-area-inset-bottom))',overflowY:'auto',minHeight:'100dvh'}}>
         <div style={{maxWidth:760,margin:'0 auto'}}>
-          {/* Header (Mobile) */}
           <header className="md:hidden" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
               <div style={{width:34,height:34,padding:7,borderRadius:11,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff'}}><IWrench/></div>
@@ -867,7 +864,6 @@ function App(){
             </div>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
               <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
-              {/* Tapping Avatar opens Account Sheet on Mobile */}
               <img 
                 src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} 
                 onClick={() => setIsAccountOpen(true)}
@@ -876,27 +872,24 @@ function App(){
             </div>
           </header>
           <div className="hidden md:block h-[20px]"></div>
-          {view==='wizard'?<IntakeWizard onDone={()=>setView('dashboard')} profile={profile}/>:<JobsDash onNew={()=>setView('wizard')} profile={profile}/>}
+          {/* Passed centralized jobs downwards */}
+          {view==='wizard'?<IntakeWizard onDone={()=>setView('dashboard')} profile={profile}/>:<JobsDash jobs={jobs} onNew={()=>setView('wizard')} profile={profile}/>}
         </div>
       </main>
 
-      {/* Mobile Nav Panel */}
       <nav className="mobile-nav md:hidden">
         <button className={`mnav-btn ${view==='dashboard'?'active':''}`} onClick={()=>setView('dashboard')}><IDash/> HOME</button>
         <button className="mnav-fab" onClick={()=>setView('wizard')}><ICar/></button>
-        {/* Account Button triggers the sheet */}
         <button className="mnav-btn" onClick={()=>setIsAccountOpen(true)} style={{color:'var(--text3)'}}><IUser/> ACCOUNT</button>
       </nav>
 
-      {/* Responsive UX: Account Modal / Bottom Sheet */}
+      {/* Account Modal / Bottom Sheet */}
       {isAccountOpen && (
         <>
           <div className="modal-overlay" onClick={() => setIsAccountOpen(false)} />
-          
           <div className="responsive-panel">
             <div className="sheet-handle" />
 
-            {/* Profile Info Header */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <img 
                 src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} 
@@ -912,7 +905,6 @@ function App(){
               </div>
             </div>
 
-            {/* Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button 
                 style={{ background: 'rgba(224, 48, 48, 0.08)', color: 'var(--red)', border: '1px solid rgba(224, 48, 48, 0.2)', padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', fontFamily:'Inter', display:'flex', justifyContent:'center', alignItems:'center', gap:'8px' }}
