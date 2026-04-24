@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070c1a" id="meta-theme" />
+  <title>VynixPanelB — Login</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --bg:#f0f4ff; --bg2:#e6ecfa; --surface:rgba(255,255,255,0.85);
+      --border:rgba(0,0,0,0.07); --text:#0d1426; --text2:#4a5580; --text3:#8896bb;
+      --accent:#1a4fff; --accent2:#0033e6; --accent-glow:rgba(26,79,255,0.25);
+      --red:#e03030; --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+      --input-bg:rgba(0,0,0,0.04); --input-border:rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg:#070c1a; --bg2:#0d1530; --surface:rgba(255,255,255,0.04);
+      --border:rgba(255,255,255,0.08); --text:#e8eeff; --text2:#8896cc; --text3:#4a5580;
+      --accent:#4d7bff; --accent2:#1a4fff; --accent-glow:rgba(77,123,255,0.25);
+      --red:#ff5050; --shadow-lg:0 8px 40px rgba(0,0,0,0.6);
+      --input-bg:rgba(255,255,255,0.05); --input-border:rgba(255,255,255,0.1);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    
+    .surface{background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:24px;box-shadow:var(--shadow-lg);}
+    
+    .btn-google {background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:100px; padding:14px 26px; font-family:'Inter',sans-serif; font-weight:700; font-size:15px; cursor:pointer; transition:all .22s; display:flex; width:100%; align-items:center; justify-content:center; gap:12px; touch-action:manipulation; position:relative; overflow:hidden;}
+    .btn-google:hover:not(:disabled) {background:var(--input-bg); border-color:var(--text3); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.15);}
+    .btn-google:active:not(:disabled) {transform:scale(0.97);}
+    .btn-google:disabled {opacity:0.6; cursor:not-allowed;}
+    
+    .mono{font-family:'JetBrains Mono',monospace}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;}
+    
+    /* Pre-React Loading Gate */
+    #authGate {position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;}
+    .hidden {opacity:0; pointer-events:none;}
+  </style>
+</head>
+<body>
+
+<div id="authGate">
+  <svg class="animate-pulse" style="width:48px;height:48px;color:var(--accent);margin-bottom:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+  </svg>
+  <div style="font-weight:700;font-size:15px;color:var(--text);">Checking session...</div>
+</div>
+
+<div id="root" style="width:100%; max-width:400px;"></div>
+
+<script>
+  /* ─── FIREBASE INIT ─── */
+  const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
+  if(!firebase.apps.length) firebase.initializeApp(FC);
+
+  /* ─── THEME INIT ─── */
+  (function() {
+    const s = localStorage.getItem('vynix_theme_dark');
+    const dark = s !== null ? JSON.parse(s) : true;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('meta-theme').content = dark ? '#070c1a' : '#f0f4ff';
+  })();
+</script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+const auth = firebase.auth();
+
+const IWrench = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+const IGoog = () => <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+const ISpin = () => <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>;
+
+function Login() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Check initial auth state
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is logged in, send them straight to the main app
+        window.location.replace('index.html');
+      } else {
+        // Safe to show the login UI
+        const gate = document.getElementById('authGate');
+        if(gate) gate.classList.add('hidden');
+      }
+    });
+
+    // Check for redirect result (if they were bounced out of a mobile browser popup)
+    auth.getRedirectResult().then((result) => {
+      if (result && result.user) {
+        window.location.replace('index.html');
+      }
+    }).catch((err) => {
+      setError(err.message);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    
+    // Add custom parameters if needed (e.g., prompt to select account)
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      // Try popup first (fastest for desktop/capable devices)
+      await auth.signInWithPopup(provider);
+      // The onAuthStateChanged listener above will catch the login and redirect instantly.
+    } catch (err) {
+      // If popup is blocked (common on mobile browsers inside other apps), fallback to redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        try {
+          await auth.signInWithRedirect(provider);
+        } catch (redirectErr) {
+          setError(redirectErr.message);
+          setLoading(false);
+        }
+      } else {
+        setError("Failed to sign in: " + err.message);
+        setLoading(false);
+      }
+    }
+  };
+
+  return (
+    <div className="surface" style={{ padding: '32px 24px', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, var(--accent), var(--accent2))', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', boxShadow: '0 8px 24px var(--accent-glow)' }}>
+          <IWrench />
+        </div>
+        <h1 style={{ fontSize: '24px', fontWeight: '900', color: 'var(--text)', margin: '0 0 6px 0' }}>VynixPanelB</h1>
+        <p className="mono" style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: '700', letterSpacing: '1px', margin: 0 }}>MECHANIC TERMINAL</p>
+        <p style={{ fontSize: '14px', color: 'var(--text2)', marginTop: '12px' }}>Sign in to access your workshop dashboard and manage vehicle intake.</p>
+      </div>
+
+      {error && (
+        <div style={{ background: 'rgba(224, 48, 48, 0.08)', border: '1px solid rgba(224, 48, 48, 0.2)', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', color: 'var(--red)', fontSize: '13px', textAlign: 'center' }}>
+          {error}
+        </div>
+      )}
+
+      <button 
+        className="btn-google" 
+        onClick={handleGoogleLogin} 
+        disabled={loading}
+      >
+        {loading ? <ISpin /> : <IGoog />}
+        {loading ? 'Authenticating...' : 'Continue with Google'}
+      </button>
+
+      <p style={{ fontSize: '12px', color: 'var(--text3)', textAlign: 'center', marginTop: '24px' }}>
+        Secure login via Google Firebase Auth.
+      </p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Login/>);
+</script>
+</body>
+</html>
