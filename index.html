@@ -140,7 +140,6 @@
     if (!user) {
       document.getElementById('authGateText').textContent = 'Redirecting to login…';
       setTimeout(function() {
-        // window.location.replace prevents back-button loops after redirecting
         window.location.replace('login.html');
       }, 500);
     } else {
@@ -154,7 +153,6 @@
 
   /* ─── THEME INIT ─── */
   (function() {
-    // Harmonized key to match login.html
     const s = localStorage.getItem('vynix_theme_dark');
     const dark = s !== null ? JSON.parse(s) : true;
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -177,14 +175,13 @@ const DEFAULT_CAR_DB={
 
 const DEFAULT_SERVICE_CATALOG = {
   "Routine Maintenance": [
-    {id:"oil-change",name:"Engine Oil & Filter Change",price:450,labor:1.0,parts:["Engine Oil (5L)","Oil Filter"],icon:"🛢"},
-    {id:"air-filter",name:"Air Filter Replacement",price:320,labor:0.5,parts:["Air Filter"],icon:"💨"},
-    {id:"cabin-filter",name:"Cabin Air Filter",price:280,labor:0.5,parts:["Cabin Filter"],icon:"🌬"},
-    {id:"spark-plugs",name:"Spark Plug Replacement",price:180,labor:1.5,parts:["Spark Plugs (x4)"],icon:"⚡"}
+    {id:"oil-change",name:"Engine Oil & Filter Change",labor:1.0,parts:[{name:"Engine Oil (5L)",price:350},{name:"Oil Filter",price:100}],icon:"🛢"},
+    {id:"air-filter",name:"Air Filter Replacement",labor:0.5,parts:[{name:"Air Filter Element",price:320}],icon:"💨"},
+    {id:"spark-plugs",name:"Spark Plug Replacement",labor:1.5,parts:[{name:"Spark Plugs (x4)",price:280}],icon:"⚡"}
   ],
   "Brakes": [
-    {id:"brake-pads-front",name:"Front Brake Pad Replacement",price:850,labor:1.5,parts:["Front Brake Pads (Set)"],icon:"🔴"},
-    {id:"brake-discs-front",name:"Front Brake Disc Replacement",price:1200,labor:2.0,parts:["Front Brake Discs (Pair)"],icon:"⚙"}
+    {id:"brake-pads-front",name:"Front Brake Pad Replacement",labor:1.5,parts:[{name:"Front Brake Pads (Set)",price:850}],icon:"🔴"},
+    {id:"brake-discs-front",name:"Front Brake Disc Replacement",labor:2.0,parts:[{name:"Front Brake Discs (Pair)",price:1200}],icon:"⚙"}
   ]
 };
 
@@ -328,11 +325,26 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
   const [notes,setNotes]=useState('');
   const [activeCategory,setActiveCategory]=useState(Object.keys(sysServices)[0] || '');
 
+  // Keep active category synced if sysServices loads late
+  useEffect(() => {
+    if (!activeCategory && Object.keys(sysServices).length > 0) {
+      setActiveCategory(Object.keys(sysServices)[0]);
+    }
+  }, [sysServices, activeCategory]);
+
   const toggle=(svc)=>{
     setSelected(p=>{
       const n={...p};
       if(n[svc.id]) delete n[svc.id];
-      else n[svc.id]={...svc,qty:1};
+      else {
+        // Calculate service total dynamically by adding up its parts
+        const calculatedPrice = (svc.parts||[]).reduce((sum, part) => {
+          return sum + (typeof part === 'string' ? 0 : (part.price || 0));
+        }, 0);
+        // Fallback to legacy svc.price if calculated price is 0
+        const finalPrice = calculatedPrice > 0 ? calculatedPrice : (svc.price || 0);
+        n[svc.id]={...svc, qty:1, price: finalPrice};
+      }
       return n;
     });
   };
@@ -374,16 +386,25 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
       <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:340,overflowY:'auto'}}>
         {(sysServices[activeCategory]||[]).map(svc=>{
           const isSel=!!selected[svc.id];
+          
+          // Map array of objects (or fallback strings) into a clean display list
+          const partsList = (svc.parts||[]).map(p => typeof p === 'string' ? p : p.name).join(' · ');
+          
+          // Dynamic calculation for the UI
+          const servicePrice = (svc.parts||[]).reduce((sum, p) => sum + (typeof p === 'string' ? 0 : (p.price || 0)), 0) || svc.price || 0;
+
           return(
             <div key={svc.id} className={`service-card ${isSel?'selected':''}`} onClick={()=>toggle(svc)}>
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <span style={{fontSize:22,flexShrink:0}}>{svc.icon}</span>
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{svc.name}</p>
-                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{(svc.parts||[]).join(' · ')||'Labour only'} · {svc.labor}h</p>
+                  <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                    {partsList || 'Labour only'} · {svc.labor}h
+                  </p>
                 </div>
                 <div style={{textAlign:'right',flexShrink:0}}>
-                  <p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {svc.price}</p>
+                  <p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {servicePrice}</p>
                   {isSel&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}} onClick={e=>e.stopPropagation()}>
                     <button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)-1)}>-</button>
                     <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:16,textAlign:'center'}}>{selected[svc.id]?.qty||1}</span>
@@ -509,6 +530,7 @@ function IntakeWizard({ onDone, profile, systemData }){
         serviceId: s.id || 'unknown_service',
         name: s.name || 'Unknown Service',
         qty: s.qty || 1,
+        // We pass the full objects to the backend so the Admin sees exact prices matched to parts
         parts: s.parts || [],
         laborHours: (s.labor || 0) * (s.qty || 1),
         unitPrice: s.price || 0,
@@ -839,7 +861,6 @@ function App(){
                 onClick={() => { 
                   setIsAccountOpen(false); 
                   auth.signOut().then(() => {
-                    // window.location.replace is much safer than .href here
                     window.location.replace('login.html'); 
                   });
                 }}
