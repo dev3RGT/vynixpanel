@@ -323,12 +323,15 @@ function CarSelector({ onSelect, sysCars }){
 function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
   const [selected,setSelected]=useState({});
   const [notes,setNotes]=useState('');
-  const [activeCategory,setActiveCategory]=useState(Object.keys(sysServices)[0] || '');
+  const [activeCategory,setActiveCategory]=useState('');
 
-  // Keep active category synced if sysServices loads late
+  // Keep active category synced securely
   useEffect(() => {
-    if (!activeCategory && Object.keys(sysServices).length > 0) {
-      setActiveCategory(Object.keys(sysServices)[0]);
+    const keys = Object.keys(sysServices);
+    if (!activeCategory && keys.length > 0) {
+      setActiveCategory(keys[0]);
+    } else if (activeCategory && !keys.includes(activeCategory) && keys.length > 0) {
+      setActiveCategory(keys[0]);
     }
   }, [sysServices, activeCategory]);
 
@@ -337,13 +340,7 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
       const n={...p};
       if(n[svc.id]) delete n[svc.id];
       else {
-        // Calculate service total dynamically by adding up its parts
-        const calculatedPrice = (svc.parts||[]).reduce((sum, part) => {
-          return sum + (typeof part === 'string' ? 0 : (part.price || 0));
-        }, 0);
-        // Fallback to legacy svc.price if calculated price is 0
-        const finalPrice = calculatedPrice > 0 ? calculatedPrice : (svc.price || 0);
-        n[svc.id]={...svc, qty:1, price: finalPrice};
+        n[svc.id]={...svc, qty:1, price: svc.price};
       }
       return n;
     });
@@ -356,6 +353,8 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
 
   const total=Object.values(selected).reduce((s,i)=>s+(i.price*i.qty),0);
   const count=Object.keys(selected).length;
+  
+  const activeCategoryData = sysServices[activeCategory] || [];
 
   return(
     <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:14}}>
@@ -369,7 +368,7 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
         </div>}
       </div>
 
-      {/* Category Tabs */}
+      {/* Dynamic Category Tabs From Parts Catalog */}
       <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:4}}>
         {Object.keys(sysServices).map(cat=>(
           <button key={cat} onClick={()=>setActiveCategory(cat)} style={{
@@ -382,16 +381,10 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
         ))}
       </div>
 
-      {/* Services Grid */}
+      {/* Services Grid (Individual Parts) */}
       <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:340,overflowY:'auto'}}>
-        {(sysServices[activeCategory]||[]).map(svc=>{
+        {activeCategoryData.map(svc=>{
           const isSel=!!selected[svc.id];
-          
-          // Map array of objects (or fallback strings) into a clean display list
-          const partsList = (svc.parts||[]).map(p => typeof p === 'string' ? p : p.name).join(' · ');
-          
-          // Dynamic calculation for the UI
-          const servicePrice = (svc.parts||[]).reduce((sum, p) => sum + (typeof p === 'string' ? 0 : (p.price || 0)), 0) || svc.price || 0;
 
           return(
             <div key={svc.id} className={`service-card ${isSel?'selected':''}`} onClick={()=>toggle(svc)}>
@@ -400,11 +393,11 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{svc.name}</p>
                   <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
-                    {partsList || 'Labour only'} · {svc.labor}h
+                    Included part · {svc.labor}h labour
                   </p>
                 </div>
                 <div style={{textAlign:'right',flexShrink:0}}>
-                  <p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {servicePrice}</p>
+                  <p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {svc.price}</p>
                   {isSel&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}} onClick={e=>e.stopPropagation()}>
                     <button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)-1)}>-</button>
                     <span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:16,textAlign:'center'}}>{selected[svc.id]?.qty||1}</span>
@@ -427,7 +420,7 @@ function ServiceSelector({ vehicle, onBack, onDone, sysServices }){
 
       {count>0&&(
         <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:14,color:'var(--text2)'}}>{count} service(s) selected</span>
+          <span style={{fontSize:14,color:'var(--text2)'}}>{count} item(s) selected</span>
           <span className="mono" style={{fontSize:18,fontWeight:800,color:'var(--accent)'}}>R {total.toFixed(2)}</span>
         </div>
       )}
@@ -521,7 +514,37 @@ function IntakeWizard({ onDone, profile, systemData }){
   const [submitting,setSubmitting]=useState(false);
 
   const sysCars = systemData?.car_db || {};
-  const sysServices = systemData?.services || {};
+  
+  // Directly map the Parts Catalog from Firebase into the categories format.
+  const sysServices = useMemo(() => {
+    if (systemData?.parts_catalog) {
+      const catalog = systemData.parts_catalog;
+      const result = {};
+      
+      Object.keys(catalog).forEach(catName => {
+        const catData = catalog[catName];
+        const partsArr = (catData.parts || []).map(p => typeof p === 'string' ? {name: p, price: 0} : p);
+        
+        const items = partsArr.map((part, idx) => ({
+          id: `pt-${catName.replace(/[^a-zA-Z0-9]/g, '')}-${idx}`.toLowerCase(),
+          name: part.name,
+          labor: 0.5, // Allocate a base 0.5h to every part fitting
+          icon: catData.icon || '🔧',
+          price: part.price || 0,
+          parts: [{ name: part.name, price: part.price || 0 }]
+        }));
+        
+        if (items.length > 0) {
+          result[catName] = items;
+        }
+      });
+      
+      if (Object.keys(result).length > 0) return result;
+    }
+    
+    // Fallback exactly to the old generic services if parts_catalog is missing
+    return systemData?.services || {};
+  }, [systemData]);
 
   const submit=async(totals)=>{
     setSubmitting(true);
