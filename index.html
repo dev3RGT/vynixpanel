@@ -166,6 +166,8 @@
     .profile-edit-field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:14px;padding:13px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;transition:all .2s}
     .profile-edit-field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
     .profile-edit-field::placeholder{color:var(--text3);font-weight:500}
+    
+    .history-card { padding:12px; border-radius:12px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; font-size:13px; }
   </style>
 </head>
 <body>
@@ -198,7 +200,6 @@ const auth=firebase.auth(), db=firebase.database();
 const LABOR=750;
 
 /* ── PORTAL FOR MODALS ── */
-// Fixes position:fixed when ancestors have CSS transforms
 const Portal = ({ children }) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -234,6 +235,7 @@ const getStatusUI = (s) => {
     'rejected': { l: 'REJECTED', c: 'var(--red)', bg: 'rgba(255,80,80,0.1)', b: 'rgba(255,80,80,0.2)' },
     'in_progress': { l: 'IN PROGRESS', c: 'var(--accent)', bg: 'rgba(77,123,255,0.1)', b: 'rgba(77,123,255,0.2)' },
     'waiting_parts': { l: 'WAITING PARTS', c: 'var(--amber)', bg: 'rgba(255,184,0,0.1)', b: 'rgba(255,184,0,0.2)' },
+    'ready_for_qa': { l: 'READY FOR QA', c: 'var(--accent)', bg: 'rgba(77,123,255,0.1)', b: 'rgba(77,123,255,0.2)' },
     'completed': { l: 'COMPLETED', c: 'var(--green)', bg: 'rgba(0,255,136,0.1)', b: 'rgba(0,255,136,0.2)' }
   };
   return map[s] || { l: s?.toUpperCase() || 'UNKNOWN', c: 'var(--text3)', bg: 'var(--input-bg)', b: 'var(--border)' };
@@ -259,6 +261,78 @@ const ICircuitDark=()=><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" 
 const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>;
 const ICamera=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>;
 const IClock=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/></svg>;
+const IHistory=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
+
+/* ── SIGNATURE PAD COMPONENT ── */
+function SignaturePad({ onChange }) {
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = 'var(--accent)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }, []);
+
+  const getPos = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const start = (e) => {
+    setIsDrawing(true);
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setIsEmpty(false);
+  };
+
+  const end = () => {
+    if(!isDrawing) return;
+    setIsDrawing(false);
+    onChange(canvasRef.current.toDataURL('image/png'));
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    setIsEmpty(true);
+    onChange(null);
+  };
+
+  return (
+    <div className="no-swipe" style={{background:'var(--input-bg)', border:'1px solid var(--border)', borderRadius:12, overflow:'hidden', position:'relative'}}>
+      <canvas
+        ref={canvasRef}
+        width={340}
+        height={140}
+        style={{width:'100%', display:'block', touchAction:'none'}}
+        onMouseDown={start} onMouseMove={draw} onMouseUp={end} onMouseLeave={end}
+        onTouchStart={start} onTouchMove={draw} onTouchEnd={end}
+      />
+      {!isEmpty && <button onClick={clear} style={{position:'absolute', top:8, right:8, background:'rgba(255,80,80,0.1)', color:'var(--red)', border:'none', borderRadius:100, fontSize:10, fontWeight:700, padding:'4px 10px', cursor:'pointer'}}>Clear</button>}
+      {isEmpty && <div style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', color:'var(--text3)', fontSize:14, fontWeight:600}}>Customer Signature Here</div>}
+    </div>
+  );
+}
+
 
 /* ── TOAST ── */
 function Toast({message, icon='✓', color='var(--green)', onDone}){
@@ -311,32 +385,103 @@ function CarSelector({onSelect,sysCars}){
   const [km,setKm]=useState('');
   const [searchQ,setSearchQ]=useState('');
   const [showDrop,setShowDrop]=useState(false);
+  
+  // History State
+  const [history, setHistory] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+
   const ref=useRef();
   const makes=Object.keys(sysCars).sort();
   const models=make?Object.keys(sysCars[make]||{}).sort():[];
   const yearRanges=make&&model?Object.keys(sysCars[make]?.[model]||{}):[];
   const engines=make&&model&&year?sysCars[make]?.[model]?.[year]||[]:[];
+  
   const filtered=useMemo(()=>{if(!searchQ.trim())return[];const q=searchQ.toLowerCase();const res=[];Object.entries(sysCars).forEach(([mk,models])=>{Object.entries(models).forEach(([mdl])=>{if((mk+' '+mdl).toLowerCase().includes(q))res.push({mk,mdl});});});return res.slice(0,8);},[searchQ,sysCars]);
+  
   useEffect(()=>{const h=(e)=>{if(ref.current&&!ref.current.contains(e.target))setShowDrop(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
+
+  // Automatically check history when typing reg plate
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (reg && reg.length >= 4) {
+        try {
+          const snap = await db.ref('workshop_jobs').orderByChild('vehicle/reg').equalTo(reg.toUpperCase()).once('value');
+          if (snap.exists()) {
+            const hist = [];
+            snap.forEach(c => { hist.push({ id: c.key, ...c.val() }); });
+            hist.sort((a,b) => b.createdAt - a.createdAt);
+            setHistory(hist);
+          } else {
+            setHistory([]);
+          }
+        } catch(e) { console.error("History fetch error:", e); }
+      } else {
+        setHistory(null);
+      }
+    }, 800); // 800ms debounce
+    return () => clearTimeout(timer);
+  }, [reg]);
+
   const canProceed=make&&model&&year&&engine&&reg;
+  
   return(
     <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
       <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Check-In</h2><p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p></div>
+      
       <div ref={ref} style={{position:'relative'}}>
         <div style={{position:'relative'}}><div style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
         <input className="field" style={{paddingLeft:44}} placeholder="Quick search make & model…" value={searchQ} onChange={e=>{setSearchQ(e.target.value);setShowDrop(true)}} onFocus={()=>setShowDrop(true)}/></div>
         {showDrop&&filtered.length>0&&<div className="search-dropdown">{filtered.map((r,i)=><div key={i} className="car-select-option" onClick={()=>{setMake(r.mk);setModel(r.mdl);setYear('');setEngine('');setSearchQ(r.mk+' '+r.mdl);setShowDrop(false)}}><span style={{fontWeight:700,color:'var(--text)'}}>{r.mk}</span> <span style={{color:'var(--text2)'}}>{r.mdl}</span></div>)}</div>}
       </div>
+
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MAKE</label><select className="field" value={make} onChange={e=>{setMake(e.target.value);setModel('');setYear('');setEngine('')}} style={{cursor:'pointer'}}><option value="">Select Make</option>{makes.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MODEL</label><select className="field" value={model} onChange={e=>{setModel(e.target.value);setYear('');setEngine('')}} disabled={!make} style={{cursor:'pointer'}}><option value="">Select Model</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>YEAR RANGE</label><select className="field" value={year} onChange={e=>{setYear(e.target.value);setEngine('')}} disabled={!model} style={{cursor:'pointer'}}><option value="">Select Year</option>{yearRanges.map(y=><option key={y} value={y}>{y}</option>)}</select></div>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ENGINE</label><select className="field" value={engine} onChange={e=>setEngine(e.target.value)} disabled={!year} style={{cursor:'pointer'}}><option value="">Select Engine</option>{engines.map(e=><option key={e} value={e}>{e}</option>)}</select></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>REG. PLATE *</label><input className="field" placeholder="e.g. CA 123-456" value={reg} onChange={e=>setReg(e.target.value.toUpperCase())}/></div>
+        <div style={{gridColumn: history?.length > 0 ? '1 / -1' : 'auto'}}>
+          <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>REG. PLATE *</label>
+          <input className="field" placeholder="e.g. CA 123-456" value={reg} onChange={e=>setReg(e.target.value.toUpperCase())}/>
+          {history && history.length > 0 && (
+            <div className="anim-up" style={{background:'rgba(0,144,255,0.08)', border:'1px solid rgba(0,144,255,0.2)', padding:'10px 14px', borderRadius:12, marginTop:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <span style={{fontSize:12, color:'var(--cyan)', fontWeight:600}}><IHistory/> Found {history.length} past service{history.length > 1 ? 's' : ''}</span>
+              <button onClick={() => setShowHistoryModal(true)} style={{background:'var(--cyan)', color:'#fff', border:'none', borderRadius:100, fontSize:11, fontWeight:700, padding:'6px 12px', cursor:'pointer'}}>View History</button>
+            </div>
+          )}
+        </div>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>VIN (optional)</label><input className="field" placeholder="e.g. AAAAAAAAAAAAAAA" value={vin} onChange={e=>setVin(e.target.value.toUpperCase())}/></div>
       </div>
-      <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>VIN (optional)</label><input className="field" placeholder="e.g. AAAAAAAAAAAAAAA" value={vin} onChange={e=>setVin(e.target.value.toUpperCase())}/></div>
+      
       <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
+
+      {/* History Modal */}
+      {showHistoryModal && (
+        <Portal>
+          <div className="modal-overlay" onClick={() => setShowHistoryModal(false)} />
+          <div className="responsive-panel">
+            <div className="sheet-handle" />
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 4px' }}>Service History</h3>
+            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 20px' }}>{reg.toUpperCase()}</p>
+            <div style={{maxHeight:'50vh', overflowY:'auto'}}>
+              {history.map((hJob, i) => (
+                <div key={i} className="history-card">
+                  <div style={{display:'flex', justifyContent:'space-between', marginBottom:6}}>
+                    <span style={{fontWeight:700, color:'var(--text)'}}>{new Date(hJob.createdAt).toLocaleDateString('en-ZA', {year:'numeric', month:'short', day:'numeric'})}</span>
+                    <span className="mono" style={{fontWeight:700, color:'var(--accent)'}}>{hJob.vehicle?.km ? `${hJob.vehicle.km} km` : ''}</span>
+                  </div>
+                  <ul style={{margin:0, paddingLeft:18, color:'var(--text2)', fontSize:12}}>
+                    {(hJob.services || []).map((s, idx) => <li key={idx}>{s.name}</li>)}
+                  </ul>
+                  {hJob.notes && <p style={{margin:'6px 0 0', fontSize:11, color:'var(--amber)', background:'rgba(255,184,0,0.06)', padding:'6px', borderRadius:6}}>📝 {hJob.notes}</p>}
+                </div>
+              ))}
+            </div>
+            <button className="btn-g" onClick={() => setShowHistoryModal(false)} style={{width:'100%', marginTop:16}}>Close History</button>
+          </div>
+        </Portal>
+      )}
+
     </div>
   );
 }
@@ -428,6 +573,8 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices}){
 
 /* ── QUOTE REVIEW ── */
 function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting}){
+  const [signature, setSignature] = useState(null);
+
   const items=Object.values(services);
   const laborTotal=items.reduce((s,i)=>s+i.labor*i.qty*LABOR,0);
   const partsTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
@@ -464,8 +611,14 @@ function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting})
         </div>
       )}
 
+      {/* Signature Pad Addition */}
+      <div style={{padding:12,borderRadius:12,background:'var(--surface)',border:'1px solid var(--border)'}}>
+         <p style={{fontSize:11,fontWeight:700,color:'var(--text)',margin:'0 0 8px',letterSpacing:'0.5px'}}>AUTHORIZATION</p>
+         <SignaturePad onChange={(data) => setSignature(data)} />
+      </div>
+
       <div style={{padding:12,borderRadius:12,background:'rgba(0,255,136,0.06)',border:'1px solid rgba(0,255,136,0.18)'}}><p style={{fontSize:12,color:'var(--green)',margin:0,fontWeight:600}}>⚡ Submitting will send this quote to the Admin Dashboard in real-time.</p></div>
-      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}} disabled={submitting}>Back</button><button className="btn-p" onClick={()=>onSubmit({laborTotal,partsTotal,subtotal,vat,grandTotal:grand})} style={{flex:1}} disabled={submitting}>{submitting?<ISpin cls="w-5 h-5"/>:<><ICheck/>Send to Admin</>}</button></div>
+      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}} disabled={submitting}>Back</button><button className="btn-p" onClick={()=>onSubmit({laborTotal,partsTotal,subtotal,vat,grandTotal:grand, signature})} style={{flex:1}} disabled={submitting}>{submitting?<ISpin cls="w-5 h-5"/>:<><ICheck/>Send to Admin</>}</button></div>
     </div>
   );
 }
@@ -501,6 +654,7 @@ function IntakeWizard({onDone,profile,systemData}){
         services:items,
         notes:notes||'',
         photos:photos||[],
+        signature:totals.signature||null,
         financials:{laborTotal:totals.laborTotal||0,partsTotal:totals.partsTotal||0,subtotal:totals.subtotal||0,vat:totals.vat||0,grandTotal:totals.grandTotal||0,lineItems:items,laborRate:LABOR},
         mechanic:{uid:auth.currentUser?.uid||'unknown',name:profile?.name||'Mechanic',shop:profile?.shop||'Workshop'},
         status:'pending_approval',
@@ -697,24 +851,35 @@ function JobsDash({onNew,profile,jobs,showToast}){
                         </div>
                       )}
 
+                      {/* Display Signature if any */}
+                      {job.signature && (
+                        <div style={{marginTop: 12}}>
+                           <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:6}}>CUSTOMER SIGNATURE</p>
+                           <div style={{background:'#fff', borderRadius:8, padding:4, display:'inline-block'}}>
+                             <img src={job.signature} style={{height: 60, objectFit:'contain'}} alt="Signature"/>
+                           </div>
+                        </div>
+                      )}
+
                       {job.notes&&<p style={{fontSize:12,color:'var(--amber)',marginTop:8,padding:'8px 12px',background:'rgba(255,184,0,0.07)',borderRadius:8}}>📝 {job.notes}</p>}
                       
                       {/* Mechanic Workflow Status Actions */}
-                      {['approved', 'in_progress', 'waiting_parts'].includes(job.status) && (
+                      {['approved', 'in_progress', 'waiting_parts', 'ready_for_qa'].includes(job.status) && (
                         <div style={{display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:'1px solid var(--border)'}}>
                           {job.status === 'approved' && <button onClick={() => updateJobStatus(job.id, 'in_progress')} className="btn-p" style={{flex:1}}><IWrench/> Start Job</button>}
                           {job.status === 'in_progress' && (
                             <>
                               <button onClick={() => updateJobStatus(job.id, 'waiting_parts')} className="btn-g" style={{flex:1}}><IClock/> Waiting Parts</button>
-                              <button onClick={() => updateJobStatus(job.id, 'completed')} className="btn-p" style={{flex:1, background: 'var(--green)'}}><ICheck/> Completed</button>
+                              <button onClick={() => updateJobStatus(job.id, 'ready_for_qa')} className="btn-p" style={{flex:1}}><ICheck/> Ready for QA</button>
                             </>
                           )}
                           {job.status === 'waiting_parts' && <button onClick={() => updateJobStatus(job.id, 'in_progress')} className="btn-p" style={{flex:1}}><IWrench/> Resume Job</button>}
+                          {job.status === 'ready_for_qa' && <button onClick={() => updateJobStatus(job.id, 'completed')} className="btn-p" style={{flex:1, background: 'var(--green)'}}><ICheck/> Job Completed</button>}
                         </div>
                       )}
 
                       {/* Admin Actions */}
-                      <div style={{display:'flex',gap:8,marginTop:14,paddingTop:12,borderTop:['approved', 'in_progress', 'waiting_parts'].includes(job.status) ? 'none' : '1px solid var(--border2)'}}>
+                      <div style={{display:'flex',gap:8,marginTop:14,paddingTop:12,borderTop:['approved', 'in_progress', 'waiting_parts', 'ready_for_qa'].includes(job.status) ? 'none' : '1px solid var(--border2)'}}>
                         <button className="edit-btn" onClick={e=>{e.stopPropagation();setEditJob(job);}}><IEdit/> Edit Info</button>
                         <button className="delete-btn" onClick={e=>{e.stopPropagation();setConfirmDelete(job);}}><IDelete/> Delete</button>
                         {job.status === 'pending_approval' && <span style={{marginLeft:'auto',fontSize:11,color:'var(--text3)',alignSelf:'center'}}>⚡ Awaiting admin review</span>}
@@ -756,6 +921,7 @@ function JobsDash({onNew,profile,jobs,showToast}){
                   { v: 'approved', l: 'Approved' }, 
                   { v: 'in_progress', l: 'In Progress' },
                   { v: 'waiting_parts', l: 'Waiting Parts' },
+                  { v: 'ready_for_qa', l: 'Ready for QA' },
                   { v: 'completed', l: 'Completed' },
                   { v: 'rejected', l: 'Rejected' }
                 ].map(o => (
