@@ -495,6 +495,7 @@ function JobsDash({onNew,profile,jobs,showToast}){
   const clearFilters=()=>{setFilterStatus('all');setDateFrom('');setDateTo('');};
 
   const active=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
+  
   return(
     <div style={{display:'flex',flexDirection:'column',gap:16}}>
       {/* Stats */}
@@ -521,30 +522,12 @@ function JobsDash({onNew,profile,jobs,showToast}){
             <p style={{fontSize:11,color:'var(--text3)',margin:'3px 0 0'}}><span className="live-dot"/>Live from Firebase{filtered&&jobs&&filtered.length!==jobs.length?` · ${filtered.length}/${jobs.length} shown`:''}</p>
           </div>
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <button onClick={()=>setShowFilters(!showFilters)} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:100,border:'1px solid',background:showFilters||activeFiltersCount>0?'rgba(77,123,255,0.1)':'var(--input-bg)',borderColor:showFilters||activeFiltersCount>0?'rgba(77,123,255,0.3)':'var(--border)',color:activeFiltersCount>0?'var(--accent)':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .18s'}}>
+            <button onClick={()=>setShowFilters(true)} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:100,border:'1px solid',background:activeFiltersCount>0?'rgba(77,123,255,0.1)':'var(--input-bg)',borderColor:activeFiltersCount>0?'rgba(77,123,255,0.3)':'var(--border)',color:activeFiltersCount>0?'var(--accent)':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .18s'}}>
               <IFilter/> Filter{activeFiltersCount>0?` (${activeFiltersCount})`:''}
             </button>
             <button className="btn-p" onClick={onNew} style={{padding:'9px 18px',fontSize:13}}><IPlus/> New Job</button>
           </div>
         </div>
-
-        {/* Filter Panel */}
-        {showFilters&&(
-          <div className="anim-up" style={{padding:'14px 20px',borderBottom:'1px solid var(--border)',background:'var(--surface2)',display:'flex',flexDirection:'column',gap:12}}>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px'}}><IFilter/> STATUS</div>
-              {[{v:'all',l:'All'},{v:'pending_approval',l:'Pending'},{v:'approved',l:'Approved'},{v:'rejected',l:'Rejected'}].map(o=><button key={o.v} className={`filter-chip ${filterStatus===o.v?'active':''}`} onClick={()=>setFilterStatus(o.v)}>{o.l}</button>)}
-            </div>
-            <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px'}}><ICalendar/> DATE</div>
-              <input type="date" className="date-input" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} placeholder="From"/>
-              <span style={{color:'var(--text3)',fontSize:12}}>→</span>
-              <input type="date" className="date-input" value={dateTo} onChange={e=>setDateTo(e.target.value)} placeholder="To"/>
-              {(dateFrom||dateTo)&&<button onClick={()=>{setDateFrom('');setDateTo('');}} style={{fontSize:11,color:'var(--red)',background:'none',border:'none',cursor:'pointer',fontFamily:'Inter',fontWeight:600}}>Clear</button>}
-            </div>
-            {activeFiltersCount>0&&<button onClick={clearFilters} style={{alignSelf:'flex-start',fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',fontFamily:'Inter',fontWeight:600,padding:0}}>✕ Clear all filters</button>}
-          </div>
-        )}
 
         {/* Job List */}
         {jobs===null?(
@@ -599,6 +582,55 @@ function JobsDash({onNew,profile,jobs,showToast}){
           </div>
         )}
       </div>
+
+      {/* Filter Bottom Sheet / Modal */}
+      {showFilters && (
+        <>
+          <div className="modal-overlay" onClick={() => setShowFilters(false)} />
+          <div className="responsive-panel">
+            <div className="sheet-handle" />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Filters</h3>
+              {activeFiltersCount > 0 && (
+                <button onClick={clearFilters} style={{ fontSize: 13, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter', fontWeight: 700, padding: 0 }}>
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '0.5px' }}>
+                <IFilter /> STATUS
+              </label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[{ v: 'all', l: 'All' }, { v: 'pending_approval', l: 'Pending' }, { v: 'approved', l: 'Approved' }, { v: 'rejected', l: 'Rejected' }].map(o => (
+                  <button key={o.v} className={`filter-chip ${filterStatus === o.v ? 'active' : ''}`} onClick={() => setFilterStatus(o.v)} style={{ flex: '1 1 auto', textAlign: 'center' }}>
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Filter */}
+            <div style={{ marginBottom: 28 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '0.5px' }}>
+                <ICalendar /> DATE RANGE
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'center' }}>
+                <input type="date" className="date-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ width: '100%' }} />
+                <span style={{ color: 'var(--text3)' }}>→</span>
+                <input type="date" className="date-input" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ width: '100%' }} />
+              </div>
+            </div>
+
+            <button className="btn-p" onClick={() => setShowFilters(false)} style={{ width: '100%', justifyContent: 'center' }}>
+              Show Results {filtered ? `(${filtered.length})` : ''}
+            </button>
+          </div>
+        </>
+      )}
 
       {confirmDelete&&<ConfirmDialog title="Delete Job?" message={`This will permanently remove the job for ${confirmDelete.vehicle?.make} ${confirmDelete.vehicle?.model} (${confirmDelete.vehicle?.reg}). This cannot be undone.`} onConfirm={()=>deleteJob(confirmDelete.id)} onCancel={()=>setConfirmDelete(null)} confirmLabel="Delete Job" danger={true}/>}
       {editJob&&<EditJobModal job={editJob} onClose={()=>setEditJob(null)} onSave={()=>{setEditJob(null);showToast('Job updated','✓','var(--green)');}}/>}
