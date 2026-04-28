@@ -1,202 +1,236 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#070c1a" id="meta-theme" />
-  <title>VynixPanelB — Mechanic Terminal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070c1a" id="meta-theme" />
+  <title>VynixPanelB — Mechanic Terminal</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-  <style>
-    :root {
-      --bg:#f0f4ff; --bg2:#e6ecfa; --surface:rgba(255,255,255,0.85); --surface2:rgba(255,255,255,0.6);
-      --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.05); --text:#0d1426; --text2:#4a5580; --text3:#8896bb;
-      --accent:#1a4fff; --accent2:#0033e6; --accent-glow:rgba(26,79,255,0.25);
-      --cyan:#0090ff; --green:#00b86e; --amber:#e8a000; --red:#e03030;
-      --shadow:0 4px 24px rgba(0,0,0,0.08); --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
-      --input-bg:rgba(0,0,0,0.04); --input-border:rgba(0,0,0,0.1);
-    }
-    [data-theme="dark"] {
-      --bg:#070c1a; --bg2:#0d1530; --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.02);
-      --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.05); --text:#e8eeff; --text2:#8896cc; --text3:#4a5580;
-      --accent:#4d7bff; --accent2:#1a4fff; --accent-glow:rgba(77,123,255,0.25);
-      --cyan:#00f5ff; --green:#00ff88; --amber:#ffb800; --red:#ff5050;
-      --shadow:0 4px 24px rgba(0,0,0,0.4); --shadow-lg:0 8px 40px rgba(0,0,0,0.6);
-      --input-bg:rgba(255,255,255,0.05); --input-border:rgba(255,255,255,0.1);
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;margin:0;transition:background .3s,color .3s}
-    ::-webkit-scrollbar{display:none} *{scrollbar-width:none}
-    .surface{background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-    .field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:14px;padding:14px 18px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;transition:all .2s;-webkit-appearance:none}
-    .field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    .field::placeholder{color:var(--text3)}
-    .btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:100px;padding:14px 26px;font-family:'Inter',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation}
-    .btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--accent-glow)}
-    .btn-p:active{transform:scale(0.97)}
-    .btn-p:disabled{background:var(--input-bg);color:var(--text3);cursor:not-allowed;box-shadow:none;transform:none}
-    .btn-g{background:var(--input-bg);color:var(--text2);border:1px solid var(--border);border-radius:100px;padding:13px 22px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
-    .btn-g:hover{background:var(--border);color:var(--text)}
-    .mono{font-family:'JetBrains Mono',monospace}
+  <style>
+    :root {
+      --bg:#f0f4ff; --bg2:#e6ecfa; --surface:rgba(255,255,255,0.85); --surface2:rgba(255,255,255,0.6);
+      --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.05); --text:#0d1426; --text2:#4a5580; --text3:#8896bb;
+      --accent:#1a4fff; --accent2:#0033e6; --accent-glow:rgba(26,79,255,0.25);
+      --cyan:#0090ff; --green:#00b86e; --amber:#e8a000; --red:#e03030;
+      --shadow:0 4px 24px rgba(0,0,0,0.08); --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+      --input-bg:rgba(0,0,0,0.04); --input-border:rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg:#070c1a; --bg2:#0d1530; --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.02);
+      --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.05); --text:#e8eeff; --text2:#8896cc; --text3:#4a5580;
+      --accent:#4d7bff; --accent2:#1a4fff; --accent-glow:rgba(77,123,255,0.25);
+      --cyan:#00f5ff; --green:#00ff88; --amber:#ffb800; --red:#ff5050;
+      --shadow:0 4px 24px rgba(0,0,0,0.4); --shadow-lg:0 8px 40px rgba(0,0,0,0.6);
+      --input-bg:rgba(255,255,255,0.05); --input-border:rgba(255,255,255,0.1);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;margin:0;transition:background .3s,color .3s}
+    ::-webkit-scrollbar{display:none} *{scrollbar-width:none}
+    .surface{background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:14px;padding:14px 18px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;transition:all .2s;-webkit-appearance:none}
+    .field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .field::placeholder{color:var(--text3)}
+    .btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:100px;padding:14px 26px;font-family:'Inter',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation}
+    .btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--accent-glow)}
+    .btn-p:active{transform:scale(0.97)}
+    .btn-p:disabled{background:var(--input-bg);color:var(--text3);cursor:not-allowed;box-shadow:none;transform:none}
+    .btn-g{background:var(--input-bg);color:var(--text2);border:1px solid var(--border);border-radius:100px;padding:13px 22px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+    .btn-g:hover{background:var(--border);color:var(--text)}
+    .mono{font-family:'JetBrains Mono',monospace}
 
-    @keyframes slideUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
-    @keyframes slideDown{0%{opacity:0;transform:translateY(-12px)}100%{opacity:1;transform:translateY(0)}}
-    @keyframes slideLeft{0%{opacity:0;transform:translateX(32px)}100%{opacity:1;transform:translateX(0)}}
-    @keyframes slideRight{0%{opacity:0;transform:translateX(-32px)}100%{opacity:1;transform:translateX(0)}}
-    @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
-    @keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
-    @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
-    @keyframes sheetUp{0%{transform:translateY(100%);opacity:0}100%{transform:translateY(0);opacity:1}}
-    @keyframes modalIn{0%{opacity:0;transform:translate(-50%,-45%) scale(0.94)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    @keyframes scaleIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}
-    @keyframes expandDown{0%{opacity:0;max-height:0;transform:translateY(-8px)}100%{opacity:1;max-height:600px;transform:translateY(0)}}
-    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-    @keyframes glow{0%,100%{box-shadow:0 0 8px var(--accent-glow)}50%{box-shadow:0 0 22px var(--accent-glow)}}
-    @keyframes navPop{0%{transform:scale(0.8) translateY(4px);opacity:0}60%{transform:scale(1.12) translateY(-2px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
-    @keyframes cardEnter{0%{opacity:0;transform:translateY(14px) scale(0.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
-    @keyframes toastIn{0%{opacity:0;transform:translateY(30px) scale(0.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
-    @keyframes toastOut{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(20px) scale(0.9)}}
-    @keyframes ripple{0%{transform:scale(0);opacity:0.5}100%{transform:scale(4);opacity:0}}
+    @keyframes slideUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{0%{opacity:0;transform:translateY(-12px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes slideLeft{0%{opacity:0;transform:translateX(32px)}100%{opacity:1;transform:translateX(0)}}
+    @keyframes slideRight{0%{opacity:0;transform:translateX(-32px)}100%{opacity:1;transform:translateX(0)}}
+    @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+    @keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
+    @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
+    @keyframes sheetUp{0%{transform:translateY(100%);opacity:0}100%{transform:translateY(0);opacity:1}}
+    @keyframes modalIn{0%{opacity:0;transform:translate(-50%,-45%) scale(0.94)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes scaleIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}
+    @keyframes expandDown{0%{opacity:0;max-height:0;transform:translateY(-8px)}100%{opacity:1;max-height:600px;transform:translateY(0)}}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    @keyframes glow{0%,100%{box-shadow:0 0 8px var(--accent-glow)}50%{box-shadow:0 0 22px var(--accent-glow)}}
+    @keyframes navPop{0%{transform:scale(0.8) translateY(4px);opacity:0}60%{transform:scale(1.12) translateY(-2px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
+    @keyframes cardEnter{0%{opacity:0;transform:translateY(14px) scale(0.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes toastIn{0%{opacity:0;transform:translateY(30px) scale(0.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes toastOut{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(20px) scale(0.9)}}
+    
+    .anim-up{animation:slideUp .38s cubic-bezier(.16,1,.3,1) forwards}
+    .anim-left{animation:slideLeft .38s cubic-bezier(.16,1,.3,1) forwards}
+    .anim-right{animation:slideRight .38s cubic-bezier(.16,1,.3,1) forwards}
+    .anim-fade{animation:fadeIn .3s ease forwards}
+    .anim-scale{animation:scaleIn .3s cubic-bezier(.16,1,.3,1) forwards}
+    .overlay-in{animation:overlayIn .22s ease forwards}
+    
+    .skel{background:linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.03) 100%);background-size:700px 100%;animation:shimmer 1.8s infinite linear;border-radius:14px}
+    [data-theme="light"] .skel{background:linear-gradient(90deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.09) 50%,rgba(0,0,0,0.04) 100%);background-size:700px 100%;animation:shimmer 1.8s infinite linear;border-radius:14px}
 
-    .anim-up{animation:slideUp .38s cubic-bezier(.16,1,.3,1) forwards}
-    .anim-left{animation:slideLeft .38s cubic-bezier(.16,1,.3,1) forwards}
-    .anim-right{animation:slideRight .38s cubic-bezier(.16,1,.3,1) forwards}
-    .anim-fade{animation:fadeIn .3s ease forwards}
-    .anim-scale{animation:scaleIn .3s cubic-bezier(.16,1,.3,1) forwards}
-    .overlay-in{animation:overlayIn .22s ease forwards}
-    
-    .skel{background:linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.03) 100%);background-size:700px 100%;animation:shimmer 1.8s infinite linear;border-radius:14px}
-    [data-theme="light"] .skel{background:linear-gradient(90deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.09) 50%,rgba(0,0,0,0.04) 100%);background-size:700px 100%;animation:shimmer 1.8s infinite linear;border-radius:14px}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s ease-in-out infinite;margin-right:6px}
+    .service-card{padding:14px 16px;border-radius:16px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all .22s;user-select:none}
+    .service-card:hover{border-color:var(--accent);background:rgba(77,123,255,0.06);transform:translateY(-1px)}
+    .service-card.selected{border-color:var(--accent);background:rgba(77,123,255,0.12);box-shadow:0 0 0 2px var(--accent-glow)}
+    .car-select-option{padding:12px 16px;border-radius:12px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+    .car-select-option:hover{background:rgba(77,123,255,0.08);border-color:rgba(77,123,255,0.15)}
+    .car-select-option.active{background:rgba(77,123,255,0.12);border-color:rgba(77,123,255,0.3)}
+    
+    .dm-pill{display:flex;align-items:center;background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:3px;gap:2px;cursor:pointer;user-select:none}
+    .dm-btn{width:32px;height:32px;border-radius:100px;display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--text3)}
+    .dm-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}
+    
+    .mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:1px solid var(--border);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);padding:8px 24px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-around}
+    .mnav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 14px;border:none;background:transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.6px;color:var(--text3);transition:all .25s;position:relative;overflow:hidden;border-radius:14px}
+    .mnav-btn.active{color:var(--accent)}
+    .mnav-btn.active::after{content:'';position:absolute;bottom:2px;width:18px;height:3px;background:var(--accent);border-radius:100px;animation:scaleIn .2s ease}
+    .mnav-btn .nav-icon-wrap{transition:all .25s;will-change:transform}
+    .mnav-btn.active .nav-icon-wrap{animation:navPop .35s cubic-bezier(.16,1,.3,1) forwards}
+    .mnav-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px var(--accent-glow);transform:translateY(-12px);transition:all .22s}
+    .mnav-fab:active{transform:translateY(-10px) scale(0.95)}
+    
+    .sidebar{width:260px;height:100vh;position:sticky;top:0;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column}
+    .snav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);border:1px solid transparent;transition:all .18s}
+    .snav-item.active{background:rgba(77,123,255,0.1);color:var(--accent);border-color:rgba(77,123,255,0.2)}
+    .snav-item:not(.active):hover{background:var(--surface);color:var(--text)}
+    
+    .step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;transition:all .3s;flex-shrink:0}
+    .step-dot.on{background:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--accent-glow);animation:glow 2s ease infinite}
+    .step-dot.done{background:var(--green);color:#fff}
+    .step-dot.off{background:var(--input-bg);color:var(--text3)}
+    
+    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:overlayIn .2s ease forwards}
+    .responsive-panel{position:fixed;z-index:201;background:var(--bg2);border:1px solid var(--border);bottom:0;left:0;right:0;top:auto;border-radius:24px 24px 0 0;padding:16px 20px calc(24px + env(safe-area-inset-bottom));animation:sheetUp .36s cubic-bezier(.16,1,.3,1) forwards;box-shadow:var(--shadow-lg)}
+    .sheet-handle{width:40px;height:4px;background:var(--border);border-radius:100px;margin:0 auto 20px}
+    
+    @media(min-width:768px){
+      .responsive-panel{top:50%;left:50%;bottom:auto;right:auto;transform:translate(-50%,-50%);width:100%;max-width:440px;border-radius:24px;padding:32px;animation:modalIn .3s cubic-bezier(.16,1,.3,1) forwards}
+      .sheet-handle{display:none}
+    }
 
-    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s ease-in-out infinite;margin-right:6px}
-    .service-card{padding:14px 16px;border-radius:16px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all .22s;user-select:none}
-    .service-card:hover{border-color:var(--accent);background:rgba(77,123,255,0.06);transform:translateY(-1px)}
-    .service-card.selected{border-color:var(--accent);background:rgba(77,123,255,0.12);box-shadow:0 0 0 2px var(--accent-glow)}
-    .car-select-option{padding:12px 16px;border-radius:12px;cursor:pointer;transition:background .15s;border:1px solid transparent}
-    .car-select-option:hover{background:rgba(77,123,255,0.08);border-color:rgba(77,123,255,0.15)}
-    .car-select-option.active{background:rgba(77,123,255,0.12);border-color:rgba(77,123,255,0.3)}
-    
-    .dm-pill{display:flex;align-items:center;background:var(--input-bg);border:1px solid var(--border);border-radius:100px;padding:3px;gap:2px;cursor:pointer;user-select:none}
-    .dm-btn{width:32px;height:32px;border-radius:100px;display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--text3)}
-    .dm-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}
-    
-    .mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:1px solid var(--border);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);padding:8px 24px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-around}
-    .mnav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 14px;border:none;background:transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.6px;color:var(--text3);transition:all .25s;position:relative;overflow:hidden;border-radius:14px}
-    .mnav-btn.active{color:var(--accent)}
-    .mnav-btn.active::after{content:'';position:absolute;bottom:2px;width:18px;height:3px;background:var(--accent);border-radius:100px;animation:scaleIn .2s ease}
-    .mnav-btn .nav-icon-wrap{transition:all .25s;will-change:transform}
-    .mnav-btn.active .nav-icon-wrap{animation:navPop .35s cubic-bezier(.16,1,.3,1) forwards}
-    .mnav-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px var(--accent-glow);transform:translateY(-12px);transition:all .22s}
-    .mnav-fab:active{transform:translateY(-10px) scale(0.95)}
-    
-    .sidebar{width:260px;height:100vh;position:sticky;top:0;background:var(--bg2);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column}
-    .snav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);border:1px solid transparent;transition:all .18s}
-    .snav-item.active{background:rgba(77,123,255,0.1);color:var(--accent);border-color:rgba(77,123,255,0.2)}
-    .snav-item:not(.active):hover{background:var(--surface);color:var(--text)}
-    
-    .step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;transition:all .3s;flex-shrink:0}
-    .step-dot.on{background:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--accent-glow);animation:glow 2s ease infinite}
-    .step-dot.done{background:var(--green);color:#fff}
-    .step-dot.off{background:var(--input-bg);color:var(--text3)}
-    
-    .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:overlayIn .2s ease forwards}
-    .responsive-panel{position:fixed;z-index:201;background:var(--bg2);border:1px solid var(--border);bottom:0;left:0;right:0;top:auto;border-radius:24px 24px 0 0;padding:16px 20px calc(24px + env(safe-area-inset-bottom));animation:sheetUp .36s cubic-bezier(.16,1,.3,1) forwards;box-shadow:var(--shadow-lg)}
-    .sheet-handle{width:40px;height:4px;background:var(--border);border-radius:100px;margin:0 auto 20px}
-    
-    @media(min-width:768px){
-      .responsive-panel{top:50%;left:50%;bottom:auto;right:auto;transform:translate(-50%,-50%);width:100%;max-width:440px;border-radius:24px;padding:32px;animation:modalIn .3s cubic-bezier(.16,1,.3,1) forwards}
-      .sheet-handle{display:none}
-    }
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:1}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.4px;font-family:'JetBrains Mono',monospace}
+    .search-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:16px;z-index:50;max-height:260px;overflow-y:auto;box-shadow:var(--shadow-lg)}
+    .qty-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;transition:all .15s;flex-shrink:0}
+    .qty-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:1}
-    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.4px;font-family:'JetBrains Mono',monospace}
-    .search-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:16px;z-index:50;max-height:260px;overflow-y:auto;box-shadow:var(--shadow-lg)}
-    .qty-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;transition:all .15s;flex-shrink:0}
-    .qty-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .job-card{border-bottom:1px solid var(--border2);transition:background .15s;animation:cardEnter .35s cubic-bezier(.16,1,.3,1) both}
+    .job-card:hover{background:rgba(77,123,255,0.03)}
+    .job-expand{animation:expandDown .3s cubic-bezier(.16,1,.3,1) forwards;overflow:hidden}
+    
+    .filter-chip{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:var(--input-bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
+    .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow)}
+    .filter-chip:hover:not(.active){border-color:var(--accent);color:var(--text)}
 
-    .job-card{border-bottom:1px solid var(--border2);transition:background .15s;animation:cardEnter .35s cubic-bezier(.16,1,.3,1) both}
-    .job-card:hover{background:rgba(77,123,255,0.03)}
-    .job-expand{animation:expandDown .3s cubic-bezier(.16,1,.3,1) forwards;overflow:hidden}
-    
-    .filter-chip{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:var(--input-bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
-    .filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow)}
-    .filter-chip:hover:not(.active){border-color:var(--accent);color:var(--text)}
+    .date-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:10px 14px;outline:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .2s;cursor:pointer;-webkit-appearance:none;color-scheme:dark}
+    .date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    [data-theme="light"] .date-input{color-scheme:light}
 
-    .date-input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:12px;padding:10px 14px;outline:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .2s;cursor:pointer;-webkit-appearance:none;color-scheme:dark}
-    .date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    [data-theme="light"] .date-input{color-scheme:light}
+    .delete-btn{background:rgba(255,80,80,0.08);color:var(--red);border:1px solid rgba(255,80,80,0.18);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+    .delete-btn:hover{background:rgba(255,80,80,0.18);transform:scale(1.02)}
+    .edit-btn{background:rgba(77,123,255,0.08);color:var(--accent);border:1px solid rgba(77,123,255,0.18);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
+    .edit-btn:hover{background:rgba(77,123,255,0.18);transform:scale(1.02)}
 
-    .delete-btn{background:rgba(255,80,80,0.08);color:var(--red);border:1px solid rgba(255,80,80,0.18);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
-    .delete-btn:hover{background:rgba(255,80,80,0.18);transform:scale(1.02)}
-    .edit-btn{background:rgba(77,123,255,0.08);color:var(--accent);border:1px solid rgba(77,123,255,0.18);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px}
-    .edit-btn:hover{background:rgba(77,123,255,0.18);transform:scale(1.02)}
+    .toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:12px 22px;font-size:13px;font-weight:700;color:var(--text);z-index:500;box-shadow:var(--shadow-lg);white-space:nowrap;display:flex;align-items:center;gap:8px}
+    .toast.in{animation:toastIn .35s cubic-bezier(.16,1,.3,1) forwards}
+    .toast.out{animation:toastOut .28s ease forwards}
 
-    .toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:12px 22px;font-size:13px;font-weight:700;color:var(--text);z-index:500;box-shadow:var(--shadow-lg);white-space:nowrap;display:flex;align-items:center;gap:8px}
-    .toast.in{animation:toastIn .35s cubic-bezier(.16,1,.3,1) forwards}
-    .toast.out{animation:toastOut .28s ease forwards}
+    .stat-card{padding:18px 20px;border-radius:20px;background:var(--surface);border:1px solid var(--border);transition:all .22s;cursor:default;position:relative;overflow:hidden}
+    .stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,0.02));pointer-events:none}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 
-    .stat-card{padding:18px 20px;border-radius:20px;background:var(--surface);border:1px solid var(--border);transition:all .22s;cursor:default;position:relative;overflow:hidden}
-    .stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(255,255,255,0.02));pointer-events:none}
-    .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    .auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease}
+    .auth-gate.hidden{opacity:0;pointer-events:none}
+    .auth-gate-icon svg{width:48px;height:48px;color:var(--accent);margin-bottom:16px;animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite}
+    .auth-gate-text{font-weight:700;font-size:15px;color:var(--text)}
+    .auth-gate-sub{font-size:13px;color:var(--text2);margin-top:4px}
 
-    .auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease}
-    .auth-gate.hidden{opacity:0;pointer-events:none}
-    .auth-gate-icon svg{width:48px;height:48px;color:var(--accent);margin-bottom:16px;animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite}
-    .auth-gate-text{font-weight:700;font-size:15px;color:var(--text)}
-    .auth-gate-sub{font-size:13px;color:var(--text2);margin-top:4px}
+    .confirm-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);animation:overlayIn .2s ease;display:flex;align-items:center;justify-content:center;padding:24px}
+    .confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:340px;animation:scaleIn .3s cubic-bezier(.16,1,.3,1);box-shadow:var(--shadow-lg)}
 
-    .confirm-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);animation:overlayIn .2s ease;display:flex;align-items:center;justify-content:center;padding:24px}
-    .confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:340px;animation:scaleIn .3s cubic-bezier(.16,1,.3,1);box-shadow:var(--shadow-lg)}
+    .swipe-container{width:100%;overflow:hidden;position:relative}
+    .swipe-inner{display:flex;transition:transform .32s cubic-bezier(.16,1,.3,1);will-change:transform}
+    .swipe-page{min-width:100%;width:100%}
+    
+    input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) saturate(5) hue-rotate(175deg);cursor:pointer;opacity:0.7}
+    [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator{filter:none;opacity:0.6}
 
-    .swipe-container{width:100%;overflow:hidden;position:relative}
-    .swipe-inner{display:flex;transition:transform .32s cubic-bezier(.16,1,.3,1);will-change:transform}
-    .swipe-page{min-width:100%;width:100%}
-    
-    input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) saturate(5) hue-rotate(175deg);cursor:pointer;opacity:0.7}
-    [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator{filter:none;opacity:0.6}
-
-    .profile-edit-field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:14px;padding:13px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;transition:all .2s}
-    .profile-edit-field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    .profile-edit-field::placeholder{color:var(--text3);font-weight:500}
-  </style>
+    .profile-edit-field{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);border-radius:14px;padding:13px 16px;width:100%;outline:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;transition:all .2s}
+    .profile-edit-field:focus{background:rgba(77,123,255,0.08);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .profile-edit-field::placeholder{color:var(--text3);font-weight:500}
+  </style>
 </head>
 <body>
 
 <div class="auth-gate" id="authGate">
-  <div class="auth-gate-icon">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-    </svg>
-  </div>
-  <div class="auth-gate-text" id="authGateText">Verifying session…</div>
-  <div class="auth-gate-sub">Please wait while we authenticate you</div>
+  <div class="auth-gate-icon">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    </svg>
+  </div>
+  <div class="auth-gate-text" id="authGateText">Verifying session…</div>
+  <div class="auth-gate-sub">Please wait while we authenticate you</div>
 </div>
 
 <div id="root"></div>
 
 <script>
-  const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
-  if(!firebase.apps.length) firebase.initializeApp(FC);
-  firebase.auth().onAuthStateChanged(function(user){
-    if(!user){document.getElementById('authGateText').textContent='Redirecting to login…';setTimeout(function(){window.location.replace('login.html');},500);}
-    else{const gate=document.getElementById('authGate');if(gate){gate.classList.add('hidden');setTimeout(function(){gate.remove();},500);}}
-  });
-  (function(){const s=localStorage.getItem('vynix_theme_dark');const dark=s!==null?JSON.parse(s):true;document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';})();
+  const FC={apiKey:"AIzaSyCh7Ute6LeSAxcNDEQwZg5m0cA4ujnLCfg",authDomain:"test-17881.firebaseapp.com",projectId:"test-17881",storageBucket:"test-17881.firebasestorage.app",messagingSenderId:"1057428047643",appId:"1:1057428047643:web:f3801c0d933225a5cd35be",databaseURL:"https://test-17881-default-rtdb.firebaseio.com"};
+  if(!firebase.apps.length) firebase.initializeApp(FC);
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){document.getElementById('authGateText').textContent='Redirecting to login…';setTimeout(function(){window.location.replace('login.html');},500);}
+    else{const gate=document.getElementById('authGate');if(gate){gate.classList.add('hidden');setTimeout(function(){gate.remove();},500);}}
+  });
+  (function(){const s=localStorage.getItem('vynix_theme_dark');const dark=s!==null?JSON.parse(s):true;document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';})();
 </script>
 
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 const auth=firebase.auth(), db=firebase.database();
 const LABOR=750;
+
+/* ── HELPERS ── */
+// Resizes and compresses image to lightweight Base64 to save directly into Realtime DB
+const processImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const getStatusUI = (s) => {
+  const map = {
+    'pending_approval': { l: 'PENDING', c: 'var(--amber)', bg: 'rgba(255,184,0,0.1)', b: 'rgba(255,184,0,0.2)' },
+    'approved': { l: 'APPROVED', c: 'var(--cyan)', bg: 'rgba(0,144,255,0.1)', b: 'rgba(0,144,255,0.2)' },
+    'rejected': { l: 'REJECTED', c: 'var(--red)', bg: 'rgba(255,80,80,0.1)', b: 'rgba(255,80,80,0.2)' },
+    'in_progress': { l: 'IN PROGRESS', c: 'var(--accent)', bg: 'rgba(77,123,255,0.1)', b: 'rgba(77,123,255,0.2)' },
+    'waiting_parts': { l: 'WAITING PARTS', c: 'var(--amber)', bg: 'rgba(255,184,0,0.1)', b: 'rgba(255,184,0,0.2)' },
+    'completed': { l: 'COMPLETED', c: 'var(--green)', bg: 'rgba(0,255,136,0.1)', b: 'rgba(0,255,136,0.2)' }
+  };
+  return map[s] || { l: s?.toUpperCase() || 'UNKNOWN', c: 'var(--text3)', bg: 'var(--input-bg)', b: 'var(--border)' };
+};
 
 /* ── ICONS ── */
 const IWrench=()=><svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
@@ -216,632 +250,776 @@ const IFilter=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" vie
 const IScreenLight=()=><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>;
 const ICircuitDark=()=><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>;
 const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>;
+const ICamera=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>;
+const IClock=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/></svg>;
 
 /* ── TOAST ── */
 function Toast({message, icon='✓', color='var(--green)', onDone}){
-  const [phase, setPhase] = useState('in');
-  useEffect(()=>{
-    const t1=setTimeout(()=>setPhase('out'),2000);
-    const t2=setTimeout(()=>onDone&&onDone(),2300);
-    return()=>{clearTimeout(t1);clearTimeout(t2);}
-  },[]);
-  return <div className={`toast ${phase}`} style={{borderColor:`rgba(${color==='var(--green)'?'0,255,136':color==='var(--red)'?'255,80,80':'77,123,255'},.2)`}}>
-    <span style={{color}}>{icon}</span> <span>{message}</span>
-  </div>;
+  const [phase, setPhase] = useState('in');
+  useEffect(()=>{
+    const t1=setTimeout(()=>setPhase('out'),2000);
+    const t2=setTimeout(()=>onDone&&onDone(),2300);
+    return()=>{clearTimeout(t1);clearTimeout(t2);}
+  },[]);
+  return <div className={`toast ${phase}`} style={{borderColor:`rgba(${color==='var(--green)'?'0,255,136':color==='var(--red)'?'255,80,80':'77,123,255'},.2)`}}>
+    <span style={{color}}>{icon}</span> <span>{message}</span>
+  </div>;
 }
 
 /* ── DARK MODE PILL ── */
 function DarkModePill({dark,onToggle}){
-  return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
+  return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
 }
 
 /* ── CONFIRM DIALOG ── */
 function ConfirmDialog({title,message,onConfirm,onCancel,confirmLabel='Confirm',danger=true}){
-  return <>
-    <div className="confirm-overlay" onClick={onCancel}/>
-    <div className="confirm-overlay" style={{alignItems:'center',justifyContent:'center',padding:24}}>
-      <div className="confirm-box" onClick={e=>e.stopPropagation()}>
-        <div style={{width:44,height:44,borderRadius:14,background:danger?'rgba(255,80,80,0.1)':'rgba(77,123,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:20}}>
-          {danger?'🗑️':'✏️'}
-        </div>
-        <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',textAlign:'center',margin:'0 0 8px'}}>{title}</h3>
-        <p style={{fontSize:13,color:'var(--text2)',textAlign:'center',margin:'0 0 24px',lineHeight:1.6}}>{message}</p>
-        <div style={{display:'flex',gap:10}}>
-          <button className="btn-g" onClick={onCancel} style={{flex:1,padding:'11px',fontSize:13,borderRadius:12}}>Cancel</button>
-          <button onClick={onConfirm} style={{flex:1,padding:'11px',fontSize:13,fontWeight:700,borderRadius:12,border:'none',cursor:'pointer',fontFamily:'Inter',background:danger?'rgba(255,80,80,0.9)':'var(--accent)',color:'#fff',transition:'all .18s'}}>
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  </>;
+  return <>
+    <div className="confirm-overlay" onClick={onCancel}/>
+    <div className="confirm-overlay" style={{alignItems:'center',justifyContent:'center',padding:24}}>
+      <div className="confirm-box" onClick={e=>e.stopPropagation()}>
+        <div style={{width:44,height:44,borderRadius:14,background:danger?'rgba(255,80,80,0.1)':'rgba(77,123,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:20}}>
+          {danger?'🗑️':'✏️'}
+        </div>
+        <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',textAlign:'center',margin:'0 0 8px'}}>{title}</h3>
+        <p style={{fontSize:13,color:'var(--text2)',textAlign:'center',margin:'0 0 24px',lineHeight:1.6}}>{message}</p>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn-g" onClick={onCancel} style={{flex:1,padding:'11px',fontSize:13,borderRadius:12}}>Cancel</button>
+          <button onClick={onConfirm} style={{flex:1,padding:'11px',fontSize:13,fontWeight:700,borderRadius:12,border:'none',cursor:'pointer',fontFamily:'Inter',background:danger?'rgba(255,80,80,0.9)':'var(--accent)',color:'#fff',transition:'all .18s'}}>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  </>;
 }
 
 /* ── CAR SELECTOR ── */
 function CarSelector({onSelect,sysCars}){
-  const [make,setMake]=useState('');
-  const [model,setModel]=useState('');
-  const [year,setYear]=useState('');
-  const [engine,setEngine]=useState('');
-  const [vin,setVin]=useState('');
-  const [reg,setReg]=useState('');
-  const [km,setKm]=useState('');
-  const [searchQ,setSearchQ]=useState('');
-  const [showDrop,setShowDrop]=useState(false);
-  const ref=useRef();
-  const makes=Object.keys(sysCars).sort();
-  const models=make?Object.keys(sysCars[make]||{}).sort():[];
-  const yearRanges=make&&model?Object.keys(sysCars[make]?.[model]||{}):[];
-  const engines=make&&model&&year?sysCars[make]?.[model]?.[year]||[]:[];
-  const filtered=useMemo(()=>{if(!searchQ.trim())return[];const q=searchQ.toLowerCase();const res=[];Object.entries(sysCars).forEach(([mk,models])=>{Object.entries(models).forEach(([mdl])=>{if((mk+' '+mdl).toLowerCase().includes(q))res.push({mk,mdl});});});return res.slice(0,8);},[searchQ,sysCars]);
-  useEffect(()=>{const h=(e)=>{if(ref.current&&!ref.current.contains(e.target))setShowDrop(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
-  const canProceed=make&&model&&year&&engine&&reg;
-  return(
-    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
-      <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Check-In</h2><p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p></div>
-      <div ref={ref} style={{position:'relative'}}>
-        <div style={{position:'relative'}}><div style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
-        <input className="field" style={{paddingLeft:44}} placeholder="Quick search make & model…" value={searchQ} onChange={e=>{setSearchQ(e.target.value);setShowDrop(true)}} onFocus={()=>setShowDrop(true)}/></div>
-        {showDrop&&filtered.length>0&&<div className="search-dropdown">{filtered.map((r,i)=><div key={i} className="car-select-option" onClick={()=>{setMake(r.mk);setModel(r.mdl);setYear('');setEngine('');setSearchQ(r.mk+' '+r.mdl);setShowDrop(false)}}><span style={{fontWeight:700,color:'var(--text)'}}>{r.mk}</span> <span style={{color:'var(--text2)'}}>{r.mdl}</span></div>)}</div>}
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MAKE</label><select className="field" value={make} onChange={e=>{setMake(e.target.value);setModel('');setYear('');setEngine('')}} style={{cursor:'pointer'}}><option value="">Select Make</option>{makes.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MODEL</label><select className="field" value={model} onChange={e=>{setModel(e.target.value);setYear('');setEngine('')}} disabled={!make} style={{cursor:'pointer'}}><option value="">Select Model</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>YEAR RANGE</label><select className="field" value={year} onChange={e=>{setYear(e.target.value);setEngine('')}} disabled={!model} style={{cursor:'pointer'}}><option value="">Select Year</option>{yearRanges.map(y=><option key={y} value={y}>{y}</option>)}</select></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ENGINE</label><select className="field" value={engine} onChange={e=>setEngine(e.target.value)} disabled={!year} style={{cursor:'pointer'}}><option value="">Select Engine</option>{engines.map(e=><option key={e} value={e}>{e}</option>)}</select></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>REG. PLATE *</label><input className="field" placeholder="e.g. CA 123-456" value={reg} onChange={e=>setReg(e.target.value.toUpperCase())}/></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
-      </div>
-      <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>VIN (optional)</label><input className="field" placeholder="e.g. AAAAAAAAAAAAAAA" value={vin} onChange={e=>setVin(e.target.value.toUpperCase())}/></div>
-      <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
-    </div>
-  );
+  const [make,setMake]=useState('');
+  const [model,setModel]=useState('');
+  const [year,setYear]=useState('');
+  const [engine,setEngine]=useState('');
+  const [vin,setVin]=useState('');
+  const [reg,setReg]=useState('');
+  const [km,setKm]=useState('');
+  const [searchQ,setSearchQ]=useState('');
+  const [showDrop,setShowDrop]=useState(false);
+  const ref=useRef();
+  const makes=Object.keys(sysCars).sort();
+  const models=make?Object.keys(sysCars[make]||{}).sort():[];
+  const yearRanges=make&&model?Object.keys(sysCars[make]?.[model]||{}):[];
+  const engines=make&&model&&year?sysCars[make]?.[model]?.[year]||[]:[];
+  const filtered=useMemo(()=>{if(!searchQ.trim())return[];const q=searchQ.toLowerCase();const res=[];Object.entries(sysCars).forEach(([mk,models])=>{Object.entries(models).forEach(([mdl])=>{if((mk+' '+mdl).toLowerCase().includes(q))res.push({mk,mdl});});});return res.slice(0,8);},[searchQ,sysCars]);
+  useEffect(()=>{const h=(e)=>{if(ref.current&&!ref.current.contains(e.target))setShowDrop(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
+  const canProceed=make&&model&&year&&engine&&reg;
+  return(
+    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
+      <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Check-In</h2><p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p></div>
+      <div ref={ref} style={{position:'relative'}}>
+        <div style={{position:'relative'}}><div style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
+        <input className="field" style={{paddingLeft:44}} placeholder="Quick search make & model…" value={searchQ} onChange={e=>{setSearchQ(e.target.value);setShowDrop(true)}} onFocus={()=>setShowDrop(true)}/></div>
+        {showDrop&&filtered.length>0&&<div className="search-dropdown">{filtered.map((r,i)=><div key={i} className="car-select-option" onClick={()=>{setMake(r.mk);setModel(r.mdl);setYear('');setEngine('');setSearchQ(r.mk+' '+r.mdl);setShowDrop(false)}}><span style={{fontWeight:700,color:'var(--text)'}}>{r.mk}</span> <span style={{color:'var(--text2)'}}>{r.mdl}</span></div>)}</div>}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MAKE</label><select className="field" value={make} onChange={e=>{setMake(e.target.value);setModel('');setYear('');setEngine('')}} style={{cursor:'pointer'}}><option value="">Select Make</option>{makes.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MODEL</label><select className="field" value={model} onChange={e=>{setModel(e.target.value);setYear('');setEngine('')}} disabled={!make} style={{cursor:'pointer'}}><option value="">Select Model</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>YEAR RANGE</label><select className="field" value={year} onChange={e=>{setYear(e.target.value);setEngine('')}} disabled={!model} style={{cursor:'pointer'}}><option value="">Select Year</option>{yearRanges.map(y=><option key={y} value={y}>{y}</option>)}</select></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ENGINE</label><select className="field" value={engine} onChange={e=>setEngine(e.target.value)} disabled={!year} style={{cursor:'pointer'}}><option value="">Select Engine</option>{engines.map(e=><option key={e} value={e}>{e}</option>)}</select></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>REG. PLATE *</label><input className="field" placeholder="e.g. CA 123-456" value={reg} onChange={e=>setReg(e.target.value.toUpperCase())}/></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
+      </div>
+      <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>VIN (optional)</label><input className="field" placeholder="e.g. AAAAAAAAAAAAAAA" value={vin} onChange={e=>setVin(e.target.value.toUpperCase())}/></div>
+      <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
+    </div>
+  );
 }
 
-/* ── SERVICE SELECTOR ── */
+/* ── SERVICE SELECTOR (WITH CAMERA INTEGRATION) ── */
 function ServiceSelector({vehicle,onBack,onDone,sysServices}){
-  const [selected,setSelected]=useState({});
-  const [notes,setNotes]=useState('');
-  const [activeCategory,setActiveCategory]=useState('');
-  useEffect(()=>{const keys=Object.keys(sysServices);if(!activeCategory&&keys.length>0)setActiveCategory(keys[0]);else if(activeCategory&&!keys.includes(activeCategory)&&keys.length>0)setActiveCategory(keys[0]);},[sysServices,activeCategory]);
-  const toggle=(svc)=>setSelected(p=>{const n={...p};if(n[svc.id])delete n[svc.id];else n[svc.id]={...svc,qty:1};return n;});
-  const setQty=(id,qty)=>{if(qty<1){setSelected(p=>{const n={...p};delete n[id];return n;});return;}setSelected(p=>({...p,[id]:{...p[id],qty}}));};
-  const total=Object.values(selected).reduce((s,i)=>s+(i.price*i.qty),0);
-  const count=Object.keys(selected).length;
-  const activeCategoryData=sysServices[activeCategory]||[];
-  return(
-    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:14}}>
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{flex:1}}><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Select Parts & Services</h2><p style={{fontSize:12,color:'var(--accent)',margin:'4px 0 0',fontWeight:600}}>Using pricing for: {vehicle.make}</p></div>
-        {count>0&&<div style={{background:'rgba(77,123,255,0.12)',border:'1px solid rgba(77,123,255,0.25)',borderRadius:100,padding:'4px 14px'}}><span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>{count} selected</span></div>}
-      </div>
-      <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:4}}>
-        {Object.keys(sysServices).map(cat=><button key={cat} onClick={()=>setActiveCategory(cat)} style={{flexShrink:0,padding:'7px 14px',borderRadius:100,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .15s',background:activeCategory===cat?'var(--accent)':'var(--input-bg)',color:activeCategory===cat?'#fff':'var(--text2)',borderColor:activeCategory===cat?'var(--accent)':'var(--border)'}}>{cat}</button>)}
-      </div>
-      <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:340,overflowY:'auto'}}>
-        {activeCategoryData.map(svc=>{const isSel=!!selected[svc.id];return(
-          <div key={svc.id} className={`service-card ${isSel?'selected':''}`} onClick={()=>toggle(svc)}>
-            <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <span style={{fontSize:22,flexShrink:0}}>{svc.icon}</span>
-              <div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{svc.name}</p><p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Included part · {svc.labor}h labour</p></div>
-              <div style={{textAlign:'right',flexShrink:0}}><p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {svc.price}</p>
-                {isSel&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}} onClick={e=>e.stopPropagation()}><button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)-1)}>-</button><span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:16,textAlign:'center'}}>{selected[svc.id]?.qty||1}</span><button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)+1)}>+</button></div>}
-              </div>
-              {isSel&&<div style={{width:20,height:20,borderRadius:'50%',background:'var(--accent)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg className="w-3 h-3" fill="white" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>}
-            </div>
-          </div>
-        );})}
-      </div>
-      <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MECHANIC NOTES</label><textarea className="field" rows={2} placeholder="Additional observations or customer concerns…" value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none'}}/></div>
-      {count>0&&<div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontSize:14,color:'var(--text2)'}}>{count} item(s) selected</span><span className="mono" style={{fontSize:18,fontWeight:800,color:'var(--accent)'}}>R {total.toFixed(2)}</span></div>}
-      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}}>Back</button><button className="btn-p" disabled={count===0} onClick={()=>onDone(selected,notes)} style={{flex:1}}>Review Quote <IChev/></button></div>
-    </div>
-  );
+  const [selected,setSelected]=useState({});
+  const [notes,setNotes]=useState('');
+  const [photos,setPhotos]=useState([]);
+  const [activeCategory,setActiveCategory]=useState('');
+  const fileRef = useRef(null);
+
+  useEffect(()=>{const keys=Object.keys(sysServices);if(!activeCategory&&keys.length>0)setActiveCategory(keys[0]);else if(activeCategory&&!keys.includes(activeCategory)&&keys.length>0)setActiveCategory(keys[0]);},[sysServices,activeCategory]);
+  
+  const toggle=(svc)=>setSelected(p=>{const n={...p};if(n[svc.id])delete n[svc.id];else n[svc.id]={...svc,qty:1};return n;});
+  const setQty=(id,qty)=>{if(qty<1){setSelected(p=>{const n={...p};delete n[id];return n;});return;}setSelected(p=>({...p,[id]:{...p[id],qty}}));};
+  
+  const handlePhotoCapture = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const base64Data = await processImage(file);
+      setPhotos(prev => [...prev, base64Data]);
+    } catch(err) {
+      alert("Error processing image.");
+    }
+  };
+
+  const removePhoto = (index) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const total=Object.values(selected).reduce((s,i)=>s+(i.price*i.qty),0);
+  const count=Object.keys(selected).length;
+  const activeCategoryData=sysServices[activeCategory]||[];
+  
+  return(
+    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{flex:1}}><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Select Parts & Services</h2><p style={{fontSize:12,color:'var(--accent)',margin:'4px 0 0',fontWeight:600}}>Using pricing for: {vehicle.make}</p></div>
+        {count>0&&<div style={{background:'rgba(77,123,255,0.12)',border:'1px solid rgba(77,123,255,0.25)',borderRadius:100,padding:'4px 14px'}}><span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>{count} selected</span></div>}
+      </div>
+      <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:4}}>
+        {Object.keys(sysServices).map(cat=><button key={cat} onClick={()=>setActiveCategory(cat)} style={{flexShrink:0,padding:'7px 14px',borderRadius:100,border:'1px solid',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .15s',background:activeCategory===cat?'var(--accent)':'var(--input-bg)',color:activeCategory===cat?'#fff':'var(--text2)',borderColor:activeCategory===cat?'var(--accent)':'var(--border)'}}>{cat}</button>)}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:240,overflowY:'auto'}}>
+        {activeCategoryData.map(svc=>{const isSel=!!selected[svc.id];return(
+          <div key={svc.id} className={`service-card ${isSel?'selected':''}`} onClick={()=>toggle(svc)}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <span style={{fontSize:22,flexShrink:0}}>{svc.icon}</span>
+              <div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0}}>{svc.name}</p><p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Included part · {svc.labor}h labour</p></div>
+              <div style={{textAlign:'right',flexShrink:0}}><p className="mono" style={{fontSize:13,fontWeight:700,color:'var(--accent)',margin:0}}>R {svc.price}</p>
+                {isSel&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:4}} onClick={e=>e.stopPropagation()}><button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)-1)}>-</button><span className="mono" style={{fontSize:13,fontWeight:700,color:'var(--text)',minWidth:16,textAlign:'center'}}>{selected[svc.id]?.qty||1}</span><button className="qty-btn" onClick={()=>setQty(svc.id,(selected[svc.id]?.qty||1)+1)}>+</button></div>}
+              </div>
+              {isSel&&<div style={{width:20,height:20,borderRadius:'50%',background:'var(--accent)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><svg className="w-3 h-3" fill="white" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>}
+            </div>
+          </div>
+        );})}
+      </div>
+
+      {/* Media & Notes Section */}
+      <div style={{background:'var(--surface2)', borderRadius: 16, padding: 14, border: '1px solid var(--border)'}}>
+        <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:10,display:'flex',justifyContent:'space-between',alignItems:'center',letterSpacing:'0.5px'}}>
+          <span>MECHANIC NOTES & MEDIA</span>
+          <button onClick={() => fileRef.current?.click()} style={{background:'var(--input-bg)', border:'1px solid var(--accent)', color:'var(--accent)', borderRadius:100, padding:'4px 10px', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', gap:4}}><ICamera/> Add Photo</button>
+        </label>
+        
+        <input type="file" accept="image/*" capture="environment" hidden ref={fileRef} onChange={handlePhotoCapture} />
+        
+        {photos.length > 0 && (
+          <div style={{display:'flex', gap:8, overflowX:'auto', marginBottom:12, paddingBottom:4}}>
+            {photos.map((url, idx) => (
+              <div key={idx} style={{position:'relative', width:64, height:64, flexShrink:0, borderRadius:12, overflow:'hidden', border:'1px solid var(--border)'}}>
+                <img src={url} style={{width:'100%', height:'100%', objectFit:'cover'}} alt="Damage" />
+                <button onClick={() => removePhoto(idx)} style={{position:'absolute', top:2, right:2, width:20, height:20, borderRadius:'50%', background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center'}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <textarea className="field" rows={2} placeholder="Additional observations, existing damage, or customer concerns…" value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none'}}/>
+      </div>
+
+      {count>0&&<div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontSize:14,color:'var(--text2)'}}>{count} item(s) selected</span><span className="mono" style={{fontSize:18,fontWeight:800,color:'var(--accent)'}}>R {total.toFixed(2)}</span></div>}
+      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}}>Back</button><button className="btn-p" disabled={count===0} onClick={()=>onDone(selected,notes,photos)} style={{flex:1}}>Review Quote <IChev/></button></div>
+    </div>
+  );
 }
 
 /* ── QUOTE REVIEW ── */
-function QuoteReview({vehicle,services,notes,onBack,onSubmit,submitting}){
-  const items=Object.values(services);
-  const laborTotal=items.reduce((s,i)=>s+i.labor*i.qty*LABOR,0);
-  const partsTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
-  const subtotal=laborTotal+partsTotal;
-  const vat=subtotal*0.15;
-  const grand=subtotal+vat;
-  return(
-    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:14}}>
-      <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Review Quotation</h2><p style={{fontSize:12,color:'var(--text2)',margin:'4px 0 0'}}>Confirm before sending to admin dashboard</p></div>
-      <div style={{background:'var(--input-bg)',borderRadius:16,border:'1px solid var(--border)',padding:'14px 16px'}}>
-        <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>VEHICLE</p>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,fontSize:13}}>
-          {[[vehicle.make+' '+vehicle.model,vehicle.engine],[vehicle.reg,vehicle.km?vehicle.km+' km':'–'],[vehicle.year,vehicle.vin||'—']].map(([a,b],i)=><React.Fragment key={i}><span style={{color:'var(--text)',fontWeight:600}}>{a}</span><span style={{color:'var(--text2)'}}>{b}</span></React.Fragment>)}
-        </div>
-      </div>
-      <div style={{background:'var(--input-bg)',borderRadius:16,border:'1px solid var(--border)',padding:'4px 16px 12px'}}>
-        <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',margin:'14px 0 10px'}}>SERVICES ({items.length})</p>
-        {items.map((svc,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<items.length-1?'1px solid var(--border2)':'none',fontSize:13}}><div><span style={{color:'var(--text)',fontWeight:600}}>{svc.name}</span>{svc.qty>1&&<span className="badge" style={{background:'rgba(77,123,255,0.1)',color:'var(--accent)',border:'1px solid rgba(77,123,255,0.2)',marginLeft:6,fontSize:10}}>×{svc.qty}</span>}<p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{svc.labor*svc.qty}h labour</p></div><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {(svc.price*svc.qty).toFixed(0)}</span></div>)}
-      </div>
-      <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'14px 16px'}}>
-        {[[`Labour (${items.reduce((s,i)=>s+i.labor*i.qty,0).toFixed(1)}h × R${LABOR})`,`R ${laborTotal.toFixed(2)}`],['Parts & Materials',`R ${partsTotal.toFixed(2)}`],['Subtotal',`R ${subtotal.toFixed(2)}`],['VAT 15%',`R ${vat.toFixed(2)}`]].map(([l,v])=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',fontSize:13,color:'var(--text2)'}}><span>{l}</span><span className="mono" style={{color:'var(--text)',fontWeight:600}}>{v}</span></div>)}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}><span style={{fontSize:15,fontWeight:800,color:'var(--accent)'}}>GRAND TOTAL</span><span className="mono" style={{fontSize:22,fontWeight:800,color:'var(--accent)'}}>R {grand.toFixed(2)}</span></div>
-      </div>
-      {notes&&<div style={{padding:12,borderRadius:12,background:'rgba(255,184,0,0.07)',border:'1px solid rgba(255,184,0,0.2)'}}><p style={{fontSize:11,fontWeight:700,color:'var(--amber)',margin:'0 0 4px',letterSpacing:'0.5px'}}>MECHANIC NOTES</p><p style={{fontSize:13,color:'var(--text2)',margin:0}}>{notes}</p></div>}
-      <div style={{padding:12,borderRadius:12,background:'rgba(0,255,136,0.06)',border:'1px solid rgba(0,255,136,0.18)'}}><p style={{fontSize:12,color:'var(--green)',margin:0,fontWeight:600}}>⚡ Submitting will send this quote to the Admin Dashboard in real-time.</p></div>
-      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}} disabled={submitting}>Back</button><button className="btn-p" onClick={()=>onSubmit({laborTotal,partsTotal,subtotal,vat,grandTotal:grand})} style={{flex:1}} disabled={submitting}>{submitting?<ISpin cls="w-5 h-5"/>:<><ICheck/>Send to Admin</>}</button></div>
-    </div>
-  );
+function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting}){
+  const items=Object.values(services);
+  const laborTotal=items.reduce((s,i)=>s+i.labor*i.qty*LABOR,0);
+  const partsTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const subtotal=laborTotal+partsTotal;
+  const vat=subtotal*0.15;
+  const grand=subtotal+vat;
+  return(
+    <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:14}}>
+      <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Review Quotation</h2><p style={{fontSize:12,color:'var(--text2)',margin:'4px 0 0'}}>Confirm before sending to admin dashboard</p></div>
+      <div style={{background:'var(--input-bg)',borderRadius:16,border:'1px solid var(--border)',padding:'14px 16px'}}>
+        <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:10}}>VEHICLE</p>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,fontSize:13}}>
+          {[[vehicle.make+' '+vehicle.model,vehicle.engine],[vehicle.reg,vehicle.km?vehicle.km+' km':'–'],[vehicle.year,vehicle.vin||'—']].map(([a,b],i)=><React.Fragment key={i}><span style={{color:'var(--text)',fontWeight:600}}>{a}</span><span style={{color:'var(--text2)'}}>{b}</span></React.Fragment>)}
+        </div>
+      </div>
+      <div style={{background:'var(--input-bg)',borderRadius:16,border:'1px solid var(--border)',padding:'4px 16px 12px'}}>
+        <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',margin:'14px 0 10px'}}>SERVICES ({items.length})</p>
+        {items.map((svc,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<items.length-1?'1px solid var(--border2)':'none',fontSize:13}}><div><span style={{color:'var(--text)',fontWeight:600}}>{svc.name}</span>{svc.qty>1&&<span className="badge" style={{background:'rgba(77,123,255,0.1)',color:'var(--accent)',border:'1px solid rgba(77,123,255,0.2)',marginLeft:6,fontSize:10}}>×{svc.qty}</span>}<p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{svc.labor*svc.qty}h labour</p></div><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {(svc.price*svc.qty).toFixed(0)}</span></div>)}
+      </div>
+      <div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'14px 16px'}}>
+        {[[`Labour (${items.reduce((s,i)=>s+i.labor*i.qty,0).toFixed(1)}h × R${LABOR})`,`R ${laborTotal.toFixed(2)}`],['Parts & Materials',`R ${partsTotal.toFixed(2)}`],['Subtotal',`R ${subtotal.toFixed(2)}`],['VAT 15%',`R ${vat.toFixed(2)}`]].map(([l,v])=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'5px 0',fontSize:13,color:'var(--text2)'}}><span>{l}</span><span className="mono" style={{color:'var(--text)',fontWeight:600}}>{v}</span></div>)}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}><span style={{fontSize:15,fontWeight:800,color:'var(--accent)'}}>GRAND TOTAL</span><span className="mono" style={{fontSize:22,fontWeight:800,color:'var(--accent)'}}>R {grand.toFixed(2)}</span></div>
+      </div>
+      
+      {(notes || photos?.length > 0) && (
+        <div style={{padding:12,borderRadius:12,background:'var(--surface)',border:'1px solid var(--border)'}}>
+          <p style={{fontSize:11,fontWeight:700,color:'var(--text)',margin:'0 0 8px',letterSpacing:'0.5px'}}>DOCUMENTS</p>
+          {photos?.length > 0 && (
+            <div style={{display:'flex', gap:6, overflowX:'auto', marginBottom: notes ? 10 : 0}}>
+              {photos.map((url, idx) => <img key={idx} src={url} style={{width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid var(--border)'}} />)}
+            </div>
+          )}
+          {notes && <p style={{fontSize:13,color:'var(--text2)',margin:0, background:'rgba(255,184,0,0.07)', padding:'8px 10px', borderRadius:8}}>📝 {notes}</p>}
+        </div>
+      )}
+
+      <div style={{padding:12,borderRadius:12,background:'rgba(0,255,136,0.06)',border:'1px solid rgba(0,255,136,0.18)'}}><p style={{fontSize:12,color:'var(--green)',margin:0,fontWeight:600}}>⚡ Submitting will send this quote to the Admin Dashboard in real-time.</p></div>
+      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}} disabled={submitting}>Back</button><button className="btn-p" onClick={()=>onSubmit({laborTotal,partsTotal,subtotal,vat,grandTotal:grand})} style={{flex:1}} disabled={submitting}>{submitting?<ISpin cls="w-5 h-5"/>:<><ICheck/>Send to Admin</>}</button></div>
+    </div>
+  );
 }
 
 /* ── INTAKE WIZARD ── */
 function IntakeWizard({onDone,profile,systemData}){
-  const [step,setStep]=useState(1);
-  const [vehicle,setVehicle]=useState(null);
-  const [services,setServices]=useState({});
-  const [notes,setNotes]=useState('');
-  const [submitting,setSubmitting]=useState(false);
-  const [animDir,setAnimDir]=useState('left');
-  const sysCars=systemData?.car_db||{};
-  const sysServices=useMemo(()=>{
-    let catalog=systemData?.parts_catalog||{};
-    if(vehicle?.make&&systemData?.make_catalogs?.[vehicle.make])catalog=systemData.make_catalogs[vehicle.make];
-    const result={};
-    Object.keys(catalog).forEach(catName=>{const catData=catalog[catName];const partsArr=(catData.parts||[]).map(p=>typeof p==='string'?{name:p,price:0}:p);const items=partsArr.map((part,idx)=>({id:`pt-${catName.replace(/[^a-zA-Z0-9]/g,'')}-${idx}`.toLowerCase(),name:part.name,labor:0.5,icon:catData.icon||'🔧',price:part.price||0,parts:[{name:part.name,price:part.price||0}]}));if(items.length>0)result[catName]=items;});
-    if(Object.keys(result).length>0)return result;
-    return systemData?.services||{};
-  },[systemData,vehicle]);
+  const [step,setStep]=useState(1);
+  const [vehicle,setVehicle]=useState(null);
+  const [services,setServices]=useState({});
+  const [notes,setNotes]=useState('');
+  const [photos,setPhotos]=useState([]);
+  const [submitting,setSubmitting]=useState(false);
+  const [animDir,setAnimDir]=useState('left');
+  
+  const sysCars=systemData?.car_db||{};
+  const sysServices=useMemo(()=>{
+    let catalog=systemData?.parts_catalog||{};
+    if(vehicle?.make&&systemData?.make_catalogs?.[vehicle.make])catalog=systemData.make_catalogs[vehicle.make];
+    const result={};
+    Object.keys(catalog).forEach(catName=>{const catData=catalog[catName];const partsArr=(catData.parts||[]).map(p=>typeof p==='string'?{name:p,price:0}:p);const items=partsArr.map((part,idx)=>({id:`pt-${catName.replace(/[^a-zA-Z0-9]/g,'')}-${idx}`.toLowerCase(),name:part.name,labor:0.5,icon:catData.icon||'🔧',price:part.price||0,parts:[{name:part.name,price:part.price||0}]}));if(items.length>0)result[catName]=items;});
+    if(Object.keys(result).length>0)return result;
+    return systemData?.services||{};
+  },[systemData,vehicle]);
 
-  const goTo=(s,dir='left')=>{setAnimDir(dir);setStep(s);};
+  const goTo=(s,dir='left')=>{setAnimDir(dir);setStep(s);};
 
-  const submit=async(totals)=>{
-    setSubmitting(true);
-    try{
-      const items=Object.values(services).map(s=>({serviceId:s.id||'unknown',name:s.name||'Unknown',qty:s.qty||1,parts:s.parts||[],laborHours:(s.labor||0)*(s.qty||1),unitPrice:s.price||0,total:(s.price||0)*(s.qty||1),icon:s.icon||'🔧'}));
-      const payload={vehicle:{make:vehicle.make||'',model:vehicle.model||'',year:vehicle.year||'',engine:vehicle.engine||'',reg:vehicle.reg||'',vin:vehicle.vin||'',km:vehicle.km||''},services:items,notes:notes||'',financials:{laborTotal:totals.laborTotal||0,partsTotal:totals.partsTotal||0,subtotal:totals.subtotal||0,vat:totals.vat||0,grandTotal:totals.grandTotal||0,lineItems:items,laborRate:LABOR},mechanic:{uid:auth.currentUser?.uid||'unknown',name:profile?.name||'Mechanic',shop:profile?.shop||'Workshop'},status:'pending_approval',createdAt:Date.now(),updatedAt:Date.now()};
-      await db.ref('workshop_jobs').push(payload);
-      onDone();
-    }catch(e){alert('Error saving data: '+e.message);}
-    setSubmitting(false);
-  };
+  const submit=async(totals)=>{
+    setSubmitting(true);
+    try{
+      const items=Object.values(services).map(s=>({serviceId:s.id||'unknown',name:s.name||'Unknown',qty:s.qty||1,parts:s.parts||[],laborHours:(s.labor||0)*(s.qty||1),unitPrice:s.price||0,total:(s.price||0)*(s.qty||1),icon:s.icon||'🔧'}));
+      const payload={
+        vehicle:{make:vehicle.make||'',model:vehicle.model||'',year:vehicle.year||'',engine:vehicle.engine||'',reg:vehicle.reg||'',vin:vehicle.vin||'',km:vehicle.km||''},
+        services:items,
+        notes:notes||'',
+        photos:photos||[],
+        financials:{laborTotal:totals.laborTotal||0,partsTotal:totals.partsTotal||0,subtotal:totals.subtotal||0,vat:totals.vat||0,grandTotal:totals.grandTotal||0,lineItems:items,laborRate:LABOR},
+        mechanic:{uid:auth.currentUser?.uid||'unknown',name:profile?.name||'Mechanic',shop:profile?.shop||'Workshop'},
+        status:'pending_approval',
+        createdAt:Date.now(),
+        updatedAt:Date.now()
+      };
+      await db.ref('workshop_jobs').push(payload);
+      onDone();
+    }catch(e){alert('Error saving data: '+e.message);}
+    setSubmitting(false);
+  };
 
-  const STEPS=['Vehicle','Services','Quote'];
-  const animClass=animDir==='left'?'anim-left':'anim-right';
-  return(
-    <div style={{maxWidth:680,margin:'0 auto'}}>
-      <div className="surface" style={{borderRadius:100,padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-        {STEPS.map((lbl,i)=>{const n=i+1,on=step>=n,done=step>n;return(
-          <React.Fragment key={n}>
-            <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <div className={`step-dot ${done?'done':on?'on':'off'}`}>{done?'✓':n}</div>
-              <span style={{fontSize:12,fontWeight:700,color:on?'var(--text)':'var(--text3)'}}>{lbl}</span>
-            </div>
-            {i<2&&<div style={{flex:1,height:2,background:done?'var(--accent)':'var(--border)',borderRadius:2,margin:'0 8px',transition:'background .3s'}}/>}
-          </React.Fragment>
-        );})}
-      </div>
-      <div className="surface" style={{borderRadius:24,padding:'24px 20px',minHeight:400,overflow:'hidden'}}>
-        <div key={step} className={animClass}>
-          {step===1&&<CarSelector onSelect={v=>{setVehicle(v);goTo(2,'left');}} sysCars={sysCars}/>}
-          {step===2&&<ServiceSelector vehicle={vehicle} onBack={()=>goTo(1,'right')} onDone={(s,n)=>{setServices(s);setNotes(n);goTo(3,'left');}} sysServices={sysServices}/>}
-          {step===3&&<QuoteReview vehicle={vehicle} services={services} notes={notes} onBack={()=>goTo(2,'right')} onSubmit={submit} submitting={submitting}/>}
-        </div>
-      </div>
-    </div>
-  );
+  const STEPS=['Vehicle','Services','Quote'];
+  const animClass=animDir==='left'?'anim-left':'anim-right';
+  return(
+    <div style={{maxWidth:680,margin:'0 auto'}}>
+      <div className="surface" style={{borderRadius:100,padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        {STEPS.map((lbl,i)=>{const n=i+1,on=step>=n,done=step>n;return(
+          <React.Fragment key={n}>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <div className={`step-dot ${done?'done':on?'on':'off'}`}>{done?'✓':n}</div>
+              <span style={{fontSize:12,fontWeight:700,color:on?'var(--text)':'var(--text3)'}}>{lbl}</span>
+            </div>
+            {i<2&&<div style={{flex:1,height:2,background:done?'var(--accent)':'var(--border)',borderRadius:2,margin:'0 8px',transition:'background .3s'}}/>}
+          </React.Fragment>
+        );})}
+      </div>
+      <div className="surface" style={{borderRadius:24,padding:'24px 20px',minHeight:400,overflow:'hidden'}}>
+        <div key={step} className={animClass}>
+          {step===1&&<CarSelector onSelect={v=>{setVehicle(v);goTo(2,'left');}} sysCars={sysCars}/>}
+          {step===2&&<ServiceSelector vehicle={vehicle} onBack={()=>goTo(1,'right')} onDone={(s,n,p)=>{setServices(s);setNotes(n);setPhotos(p);goTo(3,'left');}} sysServices={sysServices}/>}
+          {step===3&&<QuoteReview vehicle={vehicle} services={services} notes={notes} photos={photos} onBack={()=>goTo(2,'right')} onSubmit={submit} submitting={submitting}/>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ── EDIT JOB MODAL ── */
 function EditJobModal({job, onClose, onSave}){
-  const [notes, setNotes] = useState(job.notes||'');
-  const [km, setKm] = useState(job.vehicle?.km||'');
-  const [saving, setSaving] = useState(false);
-  const save = async()=>{
-    setSaving(true);
-    try{
-      await db.ref(`workshop_jobs/${job.id}`).update({notes, 'vehicle/km': km, updatedAt: Date.now()});
-      onSave();
-    }catch(e){alert('Error: '+e.message);}
-    setSaving(false);
-  };
-  return <>
-    <div className="modal-overlay" onClick={onClose}/>
-    <div className="responsive-panel">
-      <div className="sheet-handle"/>
-      <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 4px'}}>Edit Job</h3>
-      <p style={{fontSize:12,color:'var(--text2)',margin:'0 0 20px'}}>{job.vehicle?.make} {job.vehicle?.model} · {job.vehicle?.reg}</p>
-      <div style={{display:'flex',flexDirection:'column',gap:14}}>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="profile-edit-field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MECHANIC NOTES</label><textarea className="profile-edit-field" rows={3} placeholder="Additional observations…" value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none'}}/></div>
-        <div style={{display:'flex',gap:10,marginTop:4}}>
-          <button className="btn-g" onClick={onClose} style={{flex:'0 0 auto',borderRadius:12,padding:'12px 20px'}}>Cancel</button>
-          <button className="btn-p" onClick={save} disabled={saving} style={{flex:1,borderRadius:12}}>{saving?<ISpin cls="w-5 h-5"/>:<><ISave/> Save Changes</>}</button>
-        </div>
-      </div>
-    </div>
-  </>;
+  const [notes, setNotes] = useState(job.notes||'');
+  const [km, setKm] = useState(job.vehicle?.km||'');
+  const [saving, setSaving] = useState(false);
+  const save = async()=>{
+    setSaving(true);
+    try{
+      await db.ref(`workshop_jobs/${job.id}`).update({notes, 'vehicle/km': km, updatedAt: Date.now()});
+      onSave();
+    }catch(e){alert('Error: '+e.message);}
+    setSaving(false);
+  };
+  return <>
+    <div className="modal-overlay" onClick={onClose}/>
+    <div className="responsive-panel">
+      <div className="sheet-handle"/>
+      <h3 style={{fontSize:18,fontWeight:800,color:'var(--text)',margin:'0 0 4px'}}>Edit Job</h3>
+      <p style={{fontSize:12,color:'var(--text2)',margin:'0 0 20px'}}>{job.vehicle?.make} {job.vehicle?.model} · {job.vehicle?.reg}</p>
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="profile-edit-field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>MECHANIC NOTES</label><textarea className="profile-edit-field" rows={3} placeholder="Additional observations…" value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none'}}/></div>
+        <div style={{display:'flex',gap:10,marginTop:4}}>
+          <button className="btn-g" onClick={onClose} style={{flex:'0 0 auto',borderRadius:12,padding:'12px 20px'}}>Cancel</button>
+          <button className="btn-p" onClick={save} disabled={saving} style={{flex:1,borderRadius:12}}>{saving?<ISpin cls="w-5 h-5"/>:<><ISave/> Save Changes</>}</button>
+        </div>
+      </div>
+    </div>
+  </>;
 }
 
 /* ── JOBS DASHBOARD ── */
 function JobsDash({onNew,profile,jobs,showToast}){
-  const [open,setOpen]=useState(null);
-  const [filterStatus,setFilterStatus]=useState('all');
-  const [dateFrom,setDateFrom]=useState('');
-  const [dateTo,setDateTo]=useState('');
-  const [showFilters,setShowFilters]=useState(false);
-  const [confirmDelete,setConfirmDelete]=useState(null);
-  const [editJob,setEditJob]=useState(null);
+  const [open,setOpen]=useState(null);
+  const [filterStatus,setFilterStatus]=useState('all');
+  const [dateFrom,setDateFrom]=useState('');
+  const [dateTo,setDateTo]=useState('');
+  const [showFilters,setShowFilters]=useState(false);
+  const [confirmDelete,setConfirmDelete]=useState(null);
+  const [editJob,setEditJob]=useState(null);
 
-  const toDateMs=(str,end=false)=>{if(!str)return null;const d=new Date(str);if(end){d.setHours(23,59,59,999);}else{d.setHours(0,0,0,0);}return d.getTime();};
+  const toDateMs=(str,end=false)=>{if(!str)return null;const d=new Date(str);if(end){d.setHours(23,59,59,999);}else{d.setHours(0,0,0,0);}return d.getTime();};
 
-  const filtered=useMemo(()=>{
-    if(!jobs)return null;
-    return jobs.filter(j=>{
-      if(filterStatus!=='all'&&j.status!==filterStatus)return false;
-      const ts=j.createdAt||0;
-      const from=toDateMs(dateFrom,false);
-      const to=toDateMs(dateTo,true);
-      if(from&&ts<from)return false;
-      if(to&&ts>to)return false;
-      return true;
-    });
-  },[jobs,filterStatus,dateFrom,dateTo]);
+  const filtered=useMemo(()=>{
+    if(!jobs)return null;
+    return jobs.filter(j=>{
+      if(filterStatus!=='all'&&j.status!==filterStatus)return false;
+      const ts=j.createdAt||0;
+      const from=toDateMs(dateFrom,false);
+      const to=toDateMs(dateTo,true);
+      if(from&&ts<from)return false;
+      if(to&&ts>to)return false;
+      return true;
+    });
+  },[jobs,filterStatus,dateFrom,dateTo]);
 
-  const activeFiltersCount=[filterStatus!=='all',!!dateFrom,!!dateTo].filter(Boolean).length;
+  const activeFiltersCount=[filterStatus!=='all',!!dateFrom,!!dateTo].filter(Boolean).length;
 
-  const deleteJob=async(id)=>{
-    try{await db.ref(`workshop_jobs/${id}`).remove();showToast('Job deleted','🗑️','var(--red)');}
-    catch(e){alert('Error: '+e.message);}
-    setConfirmDelete(null);
-  };
+  const deleteJob=async(id)=>{
+    try{await db.ref(`workshop_jobs/${id}`).remove();showToast('Job deleted','🗑️','var(--red)');}
+    catch(e){alert('Error: '+e.message);}
+    setConfirmDelete(null);
+  };
 
-  const clearFilters=()=>{setFilterStatus('all');setDateFrom('');setDateTo('');};
+  const updateJobStatus = async (id, newStatus) => {
+    try {
+      await db.ref(`workshop_jobs/${id}`).update({status: newStatus, updatedAt: Date.now()});
+      showToast('Status Updated', '🔧', 'var(--accent)');
+    } catch(e) {
+      alert('Error updating status: ' + e.message);
+    }
+  };
 
-  const active=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
-  return(
-    <div style={{display:'flex',flexDirection:'column',gap:16}}>
-      {/* Stats */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-        {[
-          {l:'Total Jobs',v:jobs?jobs.length:'–',c:'var(--accent)',icon:'📋'},
-          {l:'Awaiting Admin',v:jobs?active:'–',c:'var(--amber)',icon:'⏳'},
-          {l:'Approved',v:jobs?jobs.filter(j=>j.status==='approved').length:'–',c:'var(--green)',icon:'✅'},
-          {l:'My Jobs',v:jobs?jobs.filter(j=>j.mechanic?.uid===auth.currentUser?.uid).length:'–',c:'var(--cyan)',icon:'🔧'},
-        ].map((s,idx)=>(
-          <div key={s.l} className="stat-card" style={{animationDelay:`${idx*60}ms`,animation:'cardEnter .4s cubic-bezier(.16,1,.3,1) both'}}>
-            <p style={{fontSize:10,fontWeight:700,color:'var(--text3)',marginBottom:8,letterSpacing:'0.5px',display:'flex',alignItems:'center',gap:5}}>{s.icon} {s.l.toUpperCase()}</p>
-            <p className="mono" style={{fontSize:26,fontWeight:900,color:s.c,margin:0,lineHeight:1}}>{s.v}</p>
-          </div>
-        ))}
-      </div>
+  const clearFilters=()=>{setFilterStatus('all');setDateFrom('');setDateTo('');};
 
-      {/* Jobs Table */}
-      <div className="surface" style={{borderRadius:20,overflow:'hidden'}}>
-        {/* Header */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid var(--border)',gap:10,flexWrap:'wrap'}}>
-          <div>
-            <h2 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Workshop Jobs</h2>
-            <p style={{fontSize:11,color:'var(--text3)',margin:'3px 0 0'}}><span className="live-dot"/>Live from Firebase{filtered&&jobs&&filtered.length!==jobs.length?` · ${filtered.length}/${jobs.length} shown`:''}</p>
-          </div>
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <button onClick={()=>setShowFilters(!showFilters)} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:100,border:'1px solid',background:showFilters||activeFiltersCount>0?'rgba(77,123,255,0.1)':'var(--input-bg)',borderColor:showFilters||activeFiltersCount>0?'rgba(77,123,255,0.3)':'var(--border)',color:activeFiltersCount>0?'var(--accent)':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .18s'}}>
-              <IFilter/> Filter{activeFiltersCount>0?` (${activeFiltersCount})`:''}
-            </button>
-            <button className="btn-p" onClick={onNew} style={{padding:'9px 18px',fontSize:13}}><IPlus/> New Job</button>
-          </div>
-        </div>
+  const active=jobs?jobs.filter(j=>j.status==='pending_approval').length:0;
+  
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+      {/* Stats */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        {[
+          {l:'Total Jobs',v:jobs?jobs.length:'–',c:'var(--accent)',icon:'📋'},
+          {l:'Awaiting Admin',v:jobs?active:'–',c:'var(--amber)',icon:'⏳'},
+          {l:'Approved',v:jobs?jobs.filter(j=>j.status==='approved').length:'–',c:'var(--cyan)',icon:'✅'},
+          {l:'My Jobs',v:jobs?jobs.filter(j=>j.mechanic?.uid===auth.currentUser?.uid).length:'–',c:'var(--green)',icon:'🔧'},
+        ].map((s,idx)=>(
+          <div key={s.l} className="stat-card" style={{animationDelay:`${idx*60}ms`,animation:'cardEnter .4s cubic-bezier(.16,1,.3,1) both'}}>
+            <p style={{fontSize:10,fontWeight:700,color:'var(--text3)',marginBottom:8,letterSpacing:'0.5px',display:'flex',alignItems:'center',gap:5}}>{s.icon} {s.l.toUpperCase()}</p>
+            <p className="mono" style={{fontSize:26,fontWeight:900,color:s.c,margin:0,lineHeight:1}}>{s.v}</p>
+          </div>
+        ))}
+      </div>
 
-        {/* Filter Panel */}
-        {showFilters&&(
-          <div className="anim-up" style={{padding:'14px 20px',borderBottom:'1px solid var(--border)',background:'var(--surface2)',display:'flex',flexDirection:'column',gap:12}}>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px'}}><IFilter/> STATUS</div>
-              {[{v:'all',l:'All'},{v:'pending_approval',l:'Pending'},{v:'approved',l:'Approved'},{v:'rejected',l:'Rejected'}].map(o=><button key={o.v} className={`filter-chip ${filterStatus===o.v?'active':''}`} onClick={()=>setFilterStatus(o.v)}>{o.l}</button>)}
-            </div>
-            <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
-              <div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:'var(--text3)',letterSpacing:'0.5px'}}><ICalendar/> DATE</div>
-              <input type="date" className="date-input" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} placeholder="From"/>
-              <span style={{color:'var(--text3)',fontSize:12}}>→</span>
-              <input type="date" className="date-input" value={dateTo} onChange={e=>setDateTo(e.target.value)} placeholder="To"/>
-              {(dateFrom||dateTo)&&<button onClick={()=>{setDateFrom('');setDateTo('');}} style={{fontSize:11,color:'var(--red)',background:'none',border:'none',cursor:'pointer',fontFamily:'Inter',fontWeight:600}}>Clear</button>}
-            </div>
-            {activeFiltersCount>0&&<button onClick={clearFilters} style={{alignSelf:'flex-start',fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',fontFamily:'Inter',fontWeight:600,padding:0}}>✕ Clear all filters</button>}
-          </div>
-        )}
+      {/* Jobs Table */}
+      <div className="surface" style={{borderRadius:20,overflow:'hidden'}}>
+        {/* Header */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px',borderBottom:'1px solid var(--border)',gap:10,flexWrap:'wrap'}}>
+          <div>
+            <h2 style={{fontSize:16,fontWeight:800,color:'var(--text)',margin:0}}>Workshop Jobs</h2>
+            <p style={{fontSize:11,color:'var(--text3)',margin:'3px 0 0'}}><span className="live-dot"/>Live from Firebase{filtered&&jobs&&filtered.length!==jobs.length?` · ${filtered.length}/${jobs.length} shown`:''}</p>
+          </div>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <button onClick={()=>setShowFilters(true)} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:100,border:'1px solid',background:activeFiltersCount>0?'rgba(77,123,255,0.1)':'var(--input-bg)',borderColor:activeFiltersCount>0?'rgba(77,123,255,0.3)':'var(--border)',color:activeFiltersCount>0?'var(--accent)':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',transition:'all .18s'}}>
+              <IFilter/> Filter{activeFiltersCount>0?` (${activeFiltersCount})`:''}
+            </button>
+            <button className="btn-p" onClick={onNew} style={{padding:'9px 18px',fontSize:13}}><IPlus/> New Job</button>
+          </div>
+        </div>
 
-        {/* Job List */}
-        {jobs===null?(
-          <div style={{padding:16,display:'flex',flexDirection:'column',gap:10}}>
-            {[1,2,3].map(i=><div key={i} className="skel" style={{height:70,animationDelay:`${(i-1)*150}ms`}}/>)}
-          </div>
-        ):filtered&&filtered.length===0?(
-          <div style={{textAlign:'center',padding:'48px 24px'}}>
-            <div style={{fontSize:32,marginBottom:12}}>🔍</div>
-            <p style={{color:'var(--text2)',fontSize:14,marginBottom:8}}>
-              {jobs.length===0?'No jobs yet. Check in a vehicle to start.':'No jobs match your filters.'}
-            </p>
-            {jobs.length===0?<button className="btn-p" onClick={onNew} style={{margin:'0 auto'}}>Check In Vehicle <IChev/></button>:<button className="btn-g" onClick={clearFilters} style={{margin:'0 auto'}}>Clear Filters</button>}
-          </div>
-        ):(
-          <div>
-            {(filtered||[]).map((job,idx)=>(
-              <div key={job.id} className="job-card" style={{animationDelay:`${idx*40}ms`}}>
-                <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',cursor:'pointer'}} onClick={()=>setOpen(open===job.id?null:job.id)}>
-                  <div style={{width:38,height:38,borderRadius:12,background:'rgba(77,123,255,0.1)',border:'1px solid rgba(77,123,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',flexShrink:0}}><ICar/></div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:14,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.make} {job.vehicle?.model}
-                      <span className="mono" style={{fontSize:10,color:'var(--text3)',marginLeft:8}}>{job.vehicle?.reg}</span>
-                    </p>
-                    <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.services?.length} services · {job.mechanic?.name} · {job.createdAt?new Date(job.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):''}</p>
-                  </div>
-                  <div style={{flexShrink:0,textAlign:'right'}}>
-                    <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',background:job.status==='approved'?'rgba(0,255,136,0.1)':job.status==='rejected'?'rgba(255,80,80,0.1)':'rgba(255,184,0,0.1)',color:job.status==='approved'?'var(--green)':job.status==='rejected'?'var(--red)':'var(--amber)',border:`1px solid ${job.status==='approved'?'rgba(0,255,136,0.2)':job.status==='rejected'?'rgba(255,80,80,0.2)':'rgba(255,184,0,0.2)'}`}}>
-                      {job.status==='pending_approval'?'PENDING':job.status==='approved'?'APPROVED':'REJECTED'}
-                    </span>
-                    <p className="mono" style={{fontSize:11,fontWeight:700,color:'var(--accent)',margin:'4px 0 0'}}>R {(job.financials?.grandTotal||0).toFixed(0)}</p>
-                  </div>
-                </div>
-                {open===job.id&&(
-                  <div className="job-expand" style={{padding:'0 20px 16px',background:'var(--surface2)'}}>
-                    <div style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:16,padding:14}}>
-                      <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:8}}>SERVICES REQUESTED</p>
-                      {job.services?.map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}><span style={{color:'var(--text2)'}}>{s.icon} {s.name}{s.qty>1?` ×${s.qty}`:''}</span><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {s.total}</span></div>)}
-                      <div style={{display:'flex',justifyContent:'space-between',marginTop:10,paddingTop:8,borderTop:'1px solid var(--border)'}}><span style={{fontWeight:800,color:'var(--accent)'}}>Grand Total (incl. VAT)</span><span className="mono" style={{fontWeight:800,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(2)}</span></div>
-                      {job.notes&&<p style={{fontSize:12,color:'var(--amber)',marginTop:8,padding:'8px 12px',background:'rgba(255,184,0,0.07)',borderRadius:8}}>📝 {job.notes}</p>}
-                      {/* Actions */}
-                      <div style={{display:'flex',gap:8,marginTop:14,paddingTop:12,borderTop:'1px solid var(--border2)'}}>
-                        <button className="edit-btn" onClick={e=>{e.stopPropagation();setEditJob(job);}}><IEdit/> Edit</button>
-                        <button className="delete-btn" onClick={e=>{e.stopPropagation();setConfirmDelete(job);}}><IDelete/> Delete</button>
-                        <span style={{marginLeft:'auto',fontSize:11,color:'var(--text3)',alignSelf:'center'}}>⚡ Awaiting admin review</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        {/* Job List */}
+        {jobs===null?(
+          <div style={{padding:16,display:'flex',flexDirection:'column',gap:10}}>
+            {[1,2,3].map(i=><div key={i} className="skel" style={{height:70,animationDelay:`${(i-1)*150}ms`}}/>)}
+          </div>
+        ):filtered&&filtered.length===0?(
+          <div style={{textAlign:'center',padding:'48px 24px'}}>
+            <div style={{fontSize:32,marginBottom:12}}>🔍</div>
+            <p style={{color:'var(--text2)',fontSize:14,marginBottom:8}}>
+              {jobs.length===0?'No jobs yet. Check in a vehicle to start.':'No jobs match your filters.'}
+            </p>
+            {jobs.length===0?<button className="btn-p" onClick={onNew} style={{margin:'0 auto'}}>Check In Vehicle <IChev/></button>:<button className="btn-g" onClick={clearFilters} style={{margin:'0 auto'}}>Clear Filters</button>}
+          </div>
+        ):(
+          <div>
+            {(filtered||[]).map((job,idx)=>{
+              const sUI = getStatusUI(job.status);
+              return (
+              <div key={job.id} className="job-card" style={{animationDelay:`${idx*40}ms`}}>
+                <div style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',cursor:'pointer'}} onClick={()=>setOpen(open===job.id?null:job.id)}>
+                  <div style={{width:38,height:38,borderRadius:12,background:'rgba(77,123,255,0.1)',border:'1px solid rgba(77,123,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent)',flexShrink:0}}><ICar/></div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:14,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.make} {job.vehicle?.model}
+                      <span className="mono" style={{fontSize:10,color:'var(--text3)',marginLeft:8}}>{job.vehicle?.reg}</span>
+                    </p>
+                    <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.services?.length} services · {job.mechanic?.name} · {job.createdAt?new Date(job.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):''}</p>
+                  </div>
+                  <div style={{flexShrink:0,textAlign:'right'}}>
+                    <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',background:sUI.bg,color:sUI.c,border:`1px solid ${sUI.b}`}}>
+                      {sUI.l}
+                    </span>
+                    <p className="mono" style={{fontSize:11,fontWeight:700,color:'var(--accent)',margin:'4px 0 0'}}>R {(job.financials?.grandTotal||0).toFixed(0)}</p>
+                  </div>
+                </div>
+                {open===job.id&&(
+                  <div className="job-expand" style={{padding:'0 20px 16px',background:'var(--surface2)'}}>
+                    <div style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:16,padding:14}}>
+                      <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:8}}>SERVICES REQUESTED</p>
+                      {job.services?.map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}><span style={{color:'var(--text2)'}}>{s.icon} {s.name}{s.qty>1?` ×${s.qty}`:''}</span><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {s.total}</span></div>)}
+                      <div style={{display:'flex',justifyContent:'space-between',marginTop:10,paddingTop:8,borderTop:'1px solid var(--border)'}}><span style={{fontWeight:800,color:'var(--accent)'}}>Grand Total (incl. VAT)</span><span className="mono" style={{fontWeight:800,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(2)}</span></div>
+                      
+                      {/* Render Photos if any */}
+                      {job.photos?.length > 0 && (
+                        <div style={{marginTop: 12, display: 'flex', gap: 8, overflowX: 'auto'}}>
+                           {job.photos.map((p, i) => <img key={i} src={p} style={{width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)'}}/>)}
+                        </div>
+                      )}
 
-      {confirmDelete&&<ConfirmDialog title="Delete Job?" message={`This will permanently remove the job for ${confirmDelete.vehicle?.make} ${confirmDelete.vehicle?.model} (${confirmDelete.vehicle?.reg}). This cannot be undone.`} onConfirm={()=>deleteJob(confirmDelete.id)} onCancel={()=>setConfirmDelete(null)} confirmLabel="Delete Job" danger={true}/>}
-      {editJob&&<EditJobModal job={editJob} onClose={()=>setEditJob(null)} onSave={()=>{setEditJob(null);showToast('Job updated','✓','var(--green)');}}/>}
-    </div>
-  );
+                      {job.notes&&<p style={{fontSize:12,color:'var(--amber)',marginTop:8,padding:'8px 12px',background:'rgba(255,184,0,0.07)',borderRadius:8}}>📝 {job.notes}</p>}
+                      
+                      {/* Mechanic Workflow Status Actions */}
+                      {['approved', 'in_progress', 'waiting_parts'].includes(job.status) && (
+                        <div style={{display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:'1px solid var(--border)'}}>
+                          {job.status === 'approved' && <button onClick={() => updateJobStatus(job.id, 'in_progress')} className="btn-p" style={{flex:1}}><IWrench/> Start Job</button>}
+                          {job.status === 'in_progress' && (
+                            <>
+                              <button onClick={() => updateJobStatus(job.id, 'waiting_parts')} className="btn-g" style={{flex:1}}><IClock/> Waiting Parts</button>
+                              <button onClick={() => updateJobStatus(job.id, 'completed')} className="btn-p" style={{flex:1, background: 'var(--green)'}}><ICheck/> Completed</button>
+                            </>
+                          )}
+                          {job.status === 'waiting_parts' && <button onClick={() => updateJobStatus(job.id, 'in_progress')} className="btn-p" style={{flex:1}}><IWrench/> Resume Job</button>}
+                        </div>
+                      )}
+
+                      {/* Admin Actions */}
+                      <div style={{display:'flex',gap:8,marginTop:14,paddingTop:12,borderTop:['approved', 'in_progress', 'waiting_parts'].includes(job.status) ? 'none' : '1px solid var(--border2)'}}>
+                        <button className="edit-btn" onClick={e=>{e.stopPropagation();setEditJob(job);}}><IEdit/> Edit Info</button>
+                        <button className="delete-btn" onClick={e=>{e.stopPropagation();setConfirmDelete(job);}}><IDelete/> Delete</button>
+                        {job.status === 'pending_approval' && <span style={{marginLeft:'auto',fontSize:11,color:'var(--text3)',alignSelf:'center'}}>⚡ Awaiting admin review</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )})}
+          </div>
+        )}
+      </div>
+
+      {/* Filter Bottom Sheet / Modal */}
+      {showFilters && (
+        <>
+          <div className="modal-overlay" onClick={() => setShowFilters(false)} />
+          <div className="responsive-panel">
+            <div className="sheet-handle" />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Filters</h3>
+              {activeFiltersCount > 0 && (
+                <button onClick={clearFilters} style={{ fontSize: 13, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter', fontWeight: 700, padding: 0 }}>
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '0.5px' }}>
+                <IFilter /> STATUS
+              </label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { v: 'all', l: 'All' }, 
+                  { v: 'pending_approval', l: 'Pending' }, 
+                  { v: 'approved', l: 'Approved' }, 
+                  { v: 'in_progress', l: 'In Progress' },
+                  { v: 'waiting_parts', l: 'Waiting Parts' },
+                  { v: 'completed', l: 'Completed' },
+                  { v: 'rejected', l: 'Rejected' }
+                ].map(o => (
+                  <button key={o.v} className={`filter-chip ${filterStatus === o.v ? 'active' : ''}`} onClick={() => setFilterStatus(o.v)} style={{ flex: '1 1 auto', textAlign: 'center' }}>
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Filter */}
+            <div style={{ marginBottom: 28 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '0.5px' }}>
+                <ICalendar /> DATE RANGE
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'center' }}>
+                <input type="date" className="date-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ width: '100%' }} />
+                <span style={{ color: 'var(--text3)' }}>→</span>
+                <input type="date" className="date-input" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ width: '100%' }} />
+              </div>
+            </div>
+
+            <button className="btn-p" onClick={() => setShowFilters(false)} style={{ width: '100%', justifyContent: 'center' }}>
+              Show Results {filtered ? `(${filtered.length})` : ''}
+            </button>
+          </div>
+        </>
+      )}
+
+      {confirmDelete&&<ConfirmDialog title="Delete Job?" message={`This will permanently remove the job for ${confirmDelete.vehicle?.make} ${confirmDelete.vehicle?.model} (${confirmDelete.vehicle?.reg}). This cannot be undone.`} onConfirm={()=>deleteJob(confirmDelete.id)} onCancel={()=>setConfirmDelete(null)} confirmLabel="Delete Job" danger={true}/>}
+      {editJob&&<EditJobModal job={editJob} onClose={()=>setEditJob(null)} onSave={()=>{setEditJob(null);showToast('Job updated','✓','var(--green)');}}/>}
+    </div>
+  );
 }
 
 /* ── ACCOUNT PANEL ── */
 function AccountPanel({user, profile, setProfile, onClose, onSignOut, dark, onToggleDark}){
-  const [editMode, setEditMode] = useState(false);
-  const [name, setName] = useState(profile.name||'');
-  const [shop, setShop] = useState(profile.shop||'');
-  const [phone, setPhone] = useState(profile.phone||'');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [name, setName] = useState(profile.name||'');
+  const [shop, setShop] = useState(profile.shop||'');
+  const [phone, setPhone] = useState(profile.phone||'');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const save = async()=>{
-    setSaving(true);
-    try{
-      const updated = {name: name.trim()||'Mechanic', shop: shop.trim()||'Workshop', phone: phone.trim()};
-      await db.ref(`users/${user.uid}`).update(updated);
-      setProfile(p=>({...p,...updated}));
-      setSaved(true);
-      setTimeout(()=>setSaved(false),2500);
-      setEditMode(false);
-    }catch(e){alert('Error saving: '+e.message);}
-    setSaving(false);
-  };
+  const save = async()=>{
+    setSaving(true);
+    try{
+      const updated = {name: name.trim()||'Mechanic', shop: shop.trim()||'Workshop', phone: phone.trim()};
+      await db.ref(`users/${user.uid}`).update(updated);
+      setProfile(p=>({...p,...updated}));
+      setSaved(true);
+      setTimeout(()=>setSaved(false),2500);
+      setEditMode(false);
+    }catch(e){alert('Error saving: '+e.message);}
+    setSaving(false);
+  };
 
-  return <>
-    <div className="modal-overlay" onClick={onClose}/>
-    <div className="responsive-panel">
-      <div className="sheet-handle"/>
-      {/* Header */}
-      <div style={{textAlign:'center',marginBottom:24}}>
-        <div style={{position:'relative',display:'inline-block'}}>
-          <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="Profile" style={{width:68,height:68,borderRadius:'50%',border:'2px solid var(--accent)',margin:'0 auto 12px auto',display:'block'}}/>
-          <div style={{position:'absolute',bottom:10,right:-2,width:18,height:18,borderRadius:'50%',background:'var(--green)',border:'2px solid var(--bg2)'}}/>
-        </div>
-        {!editMode?(
-          <>
-            <h2 style={{fontSize:20,fontWeight:900,color:'var(--text)',margin:'0 0 4px'}}>{profile.name||'Mechanic'}</h2>
-            <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 6px'}}>{user.email}</p>
-            <span style={{display:'inline-block',background:'rgba(77,123,255,0.1)',color:'var(--accent)',fontSize:10,fontWeight:700,padding:'3px 12px',borderRadius:100,border:'1px solid rgba(77,123,255,0.2)',fontFamily:'JetBrains Mono'}}>
-              {profile.shop||'Workshop'}
-            </span>
-            {profile.phone&&<p style={{fontSize:12,color:'var(--text3)',margin:'8px 0 0'}}>📞 {profile.phone}</p>}
-          </>
-        ):(
-          <div style={{display:'flex',flexDirection:'column',gap:10,textAlign:'left',marginTop:8}}>
-            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>FULL NAME</label><input className="profile-edit-field" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></div>
-            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>WORKSHOP</label><input className="profile-edit-field" value={shop} onChange={e=>setShop(e.target.value)} placeholder="Workshop name"/></div>
-            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>PHONE (optional)</label><input className="profile-edit-field" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+27 82 000 0000"/></div>
-          </div>
-        )}
-      </div>
+  return <>
+    <div className="modal-overlay" onClick={onClose}/>
+    <div className="responsive-panel">
+      <div className="sheet-handle"/>
+      {/* Header */}
+      <div style={{textAlign:'center',marginBottom:24}}>
+        <div style={{position:'relative',display:'inline-block'}}>
+          <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="Profile" style={{width:68,height:68,borderRadius:'50%',border:'2px solid var(--accent)',margin:'0 auto 12px auto',display:'block'}}/>
+          <div style={{position:'absolute',bottom:10,right:-2,width:18,height:18,borderRadius:'50%',background:'var(--green)',border:'2px solid var(--bg2)'}}/>
+        </div>
+        {!editMode?(
+          <>
+            <h2 style={{fontSize:20,fontWeight:900,color:'var(--text)',margin:'0 0 4px'}}>{profile.name||'Mechanic'}</h2>
+            <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 6px'}}>{user.email}</p>
+            <span style={{display:'inline-block',background:'rgba(77,123,255,0.1)',color:'var(--accent)',fontSize:10,fontWeight:700,padding:'3px 12px',borderRadius:100,border:'1px solid rgba(77,123,255,0.2)',fontFamily:'JetBrains Mono'}}>
+              {profile.shop||'Workshop'}
+            </span>
+            {profile.phone&&<p style={{fontSize:12,color:'var(--text3)',margin:'8px 0 0'}}>📞 {profile.phone}</p>}
+          </>
+        ):(
+          <div style={{display:'flex',flexDirection:'column',gap:10,textAlign:'left',marginTop:8}}>
+            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>FULL NAME</label><input className="profile-edit-field" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></div>
+            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>WORKSHOP</label><input className="profile-edit-field" value={shop} onChange={e=>setShop(e.target.value)} placeholder="Workshop name"/></div>
+            <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:5,display:'block',letterSpacing:'0.5px'}}>PHONE (optional)</label><input className="profile-edit-field" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+27 82 000 0000"/></div>
+          </div>
+        )}
+      </div>
 
-      {/* Dark Mode Row */}
-      {!editMode&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)',marginBottom:12}}>
-        <span style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>Theme</span>
-        <DarkModePill dark={dark} onToggle={onToggleDark}/>
-      </div>}
+      {/* Dark Mode Row */}
+      {!editMode&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderRadius:14,background:'var(--input-bg)',border:'1px solid var(--border)',marginBottom:12}}>
+        <span style={{fontSize:13,fontWeight:600,color:'var(--text2)'}}>Theme</span>
+        <DarkModePill dark={dark} onToggle={onToggleDark}/>
+      </div>}
 
-      <div style={{display:'flex',flexDirection:'column',gap:8}}>
-        {!editMode?(
-          <>
-            <button className="edit-btn" style={{justifyContent:'center',padding:'13px',fontSize:14,borderRadius:12,width:'100%'}} onClick={()=>setEditMode(true)}><IEdit/> Edit Profile</button>
-            {saved&&<div style={{textAlign:'center',fontSize:12,color:'var(--green)',padding:'6px',animation:'fadeIn .3s ease'}}>✓ Changes saved!</div>}
-            <button style={{background:'rgba(255,80,80,0.08)',color:'var(--red)',border:'1px solid rgba(255,80,80,0.2)',padding:'13px',borderRadius:12,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'Inter',display:'flex',justifyContent:'center',alignItems:'center',gap:8,transition:'all .18s'}} onClick={onSignOut}><ILogout/> Sign Out</button>
-            <button className="btn-g" style={{width:'100%',padding:'12px',fontSize:13,borderRadius:12}} onClick={onClose}>Close</button>
-          </>
-        ):(
-          <>
-            <button className="btn-p" onClick={save} disabled={saving} style={{borderRadius:12,padding:'13px'}}>{saving?<ISpin cls="w-5 h-5"/>:<><ISave/> Save Changes</>}</button>
-            <button className="btn-g" style={{borderRadius:12,padding:'12px',fontSize:13}} onClick={()=>setEditMode(false)}>Cancel</button>
-          </>
-        )}
-      </div>
-    </div>
-  </>;
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {!editMode?(
+          <>
+            <button className="edit-btn" style={{justifyContent:'center',padding:'13px',fontSize:14,borderRadius:12,width:'100%'}} onClick={()=>setEditMode(true)}><IEdit/> Edit Profile</button>
+            {saved&&<div style={{textAlign:'center',fontSize:12,color:'var(--green)',padding:'6px',animation:'fadeIn .3s ease'}}>✓ Changes saved!</div>}
+            <button style={{background:'rgba(255,80,80,0.08)',color:'var(--red)',border:'1px solid rgba(255,80,80,0.2)',padding:'13px',borderRadius:12,fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'Inter',display:'flex',justifyContent:'center',alignItems:'center',gap:8,transition:'all .18s'}} onClick={onSignOut}><ILogout/> Sign Out</button>
+            <button className="btn-g" style={{width:'100%',padding:'12px',fontSize:13,borderRadius:12}} onClick={onClose}>Close</button>
+          </>
+        ):(
+          <>
+            <button className="btn-p" onClick={save} disabled={saving} style={{borderRadius:12,padding:'13px'}}>{saving?<ISpin cls="w-5 h-5"/>:<><ISave/> Save Changes</>}</button>
+            <button className="btn-g" style={{borderRadius:12,padding:'12px',fontSize:13}} onClick={()=>setEditMode(false)}>Cancel</button>
+          </>
+        )}
+      </div>
+    </div>
+  </>;
 }
 
 /* ── SWIPE NAV CONTAINER ── */
 const VIEWS=['dashboard','wizard','account'];
 function SwipeContainer({view, setView, children}){
-  const containerRef=useRef();
-  const startX=useRef(null);
-  const startY=useRef(null);
-  const curIdx=VIEWS.indexOf(view);
+  const containerRef=useRef();
+  const startX=useRef(null);
+  const startY=useRef(null);
+  const curIdx=VIEWS.indexOf(view);
 
-  const handleTouchStart=useCallback(e=>{
-    startX.current=e.touches[0].clientX;
-    startY.current=e.touches[0].clientY;
-  },[]);
+  const handleTouchStart=useCallback(e=>{
+    startX.current=e.touches[0].clientX;
+    startY.current=e.touches[0].clientY;
+  },[]);
 
-  const handleTouchEnd=useCallback(e=>{
-    if(startX.current===null)return;
-    const dx=e.changedTouches[0].clientX-startX.current;
-    const dy=Math.abs(e.changedTouches[0].clientY-startY.current);
-    if(dy>Math.abs(dx)||Math.abs(dx)<50)return;
-    if(dx<-50&&curIdx<VIEWS.length-1)setView(VIEWS[curIdx+1]);
-    else if(dx>50&&curIdx>0)setView(VIEWS[curIdx-1]);
-    startX.current=null;
-  },[curIdx,setView]);
+  const handleTouchEnd=useCallback(e=>{
+    if(startX.current===null)return;
+    const dx=e.changedTouches[0].clientX-startX.current;
+    const dy=Math.abs(e.changedTouches[0].clientY-startY.current);
+    if(dy>Math.abs(dx)||Math.abs(dx)<50)return;
+    if(dx<-50&&curIdx<VIEWS.length-1)setView(VIEWS[curIdx+1]);
+    else if(dx>50&&curIdx>0)setView(VIEWS[curIdx-1]);
+    startX.current=null;
+  },[curIdx,setView]);
 
-  return <div ref={containerRef} style={{flex:1,overflow:'hidden'}} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>{children}</div>;
+  return <div ref={containerRef} style={{flex:1,overflow:'hidden'}} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>{children}</div>;
 }
 
 /* ── APP ── */
 function App(){
-  const [user,setUser]=useState(null);
-  const [profile,setProfile]=useState({name:'',shop:''});
-  const [view,setView]=useState('dashboard');
-  const [prevView,setPrevView]=useState('dashboard');
-  const [ready,setReady]=useState(false);
-  const [jobs,setJobs]=useState(null);
-  const [systemData,setSystemData]=useState(null);
-  const [isAccountOpen,setIsAccountOpen]=useState(false);
-  const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_theme_dark');return s!==null?JSON.parse(s):true;});
-  const [toast,setToast]=useState(null);
-  const [animDir,setAnimDir]=useState('left');
+  const [user,setUser]=useState(null);
+  const [profile,setProfile]=useState({name:'',shop:''});
+  const [view,setView]=useState('dashboard');
+  const [prevView,setPrevView]=useState('dashboard');
+  const [ready,setReady]=useState(false);
+  const [jobs,setJobs]=useState(null);
+  const [systemData,setSystemData]=useState(null);
+  const [isAccountOpen,setIsAccountOpen]=useState(false);
+  const [dark,setDark]=useState(()=>{const s=localStorage.getItem('vynix_theme_dark');return s!==null?JSON.parse(s):true;});
+  const [toast,setToast]=useState(null);
+  const [animDir,setAnimDir]=useState('left');
 
-  const navOrder=['dashboard','wizard'];
-  const changeView=(v)=>{
-    const ci=navOrder.indexOf(view);
-    const ni=navOrder.indexOf(v);
-    setAnimDir(ni>=ci?'left':'right');
-    setPrevView(view);
-    setView(v);
-  };
+  const navOrder=['dashboard','wizard'];
+  const changeView=(v)=>{
+    const ci=navOrder.indexOf(view);
+    const ni=navOrder.indexOf(v);
+    setAnimDir(ni>=ci?'left':'right');
+    setPrevView(view);
+    setView(v);
+  };
 
-  const showToast=(msg,icon='✓',color='var(--green)')=>{setToast({msg,icon,color,key:Date.now()});};
+  const showToast=(msg,icon='✓',color='var(--green)')=>{setToast({msg,icon,color,key:Date.now()});};
 
-  useEffect(()=>{
-    localStorage.setItem('vynix_theme_dark',JSON.stringify(dark));
-    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-    document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';
-  },[dark]);
+  useEffect(()=>{
+    localStorage.setItem('vynix_theme_dark',JSON.stringify(dark));
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    document.getElementById('meta-theme').content=dark?'#070c1a':'#f0f4ff';
+  },[dark]);
 
-  useEffect(()=>{
-    return auth.onAuthStateChanged(u=>{
-      if(u){
-        setUser(u);
-        const ref=db.ref(`users/${u.uid}`);
-        ref.on('value',snap=>{
-          if(snap.exists())setProfile(snap.val());
-          else{const d={name:u.displayName||'Mechanic',shop:'VynixPanelB Workshop'};ref.set(d);setProfile(d);}
-        });
-        setReady(true);
-      }
-    });
-  },[]);
+  useEffect(()=>{
+    return auth.onAuthStateChanged(u=>{
+      if(u){
+        setUser(u);
+        const ref=db.ref(`users/${u.uid}`);
+        ref.on('value',snap=>{
+          if(snap.exists())setProfile(snap.val());
+          else{const d={name:u.displayName||'Mechanic',shop:'VynixPanelB Workshop'};ref.set(d);setProfile(d);}
+        });
+        setReady(true);
+      }
+    });
+  },[]);
 
-  useEffect(()=>{
-    const sysRef=db.ref('system');
-    const sysCb=sysRef.on('value',snap=>{
-      if(snap.exists())setSystemData(snap.val());
-      else{const seed={car_db:{},services:{}};sysRef.set(seed);setSystemData(seed);}
-    });
-    return()=>sysRef.off('value',sysCb);
-  },[]);
+  useEffect(()=>{
+    const sysRef=db.ref('system');
+    const sysCb=sysRef.on('value',snap=>{
+      if(snap.exists())setSystemData(snap.val());
+      else{const seed={car_db:{},services:{}};sysRef.set(seed);setSystemData(seed);}
+    });
+    return()=>sysRef.off('value',sysCb);
+  },[]);
 
-  useEffect(()=>{
-    const ref=db.ref('workshop_jobs').limitToLast(500);
-    const cb=ref.on('value',snap=>{
-      if(!snap.exists()){setJobs([]);return;}
-      const arr=[];
-      snap.forEach(child=>{arr.push({id:child.key,...child.val()});});
-      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      setJobs(arr);
-    });
-    return()=>ref.off('value',cb);
-  },[]);
+  useEffect(()=>{
+    const ref=db.ref('workshop_jobs').limitToLast(500);
+    const cb=ref.on('value',snap=>{
+      if(!snap.exists()){setJobs([]);return;}
+      const arr=[];
+      snap.forEach(child=>{arr.push({id:child.key,...child.val()});});
+      arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      setJobs(arr);
+    });
+    return()=>ref.off('value',cb);
+  },[]);
 
-  if(!ready||!user||!systemData)return null;
+  if(!ready||!user||!systemData)return null;
 
-  const viewAnimClass = animDir==='left'?'anim-left':'anim-right';
+  const viewAnimClass = animDir==='left'?'anim-left':'anim-right';
 
-  return(
-    <div style={{minHeight:'100dvh',display:'flex',flexDirection:'row'}}>
-      {/* Sidebar (Desktop) */}
-      <nav className="sidebar" style={{display:'none'}} id="sidebar">
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:28,padding:'0 4px'}}>
-          <div style={{width:36,height:36,padding:8,borderRadius:12,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}><IWrench/></div>
-          <div><span style={{fontSize:15,fontWeight:900,color:'var(--text)',display:'block'}}>VynixPanelB</span><span style={{fontSize:10,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:600}}>MECHANIC</span></div>
-        </div>
-        <div style={{display:'flex',flexDirection:'column',gap:4,flex:1}}>
-          {[{id:'dashboard',l:'Dashboard',I:IDash},{id:'wizard',l:'Check-In Vehicle',I:ICar}].map(({id,l,I})=>(
-            <button key={id} className={`snav-item ${view===id?'active':''}`} onClick={()=>changeView(id)}><I/> {l}</button>
-          ))}
-        </div>
-        <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
-          <div style={{display:'flex',justifyContent:'center',marginBottom:16}}><DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/></div>
-          <div className="surface" onClick={()=>setIsAccountOpen(true)} style={{display:'flex',alignItems:'center',gap:10,padding:'12px',borderRadius:'16px',cursor:'pointer',transition:'background 0.2s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(77,123,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='var(--surface)'}>
-            <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
-            <div style={{overflow:'hidden',flex:1}}>
-              <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.name||'Mechanic'}</p>
-              <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.shop||'Workshop'}</p>
-            </div>
-          </div>
-        </div>
-      </nav>
+  return(
+    <div style={{minHeight:'100dvh',display:'flex',flexDirection:'row'}}>
+      {/* Sidebar (Desktop) */}
+      <nav className="sidebar" style={{display:'none'}} id="sidebar">
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:28,padding:'0 4px'}}>
+          <div style={{width:36,height:36,padding:8,borderRadius:12,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff',flexShrink:0}}><IWrench/></div>
+          <div><span style={{fontSize:15,fontWeight:900,color:'var(--text)',display:'block'}}>VynixPanelB</span><span style={{fontSize:10,color:'var(--accent)',fontFamily:'JetBrains Mono',fontWeight:600}}>MECHANIC</span></div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:4,flex:1}}>
+          {[{id:'dashboard',l:'Dashboard',I:IDash},{id:'wizard',l:'Check-In Vehicle',I:ICar}].map(({id,l,I})=>(
+            <button key={id} className={`snav-item ${view===id?'active':''}`} onClick={()=>changeView(id)}><I/> {l}</button>
+          ))}
+        </div>
+        <div style={{borderTop:'1px solid var(--border)',paddingTop:16}}>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:16}}><DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/></div>
+          <div className="surface" onClick={()=>setIsAccountOpen(true)} style={{display:'flex',alignItems:'center',gap:10,padding:'12px',borderRadius:'16px',cursor:'pointer',transition:'background 0.2s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(77,123,255,0.06)'} onMouseLeave={e=>e.currentTarget.style.background='var(--surface)'}>
+            <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} alt="" style={{width:36,height:36,borderRadius:'50%',border:'1px solid var(--border)',flexShrink:0}}/>
+            <div style={{overflow:'hidden',flex:1}}>
+              <p style={{fontSize:13,fontWeight:700,color:'var(--text)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.name||'Mechanic'}</p>
+              <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile.shop||'Workshop'}</p>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-      {/* Main */}
-      <SwipeContainer view={view} setView={v=>{if(v==='account')setIsAccountOpen(true);else changeView(v);}}>
-        <main id="main-content" style={{flex:1,padding:'16px',paddingBottom:'calc(88px + env(safe-area-inset-bottom))',overflowY:'auto',minHeight:'100dvh'}}>
-          <div style={{maxWidth:760,margin:'0 auto'}}>
-            <header className="md:hidden" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:34,height:34,padding:7,borderRadius:11,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff'}}><IWrench/></div>
-                <div><p style={{fontSize:15,fontWeight:900,color:'var(--text)',margin:0}}>VynixPanelB</p><p style={{fontSize:9,color:'var(--accent)',margin:0,fontFamily:'JetBrains Mono',fontWeight:600}}>MECHANIC TERMINAL</p></div>
-              </div>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
-                <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} onClick={()=>setIsAccountOpen(true)} alt="" style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border)',cursor:'pointer',transition:'transform .2s'}} onMouseEnter={e=>e.target.style.transform='scale(1.08)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
-              </div>
-            </header>
-            <div className="hidden md:block h-[20px]"/>
-            <div key={view} className={viewAnimClass}>
-              {view==='wizard'?<IntakeWizard onDone={()=>{changeView('dashboard');showToast('Quote submitted!','🚗','var(--green)');}} profile={profile} systemData={systemData}/>:<JobsDash jobs={jobs} onNew={()=>changeView('wizard')} profile={profile} showToast={showToast}/>}
-            </div>
-          </div>
-        </main>
-      </SwipeContainer>
+      {/* Main */}
+      <SwipeContainer view={view} setView={v=>{if(v==='account')setIsAccountOpen(true);else changeView(v);}}>
+        <main id="main-content" style={{flex:1,padding:'16px',paddingBottom:'calc(88px + env(safe-area-inset-bottom))',overflowY:'auto',minHeight:'100dvh'}}>
+          <div style={{maxWidth:760,margin:'0 auto'}}>
+            <header className="md:hidden" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:34,height:34,padding:7,borderRadius:11,background:'linear-gradient(135deg,#1a4fff,#0033e6)',color:'#fff'}}><IWrench/></div>
+                <div><p style={{fontSize:15,fontWeight:900,color:'var(--text)',margin:0}}>VynixPanelB</p><p style={{fontSize:9,color:'var(--accent)',margin:0,fontFamily:'JetBrains Mono',fontWeight:600}}>MECHANIC TERMINAL</p></div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <DarkModePill dark={dark} onToggle={()=>setDark(!dark)}/>
+                <img src={user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=1a4fff&color=fff`} onClick={()=>setIsAccountOpen(true)} alt="" style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border)',cursor:'pointer',transition:'transform .2s'}} onMouseEnter={e=>e.target.style.transform='scale(1.08)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
+              </div>
+            </header>
+            <div className="hidden md:block h-[20px]"/>
+            <div key={view} className={viewAnimClass}>
+              {view==='wizard'?<IntakeWizard onDone={()=>{changeView('dashboard');showToast('Quote submitted!','🚗','var(--green)');}} profile={profile} systemData={systemData}/>:<JobsDash jobs={jobs} onNew={()=>changeView('wizard')} profile={profile} showToast={showToast}/>}
+            </div>
+          </div>
+        </main>
+      </SwipeContainer>
 
-      {/* Mobile Nav */}
-      <nav className="mobile-nav md:hidden">
-        <button className={`mnav-btn ${view==='dashboard'?'active':''}`} onClick={()=>changeView('dashboard')}>
-          <div className="nav-icon-wrap"><IDash/></div> HOME
-        </button>
-        <button className="mnav-fab" onClick={()=>changeView('wizard')}><ICar/></button>
-        <button className={`mnav-btn ${isAccountOpen?'active':''}`} onClick={()=>setIsAccountOpen(true)} style={{color:isAccountOpen?'var(--accent)':'var(--text3)'}}>
-          <div className="nav-icon-wrap"><IUser/></div> ACCOUNT
-        </button>
-      </nav>
+      {/* Mobile Nav */}
+      <nav className="mobile-nav md:hidden">
+        <button className={`mnav-btn ${view==='dashboard'?'active':''}`} onClick={()=>changeView('dashboard')}>
+          <div className="nav-icon-wrap"><IDash/></div> HOME
+        </button>
+        <button className="mnav-fab" onClick={()=>changeView('wizard')}><ICar/></button>
+        <button className={`mnav-btn ${isAccountOpen?'active':''}`} onClick={()=>setIsAccountOpen(true)} style={{color:isAccountOpen?'var(--accent)':'var(--text3)'}}>
+          <div className="nav-icon-wrap"><IUser/></div> ACCOUNT
+        </button>
+      </nav>
 
-      {/* Account Modal */}
-      {isAccountOpen&&<AccountPanel user={user} profile={profile} setProfile={setProfile} onClose={()=>setIsAccountOpen(false)} onSignOut={()=>{setIsAccountOpen(false);auth.signOut().then(()=>window.location.replace('login.html'));}} dark={dark} onToggleDark={()=>setDark(d=>!d)}/>}
+      {/* Account Modal */}
+      {isAccountOpen&&<AccountPanel user={user} profile={profile} setProfile={setProfile} onClose={()=>setIsAccountOpen(false)} onSignOut={()=>{setIsAccountOpen(false);auth.signOut().then(()=>window.location.replace('login.html'));}} dark={dark} onToggleDark={()=>setDark(d=>!d)}/>}
 
-      {/* Toast */}
-      {toast&&<Toast key={toast.key} message={toast.msg} icon={toast.icon} color={toast.color} onDone={()=>setToast(null)}/>}
-    </div>
-  );
+      {/* Toast */}
+      {toast&&<Toast key={toast.key} message={toast.msg} icon={toast.icon} color={toast.color} onDone={()=>setToast(null)}/>}
+    </div>
+  );
 }
 
 const sidebarStyle=document.createElement('style');
