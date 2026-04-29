@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
 
   <style>
     :root {
@@ -165,7 +165,6 @@
     #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--accent); margin-bottom: 16px; }
     #reader video { object-fit: cover; border-radius: 10px; width: 100% !important; }
 
-    /* Damage Map CSS */
     .damage-pin { position:absolute; width:16px; height:16px; background:var(--red); border-radius:50%; border:2px solid #fff; transform:translate(-50%,-50%); box-shadow:0 2px 8px rgba(255,0,0,0.5); cursor:pointer; animation:scaleIn 0.2s cubic-bezier(.16,1,.3,1); z-index:10; display:flex; justify-content:center; align-items:center;}
     .damage-pin::after { content:''; position:absolute; width:4px; height:4px; background:#fff; border-radius:50%; }
   </style>
@@ -268,30 +267,37 @@ const IMic=({active})=> <svg className="w-4 h-4" fill="none" stroke="currentColo
 /* ── INNER SCANNER COMPONENT ── */
 function ScannerInner({ onClose, onScanResult }) {
   useEffect(() => {
-    const html5QrCode = new Html5Qrcode("reader");
+    let html5QrCode;
     let scannerIsRunning = false;
-    html5QrCode.start(
-      { facingMode: "environment" }, 
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        if (scannerIsRunning) {
-          html5QrCode.stop().then(() => {
-            scannerIsRunning = false;
-            onScanResult(decodedText);
-          }).catch(console.error);
-        }
-      },
-      (errorMessage) => {}
-    ).then(() => {
-      scannerIsRunning = true;
-    }).catch(err => {
-      console.warn("Camera start failed:", err);
-      alert("Could not access camera. Ensure you are on a secure (HTTPS) connection or localhost.");
+    
+    try {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          if (scannerIsRunning) {
+            html5QrCode.stop().then(() => {
+              scannerIsRunning = false;
+              onScanResult(decodedText);
+            }).catch(console.error);
+          }
+        },
+        (errorMessage) => {}
+      ).then(() => {
+        scannerIsRunning = true;
+      }).catch(err => {
+        console.warn("Camera start failed:", err);
+        alert("Could not access camera. Ensure you are on a secure (HTTPS) connection or localhost.");
+        onClose();
+      });
+    } catch(e) {
+      alert("Scanner library failed to load.");
       onClose();
-    });
+    }
 
     return () => {
-      if (scannerIsRunning) {
+      if (scannerIsRunning && html5QrCode) {
         html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(console.error);
       }
     };
@@ -317,14 +323,14 @@ function ScannerModal({ onClose, onScanResult }) {
   );
 }
 
-/* ── INTERACTIVE DAMAGE MAP COMPONENT ── */
-function DamageMap({ pins, onAddPin, onRemovePin, readOnly = false }) {
+/* ── INTERACTIVE DAMAGE MAP COMPONENT (BULLETPROOF FALLBACK) ── */
+function DamageMap({ pins = [], onAddPin, onRemovePin, readOnly = false }) {
   const containerRef = useRef(null);
+  const safePins = Array.isArray(pins) ? pins : [];
 
   const handleClick = (e) => {
     if (readOnly || !onAddPin) return;
     const rect = containerRef.current.getBoundingClientRect();
-    // Calculate percentage coordinates
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     onAddPin({ x, y, id: Date.now() });
@@ -347,8 +353,8 @@ function DamageMap({ pins, onAddPin, onRemovePin, readOnly = false }) {
            <path d="M 30 10 L 30 45 M 70 10 L 70 45" />
         </svg>
 
-        {/* Render Pins */}
-        {pins.map(pin => (
+        {/* Render Pins safely */}
+        {safePins.map(pin => (
           <div 
             key={pin.id} 
             className="damage-pin"
@@ -567,7 +573,7 @@ function CarSelector({onSelect,sysCars, showToast}){
             <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 4px' }}>Service History</h3>
             <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 20px' }}>{reg.toUpperCase()}</p>
             <div style={{maxHeight:'50vh', overflowY:'auto'}}>
-              {history.map((hJob, i) => (
+              {(history || []).map((hJob, i) => (
                 <div key={i} className="history-card">
                   <div style={{display:'flex', justifyContent:'space-between', marginBottom:6}}>
                     <span style={{fontWeight:700, color:'var(--text)'}}>{new Date(hJob.createdAt).toLocaleDateString('en-ZA', {year:'numeric', month:'short', day:'numeric'})}</span>
@@ -616,7 +622,6 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices, showToast}){
 
   const removePhoto = (index) => setPhotos(prev => prev.filter((_, i) => i !== index));
 
-  // Speech Recognition Logic
   const toggleVoiceDictation = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -625,7 +630,6 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices, showToast}){
     }
 
     if (isListening) {
-      // It will auto-stop soon, but we flag it
       setIsListening(false);
     } else {
       const recognition = new SpeechRecognition();
@@ -679,15 +683,13 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices, showToast}){
         );})}
       </div>
 
-      {/* Media, Map & Notes Section */}
       <div style={{background:'var(--surface2)', borderRadius: 16, padding: 14, border: '1px solid var(--border)'}}>
         
-        {/* Interactive Damage Map Component */}
         <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',display:'block',letterSpacing:'0.5px'}}>EXISTING DAMAGE MAP</label>
         <DamageMap 
-          pins={damagePins} 
-          onAddPin={pin => setDamagePins(p => [...p, pin])} 
-          onRemovePin={id => setDamagePins(p => p.filter(pin => pin.id !== id))} 
+          pins={damagePins || []} 
+          onAddPin={pin => setDamagePins(p => [...(p || []), pin])} 
+          onRemovePin={id => setDamagePins(p => (p || []).filter(pin => pin.id !== id))} 
         />
         
         <div style={{height:1, background:'var(--border)', margin:'14px 0'}} />
@@ -704,7 +706,7 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices, showToast}){
         
         <input type="file" accept="image/*" capture="environment" hidden ref={fileRef} onChange={handlePhotoCapture} />
         
-        {photos.length > 0 && (
+        {(photos || []).length > 0 && (
           <div className="no-swipe" style={{display:'flex', gap:8, overflowX:'auto', marginBottom:12, paddingBottom:4}}>
             {photos.map((url, idx) => (
               <div key={idx} style={{position:'relative', width:64, height:64, flexShrink:0, borderRadius:12, overflow:'hidden', border:'1px solid var(--border)'}}>
@@ -752,18 +754,18 @@ function QuoteReview({vehicle,services,notes,photos,damagePins,onBack,onSubmit,s
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}><span style={{fontSize:15,fontWeight:800,color:'var(--accent)'}}>GRAND TOTAL</span><span className="mono" style={{fontSize:22,fontWeight:800,color:'var(--accent)'}}>R {grand.toFixed(2)}</span></div>
       </div>
       
-      {(notes || photos?.length > 0 || damagePins?.length > 0) && (
+      {(notes || (photos && photos.length > 0) || (damagePins && damagePins.length > 0)) && (
         <div style={{padding:12,borderRadius:12,background:'var(--surface)',border:'1px solid var(--border)'}}>
           <p style={{fontSize:11,fontWeight:700,color:'var(--text)',margin:'0 0 8px',letterSpacing:'0.5px'}}>OBSERVATIONS</p>
           
-          {damagePins?.length > 0 && (
+          {damagePins && damagePins.length > 0 && (
             <div style={{background:'var(--input-bg)', borderRadius:8, padding:8, marginBottom:10}}>
               <p style={{fontSize:10, fontWeight:700, color:'var(--text2)', margin:'0 0 4px'}}>Damage Map ({damagePins.length} pins)</p>
               <DamageMap pins={damagePins} readOnly={true} />
             </div>
           )}
 
-          {photos?.length > 0 && (
+          {photos && photos.length > 0 && (
             <div className="no-swipe" style={{display:'flex', gap:6, overflowX:'auto', marginBottom: notes ? 10 : 0}}>
               {photos.map((url, idx) => <img key={idx} src={url} style={{width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid var(--border)'}} />)}
             </div>
@@ -991,7 +993,7 @@ function JobsDash({onNew,profile,jobs,showToast}){
                     <p style={{fontSize:14,fontWeight:700,color:'var(--text)',margin:0}}>{job.vehicle?.make} {job.vehicle?.model}
                       <span className="mono" style={{fontSize:10,color:'var(--text3)',marginLeft:8}}>{job.vehicle?.reg}</span>
                     </p>
-                    <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{job.services?.length} services · {job.mechanic?.name} · {job.createdAt?new Date(job.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):''}</p>
+                    <p style={{fontSize:11,color:'var(--text3)',margin:'2px 0 0'}}>{(job.services || []).length} services · {job.mechanic?.name} · {job.createdAt?new Date(job.createdAt).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}):''}</p>
                   </div>
                   <div style={{flexShrink:0,textAlign:'right'}}>
                     <span style={{display:'inline-flex',padding:'3px 10px',borderRadius:100,fontSize:10,fontWeight:700,fontFamily:'JetBrains Mono',background:sUI.bg,color:sUI.c,border:`1px solid ${sUI.b}`}}>
@@ -1004,19 +1006,19 @@ function JobsDash({onNew,profile,jobs,showToast}){
                   <div className="job-expand" style={{padding:'0 20px 16px',background:'var(--surface2)'}}>
                     <div style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:16,padding:14}}>
                       <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:8}}>SERVICES REQUESTED</p>
-                      {job.services?.map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}><span style={{color:'var(--text2)'}}>{s.icon} {s.name}{s.qty>1?` ×${s.qty}`:''}</span><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {s.total}</span></div>)}
+                      {(job.services || []).map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}><span style={{color:'var(--text2)'}}>{s.icon} {s.name}{s.qty>1?` ×${s.qty}`:''}</span><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {s.total}</span></div>)}
                       <div style={{display:'flex',justifyContent:'space-between',marginTop:10,paddingTop:8,borderTop:'1px solid var(--border)'}}><span style={{fontWeight:800,color:'var(--accent)'}}>Grand Total (incl. VAT)</span><span className="mono" style={{fontWeight:800,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(2)}</span></div>
                       
-                      {/* Render Damage Map if any */}
-                      {job.damagePins?.length > 0 && (
+                      {/* Render Damage Map safely */}
+                      {job.damagePins && job.damagePins.length > 0 && (
                         <div style={{marginTop: 12, background:'var(--input-bg)', borderRadius:8, padding:8}}>
                           <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:6}}>DAMAGE LOG ({job.damagePins.length})</p>
                           <DamageMap pins={job.damagePins} readOnly={true} />
                         </div>
                       )}
 
-                      {/* Render Photos if any */}
-                      {job.photos?.length > 0 && (
+                      {/* Render Photos safely */}
+                      {job.photos && job.photos.length > 0 && (
                         <div className="no-swipe" style={{marginTop: 12, display: 'flex', gap: 8, overflowX: 'auto'}}>
                            {job.photos.map((p, i) => <img key={i} src={p} style={{width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)'}}/>)}
                         </div>
