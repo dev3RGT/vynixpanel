@@ -170,8 +170,9 @@
     
     .history-card { padding:12px; border-radius:12px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; font-size:13px; }
 
-    #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--accent); }
-    #reader video { object-fit: cover; }
+    /* Target specific styles for the video stream so it doesn't break the UI */
+    #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--accent); margin-bottom: 16px; }
+    #reader video { object-fit: cover; border-radius: 10px; width: 100% !important; }
   </style>
 </head>
 <body>
@@ -268,40 +269,67 @@ const IClock=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" view
 const IHistory=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
 const IBarcode=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h4v16H4zm6 0h2v16h-2zm4 0h6v16h-6z" /></svg>;
 
-/* ── SCANNER MODAL (FOR SA LICENSE DISCS) ── */
-function ScannerModal({ onClose, onScanResult }) {
-  const scannerRef = useRef(null);
-
+/* ── INNER SCANNER COMPONENT (FIXES THE BLANK PAGE BUG) ── */
+function ScannerInner({ onClose, onScanResult }) {
   useEffect(() => {
-    // Initialize html5-qrcode
+    // We instantiate Html5Qrcode only AFTER this component actually mounts inside the Portal DOM
     const html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    let scannerIsRunning = false;
 
-    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-      html5QrCode.stop().then(() => {
-        onScanResult(decodedText);
-      });
+    html5QrCode.start(
+      { facingMode: "environment" }, 
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        // Success callback
+        if (scannerIsRunning) {
+          html5QrCode.stop().then(() => {
+            scannerIsRunning = false;
+            onScanResult(decodedText);
+          }).catch(console.error);
+        }
+      },
+      (errorMessage) => {
+        // Ignore constant scanning errors (expected behavior while searching for barcode)
+      }
+    ).then(() => {
+      scannerIsRunning = true;
     }).catch(err => {
-      console.warn("Scanner error:", err);
+      console.warn("Camera start failed:", err);
+      alert("Could not access camera. Ensure you are on a secure (HTTPS) connection or localhost, and that camera permissions are granted.");
+      onClose(); // Auto-close if camera fails so you aren't stuck
     });
 
+    // Cleanup when component unmounts (e.g. user clicks cancel)
     return () => {
-      if (html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
+      if (scannerIsRunning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+        }).catch(console.error);
       }
     };
-  }, []);
+  }, [onClose, onScanResult]);
 
+  return (
+    <div className="responsive-panel" style={{ textAlign: 'center' }}>
+      <div className="sheet-handle" />
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Scan License Disc</h3>
+      <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>Align the barcode within the frame</p>
+      
+      {/* The critically important ID "reader" must be here */}
+      <div id="reader"></div>
+      
+      <button className="btn-g" onClick={onClose} style={{ width: '100%', marginTop: 16 }}>Cancel</button>
+    </div>
+  );
+}
+
+/* ── SCANNER MODAL WRAPPER ── */
+function ScannerModal({ onClose, onScanResult }) {
+  // The Portal mounts first, THEN the inner component safely mounts into the DOM
   return (
     <Portal>
       <div className="modal-overlay" onClick={onClose} />
-      <div className="responsive-panel" style={{ textAlign: 'center' }}>
-        <div className="sheet-handle" />
-        <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Scan License Disc</h3>
-        <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>Align the barcode within the frame</p>
-        <div id="reader"></div>
-        <button className="btn-g" onClick={onClose} style={{ width: '100%', marginTop: 16 }}>Cancel</button>
-      </div>
+      <ScannerInner onClose={onClose} onScanResult={onScanResult} />
     </Portal>
   );
 }
@@ -376,7 +404,6 @@ function SignaturePad({ onChange }) {
   );
 }
 
-
 /* ── TOAST ── */
 function Toast({message, icon='✓', color='var(--green)', onDone}){
   const [phase, setPhase] = useState('in');
@@ -417,7 +444,7 @@ function ConfirmDialog({title,message,onConfirm,onCancel,confirmLabel='Confirm',
   </Portal>;
 }
 
-/* ── CAR SELECTOR (Updated with Scanner) ── */
+/* ── CAR SELECTOR (Updated with Scanner Fixes) ── */
 function CarSelector({onSelect,sysCars, showToast}){
   const [make,setMake]=useState('');
   const [model,setModel]=useState('');
@@ -474,25 +501,25 @@ function CarSelector({onSelect,sysCars, showToast}){
     return () => clearTimeout(timer);
   }, [reg, vin]);
 
-  // Parser for South African License Disc Barcode
-  const handleScanResult = (decodedText) => {
+  // Robust SA License Disc Parser
+  const handleScanResult = useCallback((decodedText) => {
     setIsScanning(false);
+    
     try {
-      // SA Discs are typically separated by '%' 
-      // Expected indices: 6 = Reg, 8 = Make, 9 = Model, 11 = VIN, 12 = Engine
       const parts = decodedText.split('%');
       
-      if (parts.length > 10) {
+      // Usually, SA discs have a lot of % separated fields
+      if (parts.length > 8) {
         setReg(parts[6] || '');
         setVin(parts[11] || '');
         setEngine(parts[12] || '');
         
-        // Attempt to auto-match Make and Model against system catalog if possible
+        // Attempt to auto-match Make and Model against system catalog
         const scannedMake = parts[8] || '';
         const scannedModel = parts[9] || '';
         
-        // Simple heuristic matching
-        const matchedMake = makes.find(m => m.toLowerCase() === scannedMake.toLowerCase());
+        // Simple heuristic matching for car databases
+        const matchedMake = makes.find(m => m.toLowerCase() === scannedMake.toLowerCase() || scannedMake.toLowerCase().includes(m.toLowerCase()));
         if (matchedMake) {
           setMake(matchedMake);
           const availableModels = Object.keys(sysCars[matchedMake] || {});
@@ -502,15 +529,15 @@ function CarSelector({onSelect,sysCars, showToast}){
         
         if(showToast) showToast('Disc Scanned Successfully!', '📷', 'var(--green)');
       } else {
-        // Fallback if not standard SA format
+        // Fallback for generic barcodes
         setVin(decodedText);
-        if(showToast) showToast('Barcode Scanned. Format unknown.', '⚠️', 'var(--amber)');
+        if(showToast) showToast('Barcode parsed. Unknown Disc Format.', '⚠️', 'var(--amber)');
       }
     } catch (e) {
-      console.error(e);
+      console.error("Parse Error: ", e);
       alert("Failed to parse barcode data.");
     }
-  };
+  }, [makes, sysCars, showToast]);
 
   const canProceed=make&&model&&year&&engine&&reg;
   
@@ -523,7 +550,7 @@ function CarSelector({onSelect,sysCars, showToast}){
 
       {/* Scanner Button */}
       <button className="btn-p" onClick={() => setIsScanning(true)} style={{background:'rgba(77,123,255,0.1)', color:'var(--accent)', border:'1px solid rgba(77,123,255,0.3)', width:'100%', boxShadow:'none'}}>
-        <IBarcode /> Scan License Disc
+        <IBarcode /> Scan SA License Disc
       </button>
       
       <div ref={ref} style={{position:'relative'}}>
@@ -554,7 +581,7 @@ function CarSelector({onSelect,sysCars, showToast}){
       
       <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
 
-      {/* Scanner Overlay */}
+      {/* Scanner Overlay safely mounting the camera into DOM */}
       {isScanning && <ScannerModal onClose={() => setIsScanning(false)} onScanResult={handleScanResult} />}
 
       {/* History Modal */}
