@@ -49,9 +49,6 @@
     .mono{font-family:'JetBrains Mono',monospace}
 
     @keyframes slideUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
-    @keyframes slideDown{0%{opacity:0;transform:translateY(-12px)}100%{opacity:1;transform:translateY(0)}}
-    @keyframes slideLeft{0%{opacity:0;transform:translateX(32px)}100%{opacity:1;transform:translateX(0)}}
-    @keyframes slideRight{0%{opacity:0;transform:translateX(-32px)}100%{opacity:1;transform:translateX(0)}}
     @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
     @keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
     @keyframes overlayIn{0%{opacity:0}100%{opacity:1}}
@@ -61,15 +58,12 @@
     @keyframes scaleIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}
     @keyframes expandDown{0%{opacity:0;max-height:0;transform:translateY(-8px)}100%{opacity:1;max-height:600px;transform:translateY(0)}}
     @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-    @keyframes glow{0%,100%{box-shadow:0 0 8px var(--accent-glow)}50%{box-shadow:0 0 22px var(--accent-glow)}}
-    @keyframes navPop{0%{transform:scale(0.8) translateY(4px);opacity:0}60%{transform:scale(1.12) translateY(-2px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
     @keyframes cardEnter{0%{opacity:0;transform:translateY(14px) scale(0.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes toastIn{0%{opacity:0;transform:translateY(30px) scale(0.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes toastOut{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(20px) scale(0.9)}}
+    @keyframes micPulse{0%{box-shadow:0 0 0 0 rgba(255,80,80,0.4)}70%{box-shadow:0 0 0 10px rgba(255,80,80,0)}100%{box-shadow:0 0 0 0 rgba(255,80,80,0)}}
     
     .anim-up{animation:slideUp .38s cubic-bezier(.16,1,.3,1) forwards}
-    .anim-left{animation:slideLeft .38s cubic-bezier(.16,1,.3,1) forwards}
-    .anim-right{animation:slideRight .38s cubic-bezier(.16,1,.3,1) forwards}
     .anim-fade{animation:fadeIn .3s ease forwards}
     .anim-scale{animation:scaleIn .3s cubic-bezier(.16,1,.3,1) forwards}
     .overlay-in{animation:overlayIn .22s ease forwards}
@@ -93,8 +87,6 @@
     .mnav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 14px;border:none;background:transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.6px;color:var(--text3);transition:all .25s;position:relative;overflow:hidden;border-radius:14px}
     .mnav-btn.active{color:var(--accent)}
     .mnav-btn.active::after{content:'';position:absolute;bottom:2px;width:18px;height:3px;background:var(--accent);border-radius:100px;animation:scaleIn .2s ease}
-    .mnav-btn .nav-icon-wrap{transition:all .25s;will-change:transform}
-    .mnav-btn.active .nav-icon-wrap{animation:navPop .35s cubic-bezier(.16,1,.3,1) forwards}
     .mnav-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px var(--accent-glow);transform:translateY(-12px);transition:all .22s}
     .mnav-fab:active{transform:translateY(-10px) scale(0.95)}
     
@@ -170,9 +162,12 @@
     
     .history-card { padding:12px; border-radius:12px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; font-size:13px; }
 
-    /* Target specific styles for the video stream so it doesn't break the UI */
     #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--accent); margin-bottom: 16px; }
     #reader video { object-fit: cover; border-radius: 10px; width: 100% !important; }
+
+    /* Damage Map CSS */
+    .damage-pin { position:absolute; width:16px; height:16px; background:var(--red); border-radius:50%; border:2px solid #fff; transform:translate(-50%,-50%); box-shadow:0 2px 8px rgba(255,0,0,0.5); cursor:pointer; animation:scaleIn 0.2s cubic-bezier(.16,1,.3,1); z-index:10; display:flex; justify-content:center; align-items:center;}
+    .damage-pin::after { content:''; position:absolute; width:4px; height:4px; background:#fff; border-radius:50%; }
   </style>
 </head>
 <body>
@@ -268,19 +263,17 @@ const ICamera=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" vie
 const IClock=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/></svg>;
 const IHistory=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
 const IBarcode=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h4v16H4zm6 0h2v16h-2zm4 0h6v16h-6z" /></svg>;
+const IMic=({active})=> <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" style={{color: active ? 'var(--red)' : 'inherit'}}><path strokeLinecap="round" strokeLinejoin="round" d="M12 1v10M8 5v6M16 5v6M4 9v2M20 9v2M12 23v-4M8 19h8" /></svg>;
 
-/* ── INNER SCANNER COMPONENT (FIXES THE BLANK PAGE BUG) ── */
+/* ── INNER SCANNER COMPONENT ── */
 function ScannerInner({ onClose, onScanResult }) {
   useEffect(() => {
-    // We instantiate Html5Qrcode only AFTER this component actually mounts inside the Portal DOM
     const html5QrCode = new Html5Qrcode("reader");
     let scannerIsRunning = false;
-
     html5QrCode.start(
       { facingMode: "environment" }, 
       { fps: 10, qrbox: { width: 250, height: 250 } },
       (decodedText) => {
-        // Success callback
         if (scannerIsRunning) {
           html5QrCode.stop().then(() => {
             scannerIsRunning = false;
@@ -288,23 +281,18 @@ function ScannerInner({ onClose, onScanResult }) {
           }).catch(console.error);
         }
       },
-      (errorMessage) => {
-        // Ignore constant scanning errors (expected behavior while searching for barcode)
-      }
+      (errorMessage) => {}
     ).then(() => {
       scannerIsRunning = true;
     }).catch(err => {
       console.warn("Camera start failed:", err);
-      alert("Could not access camera. Ensure you are on a secure (HTTPS) connection or localhost, and that camera permissions are granted.");
-      onClose(); // Auto-close if camera fails so you aren't stuck
+      alert("Could not access camera. Ensure you are on a secure (HTTPS) connection or localhost.");
+      onClose();
     });
 
-    // Cleanup when component unmounts (e.g. user clicks cancel)
     return () => {
       if (scannerIsRunning) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-        }).catch(console.error);
+        html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(console.error);
       }
     };
   }, [onClose, onScanResult]);
@@ -314,23 +302,66 @@ function ScannerInner({ onClose, onScanResult }) {
       <div className="sheet-handle" />
       <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Scan License Disc</h3>
       <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>Align the barcode within the frame</p>
-      
-      {/* The critically important ID "reader" must be here */}
       <div id="reader"></div>
-      
       <button className="btn-g" onClick={onClose} style={{ width: '100%', marginTop: 16 }}>Cancel</button>
     </div>
   );
 }
 
-/* ── SCANNER MODAL WRAPPER ── */
 function ScannerModal({ onClose, onScanResult }) {
-  // The Portal mounts first, THEN the inner component safely mounts into the DOM
   return (
     <Portal>
       <div className="modal-overlay" onClick={onClose} />
       <ScannerInner onClose={onClose} onScanResult={onScanResult} />
     </Portal>
+  );
+}
+
+/* ── INTERACTIVE DAMAGE MAP COMPONENT ── */
+function DamageMap({ pins, onAddPin, onRemovePin, readOnly = false }) {
+  const containerRef = useRef(null);
+
+  const handleClick = (e) => {
+    if (readOnly || !onAddPin) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    // Calculate percentage coordinates
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    onAddPin({ x, y, id: Date.now() });
+  };
+
+  return (
+    <div style={{width:'100%', maxWidth:240, margin:'0 auto', position:'relative', padding:'10px 0'}}>
+      <div ref={containerRef} onClick={handleClick} style={{width:'100%', position:'relative', cursor: readOnly ? 'default' : 'crosshair'}}>
+        {/* Simple Top-Down Car SVG */}
+        <svg viewBox="0 0 100 200" fill="none" stroke="var(--text3)" strokeWidth="2" style={{width:'100%', display:'block', opacity:0.6}}>
+           <rect x="20" y="10" width="60" height="180" rx="15" fill="var(--input-bg)" />
+           <rect x="25" y="45" width="50" height="30" rx="5" fill="var(--bg2)"/> 
+           <rect x="25" y="130" width="50" height="35" rx="5" fill="var(--bg2)"/>
+           {/* Tires */}
+           <rect x="14" y="30" width="6" height="24" rx="2" fill="var(--text3)" stroke="none"/>
+           <rect x="80" y="30" width="6" height="24" rx="2" fill="var(--text3)" stroke="none"/>
+           <rect x="14" y="146" width="6" height="24" rx="2" fill="var(--text3)" stroke="none"/>
+           <rect x="80" y="146" width="6" height="24" rx="2" fill="var(--text3)" stroke="none"/>
+           {/* Hood Lines */}
+           <path d="M 30 10 L 30 45 M 70 10 L 70 45" />
+        </svg>
+
+        {/* Render Pins */}
+        {pins.map(pin => (
+          <div 
+            key={pin.id} 
+            className="damage-pin"
+            style={{left: `${pin.x}%`, top: `${pin.y}%`}}
+            onClick={(e) => {
+              e.stopPropagation();
+              if(!readOnly && onRemovePin) onRemovePin(pin.id);
+            }}
+          />
+        ))}
+      </div>
+      {!readOnly && <p style={{fontSize:10, color:'var(--text3)', textAlign:'center', marginTop:10}}>Tap on the car to mark existing damage. Tap a red pin to remove it.</p>}
+    </div>
   );
 }
 
@@ -404,47 +435,7 @@ function SignaturePad({ onChange }) {
   );
 }
 
-/* ── TOAST ── */
-function Toast({message, icon='✓', color='var(--green)', onDone}){
-  const [phase, setPhase] = useState('in');
-  useEffect(()=>{
-    const t1=setTimeout(()=>setPhase('out'),2000);
-    const t2=setTimeout(()=>onDone&&onDone(),2300);
-    return()=>{clearTimeout(t1);clearTimeout(t2);}
-  },[]);
-  return <div className={`toast ${phase}`} style={{borderColor:`rgba(${color==='var(--green)'?'0,255,136':color==='var(--red)'?'255,80,80':'77,123,255'},.2)`}}>
-    <span style={{color}}>{icon}</span> <span>{message}</span>
-  </div>;
-}
-
-/* ── DARK MODE PILL ── */
-function DarkModePill({dark,onToggle}){
-  return <div className="dm-pill" onClick={onToggle}><div className={`dm-btn ${!dark?'active':''}`}><IScreenLight/></div><div className={`dm-btn ${dark?'active':''}`}><ICircuitDark/></div></div>;
-}
-
-/* ── CONFIRM DIALOG ── */
-function ConfirmDialog({title,message,onConfirm,onCancel,confirmLabel='Confirm',danger=true}){
-  return <Portal>
-    <div className="confirm-overlay" onClick={onCancel}/>
-    <div className="confirm-overlay" style={{alignItems:'center',justifyContent:'center',padding:24}}>
-      <div className="confirm-box" onClick={e=>e.stopPropagation()}>
-        <div style={{width:44,height:44,borderRadius:14,background:danger?'rgba(255,80,80,0.1)':'rgba(77,123,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',fontSize:20}}>
-          {danger?'🗑️':'✏️'}
-        </div>
-        <h3 style={{fontSize:16,fontWeight:800,color:'var(--text)',textAlign:'center',margin:'0 0 8px'}}>{title}</h3>
-        <p style={{fontSize:13,color:'var(--text2)',textAlign:'center',margin:'0 0 24px',lineHeight:1.6}}>{message}</p>
-        <div style={{display:'flex',gap:10}}>
-          <button className="btn-g" onClick={onCancel} style={{flex:1,padding:'11px',fontSize:13,borderRadius:12}}>Cancel</button>
-          <button onClick={onConfirm} style={{flex:1,padding:'11px',fontSize:13,fontWeight:700,borderRadius:12,border:'none',cursor:'pointer',fontFamily:'Inter',background:danger?'rgba(255,80,80,0.9)':'var(--accent)',color:'#fff',transition:'all .18s'}}>
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  </Portal>;
-}
-
-/* ── CAR SELECTOR (Updated with Scanner Fixes) ── */
+/* ── CAR SELECTOR ── */
 function CarSelector({onSelect,sysCars, showToast}){
   const [make,setMake]=useState('');
   const [model,setModel]=useState('');
@@ -457,7 +448,6 @@ function CarSelector({onSelect,sysCars, showToast}){
   const [showDrop,setShowDrop]=useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
-  // History State
   const [history, setHistory] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
@@ -471,12 +461,10 @@ function CarSelector({onSelect,sysCars, showToast}){
   
   useEffect(()=>{const h=(e)=>{if(ref.current&&!ref.current.contains(e.target))setShowDrop(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
 
-  // Automatically check history when typing reg plate OR vin
   useEffect(() => {
     const timer = setTimeout(async () => {
       if ((reg && reg.length >= 4) || (vin && vin.length > 5)) {
         try {
-          // Search by Reg or VIN
           let snap;
           if (reg && reg.length >= 4) {
             snap = await db.ref('workshop_jobs').orderByChild('vehicle/reg').equalTo(reg.toUpperCase()).once('value');
@@ -484,7 +472,6 @@ function CarSelector({onSelect,sysCars, showToast}){
           if ((!snap || !snap.exists()) && vin) {
              snap = await db.ref('workshop_jobs').orderByChild('vehicle/vin').equalTo(vin.toUpperCase()).once('value');
           }
-          
           if (snap && snap.exists()) {
             const hist = [];
             snap.forEach(c => { hist.push({ id: c.key, ...c.val() }); });
@@ -501,24 +488,16 @@ function CarSelector({onSelect,sysCars, showToast}){
     return () => clearTimeout(timer);
   }, [reg, vin]);
 
-  // Robust SA License Disc Parser
   const handleScanResult = useCallback((decodedText) => {
     setIsScanning(false);
-    
     try {
       const parts = decodedText.split('%');
-      
-      // Usually, SA discs have a lot of % separated fields
       if (parts.length > 8) {
         setReg(parts[6] || '');
         setVin(parts[11] || '');
         setEngine(parts[12] || '');
-        
-        // Attempt to auto-match Make and Model against system catalog
         const scannedMake = parts[8] || '';
         const scannedModel = parts[9] || '';
-        
-        // Simple heuristic matching for car databases
         const matchedMake = makes.find(m => m.toLowerCase() === scannedMake.toLowerCase() || scannedMake.toLowerCase().includes(m.toLowerCase()));
         if (matchedMake) {
           setMake(matchedMake);
@@ -526,15 +505,13 @@ function CarSelector({onSelect,sysCars, showToast}){
           const matchedModel = availableModels.find(m => m.toLowerCase().includes(scannedModel.toLowerCase()) || scannedModel.toLowerCase().includes(m.toLowerCase()));
           if (matchedModel) setModel(matchedModel);
         }
-        
         if(showToast) showToast('Disc Scanned Successfully!', '📷', 'var(--green)');
       } else {
-        // Fallback for generic barcodes
         setVin(decodedText);
         if(showToast) showToast('Barcode parsed. Unknown Disc Format.', '⚠️', 'var(--amber)');
       }
     } catch (e) {
-      console.error("Parse Error: ", e);
+      console.error(e);
       alert("Failed to parse barcode data.");
     }
   }, [makes, sysCars, showToast]);
@@ -548,7 +525,6 @@ function CarSelector({onSelect,sysCars, showToast}){
         <p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p>
       </div>
 
-      {/* Scanner Button */}
       <button className="btn-p" onClick={() => setIsScanning(true)} style={{background:'rgba(77,123,255,0.1)', color:'var(--accent)', border:'1px solid rgba(77,123,255,0.3)', width:'100%', boxShadow:'none'}}>
         <IBarcode /> Scan SA License Disc
       </button>
@@ -570,7 +546,7 @@ function CarSelector({onSelect,sysCars, showToast}){
           
           {history && history.length > 0 && (
             <div className="anim-up" style={{background:'rgba(0,144,255,0.08)', border:'1px solid rgba(0,144,255,0.2)', padding:'10px 14px', borderRadius:12, marginTop:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-              <span style={{fontSize:12, color:'var(--cyan)', fontWeight:600}}><IHistory/> Found {history.length} past service{history.length > 1 ? 's' : ''} in your database</span>
+              <span style={{fontSize:12, color:'var(--cyan)', fontWeight:600}}><IHistory/> Found {history.length} past service{history.length > 1 ? 's' : ''}</span>
               <button onClick={() => setShowHistoryModal(true)} style={{background:'var(--cyan)', color:'#fff', border:'none', borderRadius:100, fontSize:11, fontWeight:700, padding:'6px 12px', cursor:'pointer'}}>View History</button>
             </div>
           )}
@@ -581,10 +557,8 @@ function CarSelector({onSelect,sysCars, showToast}){
       
       <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
 
-      {/* Scanner Overlay safely mounting the camera into DOM */}
       {isScanning && <ScannerModal onClose={() => setIsScanning(false)} onScanResult={handleScanResult} />}
 
-      {/* History Modal */}
       {showHistoryModal && (
         <Portal>
           <div className="modal-overlay" onClick={() => setShowHistoryModal(false)} />
@@ -610,17 +584,18 @@ function CarSelector({onSelect,sysCars, showToast}){
           </div>
         </Portal>
       )}
-
     </div>
   );
 }
 
-/* ── SERVICE SELECTOR (WITH CAMERA INTEGRATION) ── */
-function ServiceSelector({vehicle,onBack,onDone,sysServices}){
+/* ── SERVICE SELECTOR (WITH DAMAGE MAP + VOICE-TO-TEXT) ── */
+function ServiceSelector({vehicle,onBack,onDone,sysServices, showToast}){
   const [selected,setSelected]=useState({});
   const [notes,setNotes]=useState('');
   const [photos,setPhotos]=useState([]);
+  const [damagePins, setDamagePins] = useState([]);
   const [activeCategory,setActiveCategory]=useState('');
+  const [isListening, setIsListening] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(()=>{const keys=Object.keys(sysServices);if(!activeCategory&&keys.length>0)setActiveCategory(keys[0]);else if(activeCategory&&!keys.includes(activeCategory)&&keys.length>0)setActiveCategory(keys[0]);},[sysServices,activeCategory]);
@@ -639,8 +614,41 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices}){
     }
   };
 
-  const removePhoto = (index) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+  const removePhoto = (index) => setPhotos(prev => prev.filter((_, i) => i !== index));
+
+  // Speech Recognition Logic
+  const toggleVoiceDictation = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser doesn't support Voice-to-Text. Try Chrome or Safari.");
+      return;
+    }
+
+    if (isListening) {
+      // It will auto-stop soon, but we flag it
+      setIsListening(false);
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsListening(true);
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setNotes(prev => prev + (prev ? ' ' : '') + transcript + '.');
+      };
+
+      recognition.onerror = (e) => {
+        console.error("Speech error", e);
+        if(showToast) showToast('Mic error: ' + e.error, '⚠️', 'var(--red)');
+        setIsListening(false);
+      };
+
+      recognition.onend = () => setIsListening(false);
+      
+      recognition.start();
+    }
   };
 
   const total=Object.values(selected).reduce((s,i)=>s+(i.price*i.qty),0);
@@ -671,11 +679,27 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices}){
         );})}
       </div>
 
-      {/* Media & Notes Section */}
+      {/* Media, Map & Notes Section */}
       <div style={{background:'var(--surface2)', borderRadius: 16, padding: 14, border: '1px solid var(--border)'}}>
+        
+        {/* Interactive Damage Map Component */}
+        <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',display:'block',letterSpacing:'0.5px'}}>EXISTING DAMAGE MAP</label>
+        <DamageMap 
+          pins={damagePins} 
+          onAddPin={pin => setDamagePins(p => [...p, pin])} 
+          onRemovePin={id => setDamagePins(p => p.filter(pin => pin.id !== id))} 
+        />
+        
+        <div style={{height:1, background:'var(--border)', margin:'14px 0'}} />
+
         <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:10,display:'flex',justifyContent:'space-between',alignItems:'center',letterSpacing:'0.5px'}}>
-          <span>MECHANIC NOTES & MEDIA</span>
-          <button onClick={() => fileRef.current?.click()} style={{background:'var(--input-bg)', border:'1px solid var(--accent)', color:'var(--accent)', borderRadius:100, padding:'4px 10px', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', gap:4}}><ICamera/> Add Photo</button>
+          <span>MECHANIC NOTES</span>
+          <div style={{display:'flex', gap:6}}>
+            <button onClick={toggleVoiceDictation} style={{background: isListening ? 'var(--red)' : 'var(--input-bg)', border: isListening ? '1px solid var(--red)' : '1px solid var(--border)', color: isListening ? '#fff' : 'var(--text)', borderRadius:100, padding:'4px 10px', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', gap:4, animation: isListening ? 'micPulse 1.5s infinite' : 'none', transition:'all 0.3s'}}>
+              <IMic active={isListening}/> {isListening ? 'Listening...' : 'Dictate'}
+            </button>
+            <button onClick={() => fileRef.current?.click()} style={{background:'var(--input-bg)', border:'1px solid var(--accent)', color:'var(--accent)', borderRadius:100, padding:'4px 10px', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', gap:4}}><ICamera/> Add Photo</button>
+          </div>
         </label>
         
         <input type="file" accept="image/*" capture="environment" hidden ref={fileRef} onChange={handlePhotoCapture} />
@@ -691,17 +715,17 @@ function ServiceSelector({vehicle,onBack,onDone,sysServices}){
           </div>
         )}
 
-        <textarea className="field" rows={2} placeholder="Additional observations, existing damage, or customer concerns…" value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none'}}/>
+        <textarea className="field" rows={3} placeholder={isListening ? "Listening... speak now" : "Additional observations, existing damage, or customer concerns…"} value={notes} onChange={e=>setNotes(e.target.value)} style={{resize:'none', border: isListening ? '1px solid var(--red)' : ''}}/>
       </div>
 
       {count>0&&<div style={{background:'rgba(77,123,255,0.06)',border:'1px solid rgba(77,123,255,0.18)',borderRadius:16,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontSize:14,color:'var(--text2)'}}>{count} item(s) selected</span><span className="mono" style={{fontSize:18,fontWeight:800,color:'var(--accent)'}}>R {total.toFixed(2)}</span></div>}
-      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}}>Back</button><button className="btn-p" disabled={count===0} onClick={()=>onDone(selected,notes,photos)} style={{flex:1}}>Review Quote <IChev/></button></div>
+      <div style={{display:'flex',gap:10}}><button className="btn-g" onClick={onBack} style={{flex:'0 0 auto'}}>Back</button><button className="btn-p" disabled={count===0} onClick={()=>onDone(selected,notes,photos,damagePins)} style={{flex:1}}>Review Quote <IChev/></button></div>
     </div>
   );
 }
 
 /* ── QUOTE REVIEW ── */
-function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting}){
+function QuoteReview({vehicle,services,notes,photos,damagePins,onBack,onSubmit,submitting}){
   const [signature, setSignature] = useState(null);
 
   const items=Object.values(services);
@@ -728,9 +752,17 @@ function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting})
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(77,123,255,0.2)',paddingTop:12,marginTop:6}}><span style={{fontSize:15,fontWeight:800,color:'var(--accent)'}}>GRAND TOTAL</span><span className="mono" style={{fontSize:22,fontWeight:800,color:'var(--accent)'}}>R {grand.toFixed(2)}</span></div>
       </div>
       
-      {(notes || photos?.length > 0) && (
+      {(notes || photos?.length > 0 || damagePins?.length > 0) && (
         <div style={{padding:12,borderRadius:12,background:'var(--surface)',border:'1px solid var(--border)'}}>
-          <p style={{fontSize:11,fontWeight:700,color:'var(--text)',margin:'0 0 8px',letterSpacing:'0.5px'}}>DOCUMENTS</p>
+          <p style={{fontSize:11,fontWeight:700,color:'var(--text)',margin:'0 0 8px',letterSpacing:'0.5px'}}>OBSERVATIONS</p>
+          
+          {damagePins?.length > 0 && (
+            <div style={{background:'var(--input-bg)', borderRadius:8, padding:8, marginBottom:10}}>
+              <p style={{fontSize:10, fontWeight:700, color:'var(--text2)', margin:'0 0 4px'}}>Damage Map ({damagePins.length} pins)</p>
+              <DamageMap pins={damagePins} readOnly={true} />
+            </div>
+          )}
+
           {photos?.length > 0 && (
             <div className="no-swipe" style={{display:'flex', gap:6, overflowX:'auto', marginBottom: notes ? 10 : 0}}>
               {photos.map((url, idx) => <img key={idx} src={url} style={{width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid var(--border)'}} />)}
@@ -759,6 +791,7 @@ function IntakeWizard({onDone,profile,systemData, showToast}){
   const [services,setServices]=useState({});
   const [notes,setNotes]=useState('');
   const [photos,setPhotos]=useState([]);
+  const [damagePins, setDamagePins] = useState([]);
   const [submitting,setSubmitting]=useState(false);
   const [animDir,setAnimDir]=useState('left');
   
@@ -783,6 +816,7 @@ function IntakeWizard({onDone,profile,systemData, showToast}){
         services:items,
         notes:notes||'',
         photos:photos||[],
+        damagePins:damagePins||[],
         signature:totals.signature||null,
         financials:{laborTotal:totals.laborTotal||0,partsTotal:totals.partsTotal||0,subtotal:totals.subtotal||0,vat:totals.vat||0,grandTotal:totals.grandTotal||0,lineItems:items,laborRate:LABOR},
         mechanic:{uid:auth.currentUser?.uid||'unknown',name:profile?.name||'Mechanic',shop:profile?.shop||'Workshop'},
@@ -814,8 +848,8 @@ function IntakeWizard({onDone,profile,systemData, showToast}){
       <div className="surface" style={{borderRadius:24,padding:'24px 20px',minHeight:400,overflow:'hidden'}}>
         <div key={step} className={animClass}>
           {step===1&&<CarSelector onSelect={v=>{setVehicle(v);goTo(2,'left');}} sysCars={sysCars} showToast={showToast}/>}
-          {step===2&&<ServiceSelector vehicle={vehicle} onBack={()=>goTo(1,'right')} onDone={(s,n,p)=>{setServices(s);setNotes(n);setPhotos(p);goTo(3,'left');}} sysServices={sysServices}/>}
-          {step===3&&<QuoteReview vehicle={vehicle} services={services} notes={notes} photos={photos} onBack={()=>goTo(2,'right')} onSubmit={submit} submitting={submitting}/>}
+          {step===2&&<ServiceSelector vehicle={vehicle} onBack={()=>goTo(1,'right')} onDone={(s,n,p,dp)=>{setServices(s);setNotes(n);setPhotos(p);setDamagePins(dp);goTo(3,'left');}} sysServices={sysServices} showToast={showToast}/>}
+          {step===3&&<QuoteReview vehicle={vehicle} services={services} notes={notes} photos={photos} damagePins={damagePins} onBack={()=>goTo(2,'right')} onSubmit={submit} submitting={submitting}/>}
         </div>
       </div>
     </div>
@@ -973,6 +1007,14 @@ function JobsDash({onNew,profile,jobs,showToast}){
                       {job.services?.map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border2)',fontSize:13}}><span style={{color:'var(--text2)'}}>{s.icon} {s.name}{s.qty>1?` ×${s.qty}`:''}</span><span className="mono" style={{fontWeight:700,color:'var(--text)'}}>R {s.total}</span></div>)}
                       <div style={{display:'flex',justifyContent:'space-between',marginTop:10,paddingTop:8,borderTop:'1px solid var(--border)'}}><span style={{fontWeight:800,color:'var(--accent)'}}>Grand Total (incl. VAT)</span><span className="mono" style={{fontWeight:800,color:'var(--accent)'}}>R {(job.financials?.grandTotal||0).toFixed(2)}</span></div>
                       
+                      {/* Render Damage Map if any */}
+                      {job.damagePins?.length > 0 && (
+                        <div style={{marginTop: 12, background:'var(--input-bg)', borderRadius:8, padding:8}}>
+                          <p className="mono" style={{fontSize:9,fontWeight:700,color:'var(--accent)',letterSpacing:'1px',marginBottom:6}}>DAMAGE LOG ({job.damagePins.length})</p>
+                          <DamageMap pins={job.damagePins} readOnly={true} />
+                        </div>
+                      )}
+
                       {/* Render Photos if any */}
                       {job.photos?.length > 0 && (
                         <div className="no-swipe" style={{marginTop: 12, display: 'flex', gap: 8, overflowX: 'auto'}}>
@@ -1171,7 +1213,6 @@ function SwipeContainer({view, setView, children}){
   const curIdx=VIEWS.indexOf(view);
 
   const handleTouchStart=useCallback(e=>{
-    // Ignore swipe events if starting on a specific no-swipe element
     if(e.target.closest('.no-swipe')) return;
     startX.current=e.touches[0].clientX;
     startY.current=e.touches[0].clientY;
@@ -1182,7 +1223,6 @@ function SwipeContainer({view, setView, children}){
     if(startX.current===null || startY.current===null) return;
     const dx=e.touches[0].clientX-startX.current;
     const dy=e.touches[0].clientY-startY.current;
-    // If user is scrolling vertically more than horizontally, cancel swipe
     if(Math.abs(dy) > Math.abs(dx)) {
       isScrolling.current = true;
     }
