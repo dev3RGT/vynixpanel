@@ -14,6 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
     :root {
@@ -168,6 +169,9 @@
     .profile-edit-field::placeholder{color:var(--text3);font-weight:500}
     
     .history-card { padding:12px; border-radius:12px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; font-size:13px; }
+
+    #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--accent); }
+    #reader video { object-fit: cover; }
   </style>
 </head>
 <body>
@@ -262,6 +266,45 @@ const ISave=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewB
 const ICamera=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="4"/></svg>;
 const IClock=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/></svg>;
 const IHistory=()=><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
+const IBarcode=()=><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h4v16H4zm6 0h2v16h-2zm4 0h6v16h-6z" /></svg>;
+
+/* ── SCANNER MODAL (FOR SA LICENSE DISCS) ── */
+function ScannerModal({ onClose, onScanResult }) {
+  const scannerRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize html5-qrcode
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+      html5QrCode.stop().then(() => {
+        onScanResult(decodedText);
+      });
+    }).catch(err => {
+      console.warn("Scanner error:", err);
+    });
+
+    return () => {
+      if (html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.error);
+      }
+    };
+  }, []);
+
+  return (
+    <Portal>
+      <div className="modal-overlay" onClick={onClose} />
+      <div className="responsive-panel" style={{ textAlign: 'center' }}>
+        <div className="sheet-handle" />
+        <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Scan License Disc</h3>
+        <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px' }}>Align the barcode within the frame</p>
+        <div id="reader"></div>
+        <button className="btn-g" onClick={onClose} style={{ width: '100%', marginTop: 16 }}>Cancel</button>
+      </div>
+    </Portal>
+  );
+}
 
 /* ── SIGNATURE PAD COMPONENT ── */
 function SignaturePad({ onChange }) {
@@ -374,8 +417,8 @@ function ConfirmDialog({title,message,onConfirm,onCancel,confirmLabel='Confirm',
   </Portal>;
 }
 
-/* ── CAR SELECTOR ── */
-function CarSelector({onSelect,sysCars}){
+/* ── CAR SELECTOR (Updated with Scanner) ── */
+function CarSelector({onSelect,sysCars, showToast}){
   const [make,setMake]=useState('');
   const [model,setModel]=useState('');
   const [year,setYear]=useState('');
@@ -385,6 +428,7 @@ function CarSelector({onSelect,sysCars}){
   const [km,setKm]=useState('');
   const [searchQ,setSearchQ]=useState('');
   const [showDrop,setShowDrop]=useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   
   // History State
   const [history, setHistory] = useState(null);
@@ -400,13 +444,21 @@ function CarSelector({onSelect,sysCars}){
   
   useEffect(()=>{const h=(e)=>{if(ref.current&&!ref.current.contains(e.target))setShowDrop(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h);},[]);
 
-  // Automatically check history when typing reg plate
+  // Automatically check history when typing reg plate OR vin
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (reg && reg.length >= 4) {
+      if ((reg && reg.length >= 4) || (vin && vin.length > 5)) {
         try {
-          const snap = await db.ref('workshop_jobs').orderByChild('vehicle/reg').equalTo(reg.toUpperCase()).once('value');
-          if (snap.exists()) {
+          // Search by Reg or VIN
+          let snap;
+          if (reg && reg.length >= 4) {
+            snap = await db.ref('workshop_jobs').orderByChild('vehicle/reg').equalTo(reg.toUpperCase()).once('value');
+          }
+          if ((!snap || !snap.exists()) && vin) {
+             snap = await db.ref('workshop_jobs').orderByChild('vehicle/vin').equalTo(vin.toUpperCase()).once('value');
+          }
+          
+          if (snap && snap.exists()) {
             const hist = [];
             snap.forEach(c => { hist.push({ id: c.key, ...c.val() }); });
             hist.sort((a,b) => b.createdAt - a.createdAt);
@@ -418,15 +470,61 @@ function CarSelector({onSelect,sysCars}){
       } else {
         setHistory(null);
       }
-    }, 800); // 800ms debounce
+    }, 800);
     return () => clearTimeout(timer);
-  }, [reg]);
+  }, [reg, vin]);
+
+  // Parser for South African License Disc Barcode
+  const handleScanResult = (decodedText) => {
+    setIsScanning(false);
+    try {
+      // SA Discs are typically separated by '%' 
+      // Expected indices: 6 = Reg, 8 = Make, 9 = Model, 11 = VIN, 12 = Engine
+      const parts = decodedText.split('%');
+      
+      if (parts.length > 10) {
+        setReg(parts[6] || '');
+        setVin(parts[11] || '');
+        setEngine(parts[12] || '');
+        
+        // Attempt to auto-match Make and Model against system catalog if possible
+        const scannedMake = parts[8] || '';
+        const scannedModel = parts[9] || '';
+        
+        // Simple heuristic matching
+        const matchedMake = makes.find(m => m.toLowerCase() === scannedMake.toLowerCase());
+        if (matchedMake) {
+          setMake(matchedMake);
+          const availableModels = Object.keys(sysCars[matchedMake] || {});
+          const matchedModel = availableModels.find(m => m.toLowerCase().includes(scannedModel.toLowerCase()) || scannedModel.toLowerCase().includes(m.toLowerCase()));
+          if (matchedModel) setModel(matchedModel);
+        }
+        
+        if(showToast) showToast('Disc Scanned Successfully!', '📷', 'var(--green)');
+      } else {
+        // Fallback if not standard SA format
+        setVin(decodedText);
+        if(showToast) showToast('Barcode Scanned. Format unknown.', '⚠️', 'var(--amber)');
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to parse barcode data.");
+    }
+  };
 
   const canProceed=make&&model&&year&&engine&&reg;
   
   return(
     <div className="anim-up" style={{display:'flex',flexDirection:'column',gap:16}}>
-      <div><h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Check-In</h2><p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p></div>
+      <div>
+        <h2 style={{fontSize:20,fontWeight:800,color:'var(--text)',margin:0}}>Vehicle Check-In</h2>
+        <p style={{fontSize:13,color:'var(--text2)',margin:'6px 0 0'}}>Select the vehicle entering the workshop</p>
+      </div>
+
+      {/* Scanner Button */}
+      <button className="btn-p" onClick={() => setIsScanning(true)} style={{background:'rgba(77,123,255,0.1)', color:'var(--accent)', border:'1px solid rgba(77,123,255,0.3)', width:'100%', boxShadow:'none'}}>
+        <IBarcode /> Scan License Disc
+      </button>
       
       <div ref={ref} style={{position:'relative'}}>
         <div style={{position:'relative'}}><div style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',color:'var(--text3)'}}><ISearch/></div>
@@ -442,18 +540,22 @@ function CarSelector({onSelect,sysCars}){
         <div style={{gridColumn: history?.length > 0 ? '1 / -1' : 'auto'}}>
           <label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>REG. PLATE *</label>
           <input className="field" placeholder="e.g. CA 123-456" value={reg} onChange={e=>setReg(e.target.value.toUpperCase())}/>
+          
           {history && history.length > 0 && (
             <div className="anim-up" style={{background:'rgba(0,144,255,0.08)', border:'1px solid rgba(0,144,255,0.2)', padding:'10px 14px', borderRadius:12, marginTop:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-              <span style={{fontSize:12, color:'var(--cyan)', fontWeight:600}}><IHistory/> Found {history.length} past service{history.length > 1 ? 's' : ''}</span>
+              <span style={{fontSize:12, color:'var(--cyan)', fontWeight:600}}><IHistory/> Found {history.length} past service{history.length > 1 ? 's' : ''} in your database</span>
               <button onClick={() => setShowHistoryModal(true)} style={{background:'var(--cyan)', color:'#fff', border:'none', borderRadius:100, fontSize:11, fontWeight:700, padding:'6px 12px', cursor:'pointer'}}>View History</button>
             </div>
           )}
         </div>
-        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
         <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>VIN (optional)</label><input className="field" placeholder="e.g. AAAAAAAAAAAAAAA" value={vin} onChange={e=>setVin(e.target.value.toUpperCase())}/></div>
+        <div><label style={{fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:6,display:'block',letterSpacing:'0.5px'}}>ODOMETER (km)</label><input className="field" type="number" placeholder="e.g. 85000" value={km} onChange={e=>setKm(e.target.value)}/></div>
       </div>
       
       <button className="btn-p" disabled={!canProceed} onClick={()=>onSelect({make,model,year,engine,reg,vin,km})} style={{width:'100%',marginTop:4}}>Select Services <IChev/></button>
+
+      {/* Scanner Overlay */}
+      {isScanning && <ScannerModal onClose={() => setIsScanning(false)} onScanResult={handleScanResult} />}
 
       {/* History Modal */}
       {showHistoryModal && (
@@ -624,7 +726,7 @@ function QuoteReview({vehicle,services,notes,photos,onBack,onSubmit,submitting})
 }
 
 /* ── INTAKE WIZARD ── */
-function IntakeWizard({onDone,profile,systemData}){
+function IntakeWizard({onDone,profile,systemData, showToast}){
   const [step,setStep]=useState(1);
   const [vehicle,setVehicle]=useState(null);
   const [services,setServices]=useState({});
@@ -684,7 +786,7 @@ function IntakeWizard({onDone,profile,systemData}){
       </div>
       <div className="surface" style={{borderRadius:24,padding:'24px 20px',minHeight:400,overflow:'hidden'}}>
         <div key={step} className={animClass}>
-          {step===1&&<CarSelector onSelect={v=>{setVehicle(v);goTo(2,'left');}} sysCars={sysCars}/>}
+          {step===1&&<CarSelector onSelect={v=>{setVehicle(v);goTo(2,'left');}} sysCars={sysCars} showToast={showToast}/>}
           {step===2&&<ServiceSelector vehicle={vehicle} onBack={()=>goTo(1,'right')} onDone={(s,n,p)=>{setServices(s);setNotes(n);setPhotos(p);goTo(3,'left');}} sysServices={sysServices}/>}
           {step===3&&<QuoteReview vehicle={vehicle} services={services} notes={notes} photos={photos} onBack={()=>goTo(2,'right')} onSubmit={submit} submitting={submitting}/>}
         </div>
@@ -1185,7 +1287,7 @@ function App(){
             </header>
             <div className="hidden md:block h-[20px]"/>
             <div key={view} className={viewAnimClass}>
-              {view==='wizard'?<IntakeWizard onDone={()=>{changeView('dashboard');showToast('Quote submitted!','🚗','var(--green)');}} profile={profile} systemData={systemData}/>:<JobsDash jobs={jobs} onNew={()=>changeView('wizard')} profile={profile} showToast={showToast}/>}
+              {view==='wizard'?<IntakeWizard onDone={()=>{changeView('dashboard');showToast('Quote submitted!','🚗','var(--green)');}} profile={profile} systemData={systemData} showToast={showToast}/>:<JobsDash jobs={jobs} onNew={()=>changeView('wizard')} profile={profile} showToast={showToast}/>}
             </div>
           </div>
         </main>
